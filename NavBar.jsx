@@ -59,7 +59,7 @@ export default function NavBar() {
         </div>
         <NavLink to="/profile" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
           <span className="dot" />
-          {user ? user.name : 'Профіль'}
+          {user ? user.email : 'Профіль'}
         </NavLink>
         <button className="nav-item" onClick={toggleTheme}>
           <span className="dot" />

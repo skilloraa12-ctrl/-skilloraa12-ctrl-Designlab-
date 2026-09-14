@@ -1,109 +1,128 @@
-import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react'
-import { loadJSON, saveJSON } from './storage.js'
+import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { supabase } from './supabaseClient.js'
+import { useAuth } from './AuthContext.jsx'
 import { MODULES } from './modules.js'
 import { ACHIEVEMENTS } from './achievements.js'
 import { LEVEL_ORDER } from './levels.js'
 
 const ProgressContext = createContext(null)
 
+const EMPTY_STATE = {
+  completed: {},
+  quizPassed: {},
+  portfolio: [],
+  palettes: [],
+  streak: { count: 0, lastDay: null },
+  achievements: [],
+}
+
 function todayKey() {
   return new Date().toISOString().slice(0, 10)
 }
 
 export function ProgressProvider({ children }) {
-  const [completed, setCompleted] = useState(() => loadJSON('completed', {}))
-  const [quizPassed, setQuizPassed] = useState(() => loadJSON('quizPassed', {}))
-  const [portfolio, setPortfolio] = useState(() => loadJSON('portfolio', []))
-  const [palettes, setPalettes] = useState(() => loadJSON('palettes', []))
-  const [streakData, setStreakData] = useState(() => loadJSON('streak', { count: 0, lastDay: null }))
-  const [unlocked, setUnlocked] = useState(() => loadJSON('achievements', []))
+  const { user } = useAuth()
+  const [state, setState] = useState(EMPTY_STATE)
+  const [ready, setReady] = useState(false)
+  const saveTimer = useRef(null)
 
-  // Оновлюємо стрік один раз при завантаженні застосунку
   useEffect(() => {
+    let cancelled = false
+    if (!user) {
+      setState(EMPTY_STATE)
+      setReady(false)
+      return
+    }
+    setReady(false)
+    supabase
+      .from('progress')
+      .select('data')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          console.warn('Не вдалося завантажити прогрес', error)
+          setState(EMPTY_STATE)
+        } else if (data) {
+          setState({ ...EMPTY_STATE, ...data.data })
+        } else {
+          setState(EMPTY_STATE)
+        }
+        setReady(true)
+      })
+    return () => { cancelled = true }
+  }, [user])
+
+  useEffect(() => {
+    if (!ready) return
     const today = todayKey()
-    setStreakData((prev) => {
-      if (prev.lastDay === today) return prev
+    setState((prev) => {
+      if (prev.streak.lastDay === today) return prev
       const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-      const next = prev.lastDay === yesterday
-        ? { count: prev.count + 1, lastDay: today }
+      const nextStreak = prev.streak.lastDay === yesterday
+        ? { count: prev.streak.count + 1, lastDay: today }
         : { count: 1, lastDay: today }
-      saveJSON('streak', next)
-      return next
+      return { ...prev, streak: nextStreak }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [ready])
+
+  useEffect(() => {
+    if (!ready || !user) return
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
+      supabase
+        .from('progress')
+        .upsert({ user_id: user.id, data: state, updated_at: new Date().toISOString() })
+        .then(({ error }) => {
+          if (error) console.warn('Не вдалося зберегти прогрес', error)
+        })
+    }, 600)
+    return () => clearTimeout(saveTimer.current)
+  }, [state, ready, user])
 
   const toggleModule = useCallback((id) => {
-    setCompleted((prev) => {
-      const next = { ...prev, [id]: !prev[id] }
-      saveJSON('completed', next)
-      return next
-    })
+    setState((prev) => ({ ...prev, completed: { ...prev.completed, [id]: !prev.completed[id] } }))
   }, [])
 
   const passQuiz = useCallback((moduleId) => {
-    setQuizPassed((prev) => {
-      if (prev[moduleId]) return prev // бали нараховуються лише один раз за модуль
-      const next = { ...prev, [moduleId]: true }
-      saveJSON('quizPassed', next)
-      return next
+    setState((prev) => {
+      if (prev.quizPassed[moduleId]) return prev
+      return { ...prev, quizPassed: { ...prev.quizPassed, [moduleId]: true } }
     })
   }, [])
 
   const addPortfolioItem = useCallback((item) => {
-    setPortfolio((prev) => {
-      const next = [{ id: crypto.randomUUID(), date: new Date().toLocaleDateString('uk-UA'), ...item }, ...prev]
-      saveJSON('portfolio', next)
-      return next
-    })
+    setState((prev) => ({
+      ...prev,
+      portfolio: [{ id: crypto.randomUUID(), date: new Date().toLocaleDateString('uk-UA'), ...item }, ...prev.portfolio],
+    }))
   }, [])
 
   const removePortfolioItem = useCallback((id) => {
-    setPortfolio((prev) => {
-      const next = prev.filter((p) => p.id !== id)
-      saveJSON('portfolio', next)
-      return next
-    })
+    setState((prev) => ({ ...prev, portfolio: prev.portfolio.filter((p) => p.id !== id) }))
   }, [])
 
   const savePalette = useCallback((hexes) => {
-    setPalettes((prev) => {
-      const next = [hexes, ...prev]
-      saveJSON('palettes', next)
-      return next
-    })
+    setState((prev) => ({ ...prev, palettes: [hexes, ...prev.palettes] }))
   }, [])
 
   const removePalette = useCallback((index) => {
-    setPalettes((prev) => {
-      const next = prev.filter((_, i) => i !== index)
-      saveJSON('palettes', next)
-      return next
-    })
+    setState((prev) => ({ ...prev, palettes: prev.palettes.filter((_, i) => i !== index) }))
   }, [])
 
   const resetProgress = useCallback(() => {
-    setCompleted({})
-    setQuizPassed({})
-    setPortfolio([])
-    setPalettes([])
-    setUnlocked([])
-    setStreakData({ count: 0, lastDay: null })
-    saveJSON('completed', {})
-    saveJSON('quizPassed', {})
-    saveJSON('portfolio', [])
-    saveJSON('palettes', [])
-    saveJSON('achievements', [])
-    saveJSON('streak', { count: 0, lastDay: null })
+    setState(EMPTY_STATE)
   }, [])
 
   const completedIds = useMemo(
-    () => MODULES.filter((m) => completed[m.id]).map((m) => m.id),
-    [completed]
+    () => MODULES.filter((m) => state.completed[m.id]).map((m) => m.id),
+    [state.completed]
   )
   const completedCount = completedIds.length
   const total = MODULES.length
-  const quizPassedCount = Object.values(quizPassed).filter(Boolean).length
+  const quizPassedCount = Object.values(state.quizPassed).filter(Boolean).length
   const xp = completedCount * 100 + quizPassedCount * 20
   const level = Math.floor(xp / 500) + 1
 
@@ -111,42 +130,39 @@ export function ProgressProvider({ children }) {
     const map = {}
     LEVEL_ORDER.forEach((lv) => {
       const mods = MODULES.filter((m) => m.level === lv)
-      map[lv] = mods.length > 0 && mods.every((m) => completed[m.id])
+      map[lv] = mods.length > 0 && mods.every((m) => state.completed[m.id])
     })
     return map
-  }, [completed])
+  }, [state.completed])
 
-  // Перевірка досягнень при кожній зміні реального прогресу
   useEffect(() => {
+    if (!ready) return
     const stats = {
       completedIds,
       completedCount,
       total,
       levelDone,
-      portfolioCount: portfolio.length,
-      paletteCount: palettes.length,
-      streak: streakData.count,
+      portfolioCount: state.portfolio.length,
+      paletteCount: state.palettes.length,
+      streak: state.streak.count,
     }
     const newlyUnlocked = ACHIEVEMENTS.filter(
-      (a) => !unlocked.includes(a.slug) && a.check(stats)
+      (a) => !state.achievements.includes(a.slug) && a.check(stats)
     ).map((a) => a.slug)
     if (newlyUnlocked.length > 0) {
-      setUnlocked((prev) => {
-        const next = [...prev, ...newlyUnlocked]
-        saveJSON('achievements', next)
-        return next
-      })
+      setState((prev) => ({ ...prev, achievements: [...prev.achievements, ...newlyUnlocked] }))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completedIds.join(','), portfolio.length, palettes.length, streakData.count])
+  }, [ready, completedIds.join(','), state.portfolio.length, state.palettes.length, state.streak.count])
 
   const value = {
-    completed, toggleModule, completedIds, completedCount, total, xp, level, levelDone,
-    quizPassed, passQuiz, quizPassedCount,
-    portfolio, addPortfolioItem, removePortfolioItem,
-    palettes, savePalette, removePalette,
-    streak: streakData.count,
-    unlocked,
+    ready,
+    completed: state.completed, toggleModule, completedIds, completedCount, total, xp, level, levelDone,
+    quizPassed: state.quizPassed, passQuiz, quizPassedCount,
+    portfolio: state.portfolio, addPortfolioItem, removePortfolioItem,
+    palettes: state.palettes, savePalette, removePalette,
+    streak: state.streak.count,
+    unlocked: state.achievements,
     resetProgress,
   }
 

@@ -13,6 +13,8 @@ import ColorLabPage from './ColorLabPage.jsx'
 import Portfolio from './Portfolio.jsx'
 import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
+import RequireAuth from './RequireAuth.jsx'
+import Welcome from './Welcome.jsx'
 
 export default function App() {
   return (
@@ -23,14 +25,15 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/academy" element={<Academy />} />
-          <Route path="/module/:id" element={<Module />} />
-          <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/academy" element={<RequireAuth><Academy /></RequireAuth>} />
+          <Route path="/module/:id" element={<RequireAuth><Module /></RequireAuth>} />
+          <Route path="/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
           <Route path="/glossary" element={<Glossary />} />
-          <Route path="/achievements" element={<Achievements />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/color-lab" element={<ColorLabPage />} />
-          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/achievements" element={<RequireAuth><Achievements /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="/color-lab" element={<RequireAuth><ColorLabPage /></RequireAuth>} />
+          <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
