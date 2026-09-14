@@ -1,0 +1,71 @@
+import { useState, useEffect } from 'react'
+import { NavLink } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
+import { useProgress } from '../context/ProgressContext.jsx'
+import { loadJSON, saveJSON } from '../utils/storage.js'
+
+const LINKS = [
+  { to: '/', label: 'Головна', end: true },
+  { to: '/academy', label: 'Академія' },
+  { to: '/portfolio', label: 'Портфоліо' },
+  { to: '/color-lab', label: 'Color Lab' },
+  { to: '/glossary', label: 'Словник' },
+  { to: '/career', label: "Кар'єра" },
+  { to: '/achievements', label: 'Досягнення' },
+]
+
+export default function NavBar() {
+  const { user } = useAuth()
+  const { xp, level } = useProgress()
+  const [theme, setTheme] = useState(() => loadJSON('theme', 'light'))
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme)
+  }, [theme])
+
+  function toggleTheme() {
+    const next = theme === 'light' ? 'dark' : 'light'
+    setTheme(next)
+    saveJSON('theme', next)
+  }
+
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <div className="brand-mark" />
+        <div className="brand-name">
+          DESIGNLAB UA
+          <b>Від першої лінії — до дизайну</b>
+        </div>
+      </div>
+
+      <nav className="nav">
+        {LINKS.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            end={link.end}
+            className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}
+          >
+            <span className="dot" />
+            {link.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="sidebar-foot">
+        <div className="stat-pill" style={{ marginBottom: 8 }}>
+          <b>{xp}</b>&nbsp;XP · Рівень {level}
+        </div>
+        <NavLink to="/profile" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+          <span className="dot" />
+          {user ? user.name : 'Профіль'}
+        </NavLink>
+        <button className="nav-item" onClick={toggleTheme}>
+          <span className="dot" />
+          {theme === 'light' ? 'Світла тема' : 'Темна тема'}
+        </button>
+      </div>
+    </aside>
+  )
+}
