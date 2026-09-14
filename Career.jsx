@@ -1,6 +1,6 @@
-import { CAREER_TRACKS } from '../data/careerTracks.js'
-import { useProgress } from '../context/ProgressContext.jsx'
-import ProgressBar from '../components/ProgressBar.jsx'
+import { CAREER_TRACKS } from './careerTracks.js'
+import { useProgress } from './ProgressContext.jsx'
+import ProgressBar from './ProgressBar.jsx'
 
 export default function Career() {
   const { completed, portfolio } = useProgress()

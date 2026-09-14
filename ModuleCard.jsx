@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useProgress } from '../context/ProgressContext.jsx'
+import { useProgress } from './ProgressContext.jsx'
 
 export default function ModuleCard({ module }) {
   const { completed, toggleModule } = useProgress()

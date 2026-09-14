@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useProgress } from '../context/ProgressContext.jsx'
+import { useProgress } from './ProgressContext.jsx'
 
 export default function Portfolio() {
   const { portfolio, addPortfolioItem, removePortfolioItem } = useProgress()

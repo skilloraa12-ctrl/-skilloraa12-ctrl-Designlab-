@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
-import { loadJSON, saveJSON } from '../utils/storage.js'
+import { loadJSON, saveJSON } from './storage.js'
 
 // Локальна "авторизація" для MVP: без сервера, без паролів на бекенді
 // (бо бекенду немає). Дані користувача зберігаються лише в localStorage

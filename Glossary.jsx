@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { GLOSSARY } from '../data/glossary.js'
+import { GLOSSARY } from './glossary.js'
 
 export default function Glossary() {
   const [query, setQuery] = useState('')

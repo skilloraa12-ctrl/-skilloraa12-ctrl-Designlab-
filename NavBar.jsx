@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
-import { useProgress } from '../context/ProgressContext.jsx'
-import { loadJSON, saveJSON } from '../utils/storage.js'
+import { useAuth } from './AuthContext.jsx'
+import { useProgress } from './ProgressContext.jsx'
+import { loadJSON, saveJSON } from './storage.js'
 
 const LINKS = [
   { to: '/', label: 'Головна', end: true },

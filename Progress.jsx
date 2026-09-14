@@ -1,7 +1,7 @@
-import { LEVELS, LEVEL_ORDER } from '../data/levels.js'
-import { MODULES } from '../data/modules.js'
-import { useProgress } from '../context/ProgressContext.jsx'
-import ProgressBar from '../components/ProgressBar.jsx'
+import { LEVELS, LEVEL_ORDER } from './levels.js'
+import { MODULES } from './modules.js'
+import { useProgress } from './ProgressContext.jsx'
+import ProgressBar from './ProgressBar.jsx'
 
 export default function Progress() {
   const { completed, completedCount, total, xp, level, streak } = useProgress()

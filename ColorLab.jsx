@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useProgress } from '../context/ProgressContext.jsx'
+import { useProgress } from './ProgressContext.jsx'
 
 const HARMONIES = {
   complementary: 'Компліментарна',

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
-import { useProgress } from '../context/ProgressContext.jsx'
+import { useAuth } from './AuthContext.jsx'
+import { useProgress } from './ProgressContext.jsx'
 
 export default function Profile() {
   const { user, logout } = useAuth()

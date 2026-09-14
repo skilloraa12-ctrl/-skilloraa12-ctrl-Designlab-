@@ -1,7 +1,7 @@
-import { MODULES } from '../data/modules.js'
-import { LEVELS, LEVEL_ORDER } from '../data/levels.js'
-import { useProgress } from '../context/ProgressContext.jsx'
-import ModuleCard from '../components/ModuleCard.jsx'
+import { MODULES } from './modules.js'
+import { LEVELS, LEVEL_ORDER } from './levels.js'
+import { useProgress } from './ProgressContext.jsx'
+import ModuleCard from './ModuleCard.jsx'
 
 export default function Academy() {
   const { completed } = useProgress()

@@ -1,4 +1,4 @@
-import ColorLab from '../components/ColorLab.jsx'
+import ColorLab from './ColorLab.jsx'
 
 export default function ColorLabPage() {
   return (

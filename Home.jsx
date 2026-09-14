@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { useProgress } from '../context/ProgressContext.jsx'
-import { MODULES } from '../data/modules.js'
-import ModuleCard from '../components/ModuleCard.jsx'
+import { useProgress } from './ProgressContext.jsx'
+import { MODULES } from './modules.js'
+import ModuleCard from './ModuleCard.jsx'
 
 export default function Home() {
   const { completed, completedCount, total, xp, level, portfolio } = useProgress()

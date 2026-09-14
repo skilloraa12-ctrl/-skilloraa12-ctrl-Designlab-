@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react'
-import { loadJSON, saveJSON } from '../utils/storage.js'
-import { MODULES } from '../data/modules.js'
-import { ACHIEVEMENTS } from '../data/achievements.js'
-import { LEVEL_ORDER } from '../data/levels.js'
+import { loadJSON, saveJSON } from './storage.js'
+import { MODULES } from './modules.js'
+import { ACHIEVEMENTS } from './achievements.js'
+import { LEVEL_ORDER } from './levels.js'
 
 const ProgressContext = createContext(null)
 

@@ -1,6 +1,6 @@
-import { ACHIEVEMENTS } from '../data/achievements.js'
-import { useProgress } from '../context/ProgressContext.jsx'
-import AchievementBadge from '../components/AchievementBadge.jsx'
+import { ACHIEVEMENTS } from './achievements.js'
+import { useProgress } from './ProgressContext.jsx'
+import AchievementBadge from './AchievementBadge.jsx'
 
 export default function Achievements() {
   const { unlocked } = useProgress()

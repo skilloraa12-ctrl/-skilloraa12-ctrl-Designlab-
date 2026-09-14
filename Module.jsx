@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { getModule, MODULES } from '../data/modules.js'
-import { LEVELS } from '../data/levels.js'
-import { useProgress } from '../context/ProgressContext.jsx'
-import Quiz from '../components/Quiz.jsx'
-import SketchPad from '../components/SketchPad.jsx'
-import AudioNarration from '../components/AudioNarration.jsx'
-import PresentationMode from '../components/PresentationMode.jsx'
+import { getModule, MODULES } from './modules.js'
+import { LEVELS } from './levels.js'
+import { useProgress } from './ProgressContext.jsx'
+import Quiz from './Quiz.jsx'
+import SketchPad from './SketchPad.jsx'
+import AudioNarration from './AudioNarration.jsx'
+import PresentationMode from './PresentationMode.jsx'
 
 export default function Module() {
   const { id } = useParams()
