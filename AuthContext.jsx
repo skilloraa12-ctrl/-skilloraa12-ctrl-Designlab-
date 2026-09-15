@@ -47,6 +47,7 @@ export function AuthProvider({ children }) {
 
   const sendMagicLink = useCallback(async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
+      shouldCreateUser: false,
       email,
       options: {
         emailRedirectTo: window.location.origin + import.meta.env.BASE_URL,
