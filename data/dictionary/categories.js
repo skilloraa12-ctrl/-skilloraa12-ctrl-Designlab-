@@ -1,0 +1,61 @@
+// All 50 Словник categories from the ТЗ. Subcategories are only listed
+// where the spec itself defined them (01-07, 11, 36) - the rest are flat
+// term lists, matching the source spec exactly rather than inventing
+// subcategory breakdowns that weren't asked for.
+
+export const DICTIONARY_CATEGORIES = [
+  { id: 'design-foundations', en: 'Design Foundations', ua: 'Основи дизайну', subcategories: ['Design', 'Design Principles', 'Design Elements', 'Visual Language', 'Composition', 'Layout', 'Balance', 'Contrast', 'Hierarchy', 'Alignment', 'Proportion', 'Rhythm', 'Scale', 'Unity', 'Gestalt'] },
+  { id: 'visual-design', en: 'Visual Design', ua: 'Візуальний дизайн', subcategories: ['Visual Hierarchy', 'Composition', 'Shape', 'Form', 'Line', 'Texture', 'Space', 'Depth', 'Visual Weight'] },
+  { id: 'color-design', en: 'Color Design', ua: 'Колір', subcategories: ['Color Theory', 'Color Systems', 'Color Harmonies', 'Accessibility', 'Color Management', 'Digital Color', 'Print Color'] },
+  { id: 'typography', en: 'Typography', ua: 'Типографіка', subcategories: ['Typography Fundamentals', 'Fonts', 'Typefaces', 'Classification', 'Spacing', 'Hierarchy', 'Editorial Typography', 'Web Typography', 'Variable Fonts'] },
+  { id: 'ui-design', en: 'UI Design', ua: 'UI-дизайн', subcategories: ['UI Fundamentals', 'Components', 'Controls', 'Navigation', 'Forms', 'States', 'Responsive UI', 'Mobile UI', 'Desktop UI'] },
+  { id: 'ux-design', en: 'UX Design', ua: 'UX-дизайн', subcategories: ['UX Fundamentals', 'User-Centered Design', 'User Journey', 'Information Architecture', 'Interaction', 'Flows', 'Prototyping', 'Testing'] },
+  { id: 'ux-research', en: 'UX Research', ua: 'UX-дослідження', subcategories: ['Research Methods', 'Qualitative Research', 'Quantitative Research', 'Interviews', 'Surveys', 'Usability Testing', 'Competitive Research', 'Data Analysis'] },
+  { id: 'design-strategy', en: 'Design Strategy', ua: 'Дизайн-стратегія', subcategories: ['Design Strategy', 'Business Strategy', 'Product Strategy', 'Creative Strategy', 'Brand Strategy', 'Design Brief', 'Decision Making'] },
+  { id: 'design-thinking', en: 'Design Thinking', ua: 'Дизайн-мислення', subcategories: [] },
+  { id: 'designops', en: 'DesignOps', ua: 'DesignOps', subcategories: [] },
+  { id: 'design-systems', en: 'Design Systems', ua: 'Дизайн-системи', subcategories: ['Design Tokens', 'Components', 'Patterns', 'Foundations', 'Documentation', 'Governance'] },
+  { id: 'web-design', en: 'Web Design', ua: 'Веб-дизайн', subcategories: [] },
+  { id: 'app-design', en: 'App Design', ua: 'Дизайн застосунків', subcategories: [] },
+  { id: 'interaction-design', en: 'Interaction Design', ua: 'Дизайн взаємодії', subcategories: [] },
+  { id: 'graphic-design', en: 'Graphic Design', ua: 'Графічний дизайн', subcategories: [] },
+  { id: 'branding', en: 'Branding', ua: 'Брендинг', subcategories: [] },
+  { id: 'logo-design', en: 'Logo Design', ua: 'Дизайн логотипу', subcategories: [] },
+  { id: 'packaging-design', en: 'Packaging Design', ua: 'Дизайн упаковки', subcategories: [] },
+  { id: 'advertising-design', en: 'Advertising Design', ua: 'Рекламний дизайн', subcategories: [] },
+  { id: 'motion-design', en: 'Motion Design', ua: 'Моушн-дизайн', subcategories: [] },
+  { id: '3d-design', en: '3D Design', ua: '3D-дизайн', subcategories: [] },
+  { id: 'xr-design', en: 'XR / AR / VR / Spatial Design', ua: 'XR / AR / VR / Просторовий дизайн', subcategories: [] },
+  { id: 'game-design', en: 'Game Design', ua: 'Гейм-дизайн', subcategories: [] },
+  { id: 'game-art', en: 'Game Art', ua: 'Ігрова графіка', subcategories: [] },
+  { id: 'information-design', en: 'Information Design', ua: 'Інформаційний дизайн', subcategories: [] },
+  { id: 'data-visualization', en: 'Data Visualization', ua: 'Візуалізація даних', subcategories: [] },
+  { id: 'editorial-design', en: 'Editorial Design', ua: 'Редакційний дизайн', subcategories: [] },
+  { id: 'environmental-design', en: 'Environmental / Exhibition Design', ua: 'Середовищний / виставковий дизайн', subcategories: [] },
+  { id: 'photography-art-direction', en: 'Photography & Art Direction', ua: 'Фотографія та арт-дирекшн', subcategories: [] },
+  { id: 'video-design', en: 'Video Design', ua: 'Відео-дизайн', subcategories: [] },
+  { id: 'print-production', en: 'Print Production', ua: 'Друкарське виробництво', subcategories: [] },
+  { id: 'product-design', en: 'Product Design', ua: 'Продуктовий дизайн', subcategories: [] },
+  { id: 'industrial-design', en: 'Industrial Design', ua: 'Промисловий дизайн', subcategories: [] },
+  { id: 'service-design', en: 'Service Design', ua: 'Сервісний дизайн', subcategories: [] },
+  { id: 'accessibility', en: 'Accessibility & Inclusive Design', ua: 'Доступність та інклюзивний дизайн', subcategories: [] },
+  { id: 'content-design', en: 'Content Design / UX Writing', ua: 'Контент-дизайн / UX-письмо', subcategories: ['UX Writing', 'Content Design', 'Microcopy', 'UI Content', 'Voice & Tone', 'Localization', 'Accessibility', 'Content Strategy'] },
+  { id: 'ai-design', en: 'AI Design', ua: 'AI-дизайн', subcategories: ['AI Image', 'AI Video', 'AI UI', 'AI Writing', 'AI Research', 'AI Prototyping', 'Prompt Design', 'Responsible AI'] },
+  { id: 'design-ethics', en: 'Design Ethics', ua: 'Етика дизайну', subcategories: [] },
+  { id: 'sustainable-design', en: 'Sustainable Design', ua: 'Сталий дизайн', subcategories: [] },
+  { id: 'fashion-textile-design', en: 'Fashion & Textile Design', ua: 'Дизайн одягу та текстилю', subcategories: [] },
+  { id: 'interior-space-design', en: 'Interior & Space Design', ua: 'Інтер’єрний та просторовий дизайн', subcategories: [] },
+  { id: 'iconography', en: 'Iconography & Symbol Design', ua: 'Іконографіка та символи', subcategories: [] },
+  { id: 'illustration', en: 'Illustration', ua: 'Ілюстрація', subcategories: [] },
+  { id: 'conversion-growth-design', en: 'Conversion & Growth Design', ua: 'Конверсійний дизайн', subcategories: [] },
+  { id: 'localization-design', en: 'Localization & Global Design', ua: 'Локалізація та глобальний дизайн', subcategories: [] },
+  { id: 'wearable-design', en: 'Wearable & Device Design', ua: 'Дизайн носимих пристроїв', subcategories: [] },
+  { id: 'design-to-development', en: 'Design-to-Development', ua: 'Передача дизайну в розробку', subcategories: [] },
+  { id: 'figma-design-tools', en: 'Figma & Design Tools', ua: 'Figma та інструменти дизайну', subcategories: [] },
+  { id: 'design-files-production', en: 'Design Files & Production', ua: 'Файли та продакшн', subcategories: [] },
+  { id: 'universal-vocabulary', en: 'Universal Design Vocabulary', ua: 'Загальний професійний словник', subcategories: [] },
+]
+
+export function getCategory(id) {
+  return DICTIONARY_CATEGORIES.find((c) => c.id === id)
+}

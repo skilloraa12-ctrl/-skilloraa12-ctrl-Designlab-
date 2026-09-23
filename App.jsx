@@ -16,6 +16,9 @@ import NotFound from './NotFound.jsx'
 import RequireAuth from './RequireAuth.jsx'
 import Welcome from './Welcome.jsx'
 import LabsHome from './LabsHome.jsx'
+import DictionaryHome from './DictionaryHome.jsx'
+import DictionaryCategory from './DictionaryCategory.jsx'
+import DictionaryTerm from './DictionaryTerm.jsx'
 
 export default function App() {
   return (
@@ -31,6 +34,9 @@ export default function App() {
           <Route path="/module/:id" element={<RequireAuth><Module /></RequireAuth>} />
           <Route path="/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
           <Route path="/glossary" element={<Glossary />} />
+          <Route path="/dictionary" element={<DictionaryHome />} />
+          <Route path="/dictionary/:category" element={<DictionaryCategory />} />
+          <Route path="/dictionary/:category/:term" element={<DictionaryTerm />} />
           <Route path="/achievements" element={<RequireAuth><Achievements /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/color-lab" element={<RequireAuth><ColorLabPage /></RequireAuth>} />
