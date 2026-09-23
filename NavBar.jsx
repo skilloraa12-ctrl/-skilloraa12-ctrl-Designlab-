@@ -10,6 +10,7 @@ const LINKS = [
   { to: '/portfolio', label: 'Портфоліо' },
   { to: '/labs', label: '🧪 Design Labs' },
   { to: '/dictionary', label: '📖 Словник' },
+  { to: '/guide', label: '🧭 Довідник' },
   { to: '/career', label: "Кар'єра" },
   { to: '/achievements', label: 'Досягнення' },
 ]

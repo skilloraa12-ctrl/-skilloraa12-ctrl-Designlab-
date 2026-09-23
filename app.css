@@ -694,3 +694,62 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 @media (max-width: 420px) {
   .dict-cat-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- Guide (Довідник) ---------- */
+
+.guide-continue-card {
+  display: block; border: 1px solid var(--accent); border-radius: var(--radius); background: var(--surface);
+  padding: 16px 18px; margin-bottom: 8px; box-shadow: var(--shadow-sm);
+}
+.guide-continue-label { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
+.guide-continue-title { font-size: 15px; font-weight: 600; }
+
+.guide-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.guide-cat-card {
+  display: block; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 16px; box-shadow: var(--shadow-sm); transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+.guide-cat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--accent); }
+.guide-cat-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.guide-cat-en { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.guide-progress-bar { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.guide-progress-fill { height: 100%; background: var(--accent); }
+.guide-progress-label { font-size: 11px; color: var(--muted); }
+
+.guide-topics-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; }
+
+.guide-lesson-list { display: flex; flex-direction: column; gap: 8px; }
+.guide-lesson-row {
+  display: flex; align-items: center; gap: 14px; padding: 13px 14px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface);
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+.guide-lesson-row:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); transform: translateX(2px); }
+.guide-lesson-check {
+  width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line); flex: none;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted);
+}
+.guide-lesson-check.done { background: var(--green); border-color: var(--green); color: #fff; }
+.guide-lesson-title { flex: 1; font-size: 13.5px; }
+.guide-lesson-arrow { color: var(--muted); font-size: 13px; }
+
+.guide-bullet-list { margin: 0; padding-left: 20px; font-size: 14px; color: var(--ink); line-height: 1.7; }
+.guide-bullet-list li { margin-bottom: 4px; }
+
+.guide-swatch-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.guide-swatch {
+  width: 90px; height: 60px; border-radius: var(--radius-sm); border: 1px solid var(--line);
+  display: flex; align-items: flex-end; padding: 6px;
+}
+.guide-swatch span { font-size: 10px; background: rgba(0,0,0,.35); color: #fff; padding: 2px 5px; border-radius: 2px; }
+
+.guide-type-samples { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+.guide-type-sample { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--surface); }
+.guide-type-sample-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .03em; }
+
+@media (max-width: 620px) {
+  .guide-cat-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 420px) {
+  .guide-cat-grid { grid-template-columns: 1fr; }
+}
