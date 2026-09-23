@@ -17,7 +17,7 @@ const LINKS = [
 export default function NavBar() {
   const { user } = useAuth()
   const { xp, level } = useProgress()
-  const [theme, setTheme] = useState(() => loadJSON('theme', 'light'))
+  const [theme, setTheme] = useState(() => loadJSON('theme', 'dark'))
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme)

@@ -7,6 +7,7 @@ import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import AudioNarration from './AudioNarration.jsx'
 import PresentationMode from './PresentationMode.jsx'
+import GlossaryText from './GlossaryText.jsx'
 
 export default function Module() {
   const { id } = useParams()
@@ -38,7 +39,7 @@ export default function Module() {
         </button>
       </div>
 
-      {module.theory && <p className="module-theory">{module.theory}</p>}
+      {module.theory && <p className="module-theory"><GlossaryText text={module.theory} /></p>}
 
       {module.theory && (
         <div className="module-media-row">
@@ -68,7 +69,7 @@ export default function Module() {
         <div className="callout callout--points">
           <p className="eyebrow">КЛЮЧОВІ ПРИНЦИПИ</p>
           <ul className="callout-list">
-            {module.keyPoints.map((p, i) => <li key={i}>{p}</li>)}
+            {module.keyPoints.map((p, i) => <li key={i}><GlossaryText text={p} /></li>)}
           </ul>
         </div>
       )}
@@ -77,7 +78,7 @@ export default function Module() {
         <div className="callout callout--mistakes">
           <p className="eyebrow" style={{ color: 'var(--coral)' }}>ТИПОВІ ПОМИЛКИ</p>
           <ul className="callout-list">
-            {module.mistakes.map((m, i) => <li key={i}>{m}</li>)}
+            {module.mistakes.map((m, i) => <li key={i}><GlossaryText text={m} /></li>)}
           </ul>
         </div>
       )}

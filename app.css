@@ -105,6 +105,35 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .audio-note { font-size: 11px; color: var(--muted); }
 .audio-unsupported { font-size: 12px; color: var(--muted); }
 
+.glossary-term-wrap { position: relative; display: inline-block; }
+.glossary-term {
+  font: inherit;
+  color: var(--amber);
+  background: none;
+  border: none;
+  border-bottom: 1px dotted var(--amber);
+  padding: 0;
+  cursor: pointer;
+}
+.glossary-term:hover { opacity: .85; }
+.glossary-term-popup {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  top: 100%;
+  margin-top: 6px;
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.glossary-term-popup strong { color: var(--amber); }
+
 .example-block { border-left: 2px solid var(--amber); padding-left: 14px; margin-top: 6px; }
 .example-text { font-size: 13.5px; line-height: 1.6; color: var(--ink); margin: 0; max-width: 66ch; }
 
