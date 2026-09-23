@@ -1,97 +1,112 @@
 import { useState, useEffect, useRef } from 'react'
+import { synthesizeSpeechWav } from './piperTts.js'
 
-// Озвучення тексту через вбудований у браузер Web Speech API — без
-// сторонніх сервісів чи файлів. Якість і наявність української voice
-// залежить від браузера й ОС користувача (Chrome/Edge зазвичай мають
-// хоча б одну), тому компонент чесно попереджає, якщо озвучення
-// недоступне взагалі.
+// Real neural voice (Piper, uk_UA-lada-x_low) reused from 00100101-platform,
+// with eSpeak-NG as an automatic fallback — see piperTts.js. Replaces the
+// old Web Speech API version: that only worked if the learner's OS happened
+// to have a Ukrainian voice installed, which silently failed on a lot of
+// real machines. This runs entirely client-side, no OS dependency.
 
 export default function AudioNarration({ text }) {
-  const [supported, setSupported] = useState(true)
-  const [speaking, setSpeaking] = useState(false)
-  const [paused, setPaused] = useState(false)
-  const utteranceRef = useRef(null)
+  const [state, setState] = useState('idle') // idle | loading | playing | paused | error
+  const [errorMsg, setErrorMsg] = useState(null)
+  const audioRef = useRef(null)
+  const blobUrlRef = useRef(null)
+  const requestIdRef = useRef(0)
+
+  const cleanupAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+      audioRef.current = null
+    }
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current)
+      blobUrlRef.current = null
+    }
+  }
 
   useEffect(() => {
-    setSupported(typeof window !== 'undefined' && 'speechSynthesis' in window)
     return () => {
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
+      requestIdRef.current += 1
+      cleanupAudio()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Скидаємо відтворення, якщо користувач перейшов на інший модуль
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
-    setSpeaking(false)
-    setPaused(false)
+    requestIdRef.current += 1
+    cleanupAudio()
+    setState('idle')
+    setErrorMsg(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text])
 
-  function pickVoice() {
-    const voices = window.speechSynthesis.getVoices()
-    return voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('uk')) || null
-  }
+  if (!text) return null
 
-  function play() {
-    const synth = window.speechSynthesis
-    if (paused) {
-      synth.resume()
-      setPaused(false)
-      setSpeaking(true)
+  async function play() {
+    if (state === 'paused' && audioRef.current) {
+      audioRef.current.play()
+      setState('playing')
       return
     }
-    synth.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    const voice = pickVoice()
-    if (voice) utterance.voice = voice
-    utterance.lang = voice ? voice.lang : 'uk-UA'
-    utterance.rate = 1
-    utterance.onend = () => { setSpeaking(false); setPaused(false) }
-    utterance.onerror = () => { setSpeaking(false); setPaused(false) }
-    utteranceRef.current = utterance
-    synth.speak(utterance)
-    setSpeaking(true)
-    setPaused(false)
+    const myId = ++requestIdRef.current
+    setErrorMsg(null)
+    setState('loading')
+    try {
+      const blob = await synthesizeSpeechWav(text)
+      if (myId !== requestIdRef.current) return
+      const url = URL.createObjectURL(blob)
+      blobUrlRef.current = url
+      const audio = new Audio(url)
+      audioRef.current = audio
+      audio.onended = () => { if (myId === requestIdRef.current) setState('idle') }
+      audio.onerror = () => { if (myId === requestIdRef.current) { setErrorMsg('Не вдалося відтворити аудіо.'); setState('error') } }
+      await audio.play()
+      if (myId !== requestIdRef.current) return
+      setState('playing')
+    } catch (err) {
+      if (myId !== requestIdRef.current) return
+      setErrorMsg(String(err.message || err))
+      setState('error')
+    }
   }
 
   function pause() {
-    window.speechSynthesis.pause()
-    setPaused(true)
-    setSpeaking(false)
+    if (!audioRef.current) return
+    audioRef.current.pause()
+    setState('paused')
   }
 
   function stop() {
-    window.speechSynthesis.cancel()
-    setSpeaking(false)
-    setPaused(false)
-  }
-
-  if (!supported) {
-    return (
-      <p className="audio-unsupported">
-        🔇 Ваш браузер не підтримує озвучення тексту (Web Speech API). Спробуйте Chrome чи Edge.
-      </p>
-    )
+    requestIdRef.current += 1
+    cleanupAudio()
+    setState('idle')
+    setErrorMsg(null)
   }
 
   return (
     <div className="audio-narration">
-      {!speaking && !paused && (
+      {(state === 'idle' || state === 'error') && (
         <button className="harmony-btn" onClick={play}>🔊 Прослухати теорію</button>
       )}
-      {speaking && (
-        <button className="harmony-btn" onClick={pause}>⏸ Пауза</button>
+      {state === 'loading' && (
+        <span className="audio-note">Готую озвучення… (для довгого тексту може тривати до хвилини)</span>
       )}
-      {paused && (
-        <button className="harmony-btn" onClick={play}>▶ Продовжити</button>
+      {state === 'playing' && (
+        <>
+          <button className="harmony-btn" onClick={pause}>⏸ Пауза</button>
+          <button className="harmony-btn" onClick={stop}>⏹ Стоп</button>
+        </>
       )}
-      {(speaking || paused) && (
-        <button className="harmony-btn" onClick={stop}>⏹ Стоп</button>
+      {state === 'paused' && (
+        <>
+          <button className="harmony-btn" onClick={play}>▶ Продовжити</button>
+          <button className="harmony-btn" onClick={stop}>⏹ Стоп</button>
+        </>
       )}
-      <span className="audio-note">Озвучення — голос браузера, якість залежить від вашої ОС</span>
+      {state === 'error' && errorMsg && <span className="audio-note">{errorMsg}</span>}
     </div>
   )
 }
