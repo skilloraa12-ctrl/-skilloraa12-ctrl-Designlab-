@@ -6,6 +6,15 @@ import ModuleCard from './ModuleCard.jsx'
 export default function Academy() {
   const { completed } = useProgress()
 
+  if (MODULES.length === 0) {
+    return (
+      <div>
+        <h1 className="page-title">Академія</h1>
+        <p className="page-sub">Уроки за напрямками дизайну (Web Design, UI Design, Game Design та інші) готуються — скоро тут з'явиться нова програма.</p>
+      </div>
+    )
+  }
+
   return (
     <div>
       <h1 className="page-title">Академія</h1>

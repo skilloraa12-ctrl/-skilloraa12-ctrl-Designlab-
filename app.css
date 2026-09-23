@@ -333,10 +333,6 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 }
 @media (max-width: 620px) {
   .app { flex-direction: column; }
-  .sidebar} }
-
-@media (max-width: 620px) {
-  .app { flex-direction: column; }
   .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--line); flex-direction: row; align-items: center; flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
   .nav { flex-direction: row; flex-wrap: wrap; }
   .sidebar-foot { margin-top: 0; padding-top: 0; }
