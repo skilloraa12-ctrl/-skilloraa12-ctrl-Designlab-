@@ -71,6 +71,15 @@ function ColorFormatsTable({ hex }) {
   )
 }
 
+function HelpBox({ children }) {
+  return (
+    <details className="cl-help">
+      <summary>❓ Як це працює (пояснення простими словами)</summary>
+      <div className="cl-help-body">{children}</div>
+    </details>
+  )
+}
+
 // ---------- 1. Color Picker ----------
 
 function PickerTab({ hex, setHex }) {
@@ -101,6 +110,15 @@ function PickerTab({ hex, setHex }) {
   return (
     <div>
       <p className="cl-tab-desc">Базовий колір для всього Color Lab — гармонії, палітра, відтінки й превʼю нижче будуються саме з нього.</p>
+      <HelpBox>
+        <ol>
+          <li>Обери колір трьома способами: клікни на кольоровий квадратик зліва, впиши HEX-код у поле (наприклад <code>#3E37E0</code>), або зміни цифри R/G/B чи H/S/L нижче.</li>
+          <li>Цей колір — <b>головний (базовий)</b> для всього Color Lab. Щойно він зміниться — автоматично перерахуються вкладки Harmonies, Palette, Shades, Contrast, Typography і Design Preview.</li>
+          <li>Кнопка <b>🎲 Random</b> підбирає випадковий колір, якщо не знаєш, з чого почати.</li>
+          <li>Кнопка <b>💾 Save</b> кладе колір у вкладку Saved, щоб не загубити — звідти його завжди можна повернути.</li>
+          <li>Таблиця «Усі формати» внизу — це той самий колір, записаний різними «мовами»: RGB/HSL для сайтів, CMYK для друку, LAB/LCH для точних розрахунків. Клікни на будь-яке поле, щоб скопіювати саме той запис.</li>
+        </ol>
+      </HelpBox>
       <div className="cl-picker-top">
         <input type="color" className="cl-swatch-input" value={safeHex(hex)} onChange={(e) => { setHex(e.target.value); setText(e.target.value) }} />
         <input
@@ -158,6 +176,15 @@ function HarmoniesTab({ hex, setHex }) {
   return (
     <div>
       <p className="cl-tab-desc">Гармонії будуються з відтінку (hue) поточного базового кольору з вкладки Color Picker.</p>
+      <HelpBox>
+        <p>Уяви кольорове коло (веселку, замкнену в круг). «Гармонія» — це набір кольорів, розташованих на цьому колі за певною математичною схемою відносно твого базового кольору — тому вони автоматично добре поєднуються.</p>
+        <ol>
+          <li>Обери тип гармонії кнопками вгорі — кожен тип дає інший настрій і різну кількість кольорів (наприклад «Комплементарна» дає 2 контрастні кольори, а «Тріадна» — 3 збалансовані).</li>
+          <li>Під кожним кольором підписано, для чого він зазвичай підходить (База, Акцент, CTA-кнопка і т.д.) — це підказка, а не жорстке правило.</li>
+          <li>Кнопка <b>«Base ⟶»</b> робить цей колір новим базовим — переносить тебе на вкладку Color Picker з уже вибраним кольором.</li>
+          <li>Кнопка <b>💾</b> зберігає один конкретний колір, а кнопка «Зберегти цю гармонію як палітру» внизу — всі кольори одразу.</li>
+        </ol>
+      </HelpBox>
       <div className="harmony-select">
         {Object.entries(C.HARMONY_TYPES).map(([key, val]) => (
           <button key={key} className={'harmony-btn' + (type === key ? ' active' : '')} onClick={() => setType(key)}>
@@ -191,11 +218,43 @@ function HarmoniesTab({ hex, setHex }) {
 
 // ---------- 3. Palette Generator ----------
 
+const ROLE_NOTES = {
+  primary: 'Головний колір бренду. З’являється на найважливіших кнопках («Почати», «Play»), у шапці сайту/застосунку, в лого.',
+  secondary: 'Другий колір бренду. Підтримує primary — частина лого, другорядні акценти.',
+  accent: 'Яскравий «зачіпний» колір. Іконки карток, аватарки, CTA-кнопки («Дізнатись більше»), підсвітка активних елементів.',
+  background: 'Фон усієї сторінки або екрана — те, що під усім іншим.',
+  surface: 'Фон карток, панелей, навбару — трохи відрізняється від background, щоб елементи «піднімались» над фоном.',
+  text: 'Основний колір тексту — заголовки, звичайний текст.',
+  muted: 'Приглушений колір — підписи, описи, другорядна інформація, яка не має перетягувати увагу.',
+  border: 'Колір рамок карток і ліній-роздільників.',
+  success: 'Колір «все добре»: успішні дії, позитивні повідомлення.',
+  warning: 'Колір попередження: обережно, зверни увагу.',
+  error: 'Колір помилки: щось пішло не так, обов’язкові поля тощо.',
+  info: 'Колір інформаційних підказок і нейтральних повідомлень.',
+}
+
 function PaletteTab({ palette, onChange, onReset }) {
   const { savePalette } = useProgress()
   return (
     <div>
       <p className="cl-tab-desc">Семантична палітра, автоматично згенерована з базового кольору. Кожну роль можна перевизначити вручну.</p>
+      <HelpBox>
+        <p><b>Це «пульт керування» кольорами всього Color Lab.</b> Замість одного кольору тут 12 «ролей» — кожна відповідає за свою частину дизайну. Зміниш роль тут — і скрізь, де вона використовується (Design Preview, Typography, Contrast), одразу оновиться.</p>
+        <ol>
+          <li>Клікни на кольоровий квадратик картки, щоб відкрити вибір кольору, або впиши HEX-код у поле під ним.</li>
+          <li>Кожна роль незалежна — можеш поміняти, наприклад, тільки Primary, а решта залишиться як була згенерована автоматично.</li>
+          <li>Кнопка <b>«Скинути до авто»</b> прибирає всі твої ручні зміни й повертає палітру, згенеровану з базового кольору (вкладка Color Picker).</li>
+        </ol>
+        <p className="cl-help-legend-title">За що відповідає кожна роль:</p>
+        <ul className="cl-help-legend">
+          {Object.entries(C.SEMANTIC_LABELS).map(([role, label]) => (
+            <li key={role}>
+              <span className="cl-legend-swatch" style={{ background: palette[role] }} />
+              <span><b>{label}</b> ({role}) — {ROLE_NOTES[role]}</span>
+            </li>
+          ))}
+        </ul>
+      </HelpBox>
       <div className="cl-palette-grid">
         {Object.entries(C.SEMANTIC_LABELS).map(([role, label]) => (
           <div className="cl-role-card" key={role}>
@@ -231,6 +290,15 @@ function ShadesTab({ hex }) {
   return (
     <div>
       <p className="cl-tab-desc">Шкала 50–950 від базового кольору — як у Tailwind/Material: для фонів, бордерів, hover-станів.</p>
+      <HelpBox>
+        <p>Це один і той самий колір, але освітлений або затемнений у 11 кроків — як сходинки. 50 — майже білий, 500 — приблизно твій базовий колір, 950 — майже чорний.</p>
+        <ol>
+          <li>Світлі кроки (50–200) зазвичай беруть для фонів блоків, підсвітки при наведенні.</li>
+          <li>Середні кроки (400–600) — для кнопок, іконок, основних акцентів.</li>
+          <li>Темні кроки (700–950) — для тексту на світлому фоні або темної теми.</li>
+          <li>Клікни на будь-яку клітинку, щоб скопіювати її HEX-код.</li>
+        </ol>
+      </HelpBox>
       <div className="cl-shade-row">
         {C.SHADE_STEPS.map((step) => (
           <div key={step} className="cl-shade-cell" style={{ background: scale[step] }} onClick={() => copy(scale[step])}>
@@ -280,6 +348,14 @@ function ContrastTab({ palette }) {
   return (
     <div>
       <p className="cl-tab-desc">Перевірка контрастності за WCAG 2.1 — для тексту, кнопок і UI-елементів.</p>
+      <HelpBox>
+        <p>Контраст — це наскільки сильно відрізняються колір тексту й колір фону. Якщо контраст малий (наприклад, жовтий текст на білому фоні), текст важко прочитати — особливо людям з поганим зором.</p>
+        <ol>
+          <li>WCAG — це міжнародний стандарт доступності. Він каже: для звичайного тексту потрібне співвідношення контрасту мінімум <b>4.5:1</b> (рівень AA) або <b>7:1</b> (суворіший рівень AAA); для великого тексту вимоги мʼякші.</li>
+          <li>Зелена галочка ✓ = пройшло перевірку, можна використовувати. Червоний хрестик ✕ = текст буде важко читати, варто замінити колір фону або тексту.</li>
+          <li>Обери колір тексту й фону вгорі, щоб перевірити довільну пару кольорів, або дивись автоматичну перевірку кожної кнопки нижче.</li>
+        </ol>
+      </HelpBox>
       <div className="cl-editrow">
         <label>Текст <input type="color" value={safeHex(fg)} onChange={(e) => setFg(e.target.value)} /></label>
         <label>Фон <input type="color" value={safeHex(bg)} onChange={(e) => setBg(e.target.value)} /></label>
@@ -327,6 +403,16 @@ function GradientTab({ baseHex }) {
   return (
     <div>
       <p className="cl-tab-desc">Лінійні, радіальні й конічні градієнти з кількома кольоровими точками — з готовим CSS та SVG.</p>
+      <HelpBox>
+        <p>Градієнт — плавний перехід від одного кольору до іншого (наприклад, від фіолетового до рожевого). «Точка» — це один колір у цьому переході.</p>
+        <ol>
+          <li>Обери тип: <b>linear</b> — перехід по прямій лінії під кутом, <b>radial</b> — розходиться колами з центру, <b>conic</b> — обертається навколо центру, як циферблат.</li>
+          <li>Для linear/conic крути повзунок «Кут», щоб змінити напрямок переходу.</li>
+          <li>У кожної точки є колір, «Позиція» (де саме на градієнті вона знаходиться, у %) і «Прозорість».</li>
+          <li>«+ Додати точку» додає ще один колір у перехід, ✕ прибирає точку (мінімум дві точки завжди залишаються).</li>
+          <li>Готовий код CSS і SVG внизу можна скопіювати прямо в сайт, а кнопка 💾 зберігає градієнт у вкладку Saved.</li>
+        </ol>
+      </HelpBox>
       <div className="harmony-select">
         {['linear', 'radial', 'conic'].map((t) => (
           <button key={t} className={'harmony-btn' + (type === t ? ' active' : '')} onClick={() => setType(t)}>{t}</button>
@@ -374,6 +460,13 @@ function TypographyTab({ palette }) {
   return (
     <div>
       <p className="cl-tab-desc">Типографічна ієрархія на кольорах поточної палітри, з перевіркою контрасту біля кожного стилю.</p>
+      <HelpBox>
+        <p>Тут показано, як текст різних «рівнів» (заголовок, звичайний текст, підпис, посилання, текст кнопки) буде виглядати кольорами твоєї палітри.</p>
+        <ol>
+          <li>Число праворуч від кожного рядка (наприклад «5.2:1») — це контраст тексту з фоном під ним. Чим більше — тим краще видно.</li>
+          <li>Щоб змінити ці кольори, не редагуй тут нічого — йди на вкладку 🎯 Palette і зміни ролі <b>text</b>, <b>muted</b>, <b>accent</b> або <b>primary</b> (кнопка бере колір з primary).</li>
+        </ol>
+      </HelpBox>
       {items.map((it) => {
         const bg = it.bg || palette.background
         const ratio = C.contrastRatio(it.color, bg)
@@ -590,12 +683,38 @@ const PREVIEW_COMPONENTS = {
   graphic: PreviewGraphic,
 }
 
-function DesignPreviewTab({ palette }) {
+function DesignPreviewTab({ palette, goTo }) {
   const [type, setType] = useState('website')
   const Comp = PREVIEW_COMPONENTS[type]
   return (
     <div>
       <p className="cl-tab-desc">Як поточна палітра виглядає у справжньому макеті — обери напрямок.</p>
+      <HelpBox>
+        <p><b>Головне: ця вкладка нічого сама не редагує.</b> Вона тільки ПОКАЗУЄ, як твоя палітра виглядає у справжньому макеті — сайті, застосунку, упаковці тощо.</p>
+        <ol>
+          <li>Кнопки вгорі (Website, App, Game UI, Logo…) — перемикають лише ТИП макета, який показується. Кольори від цього не змінюються.</li>
+          <li>Щоб <b>змінити кольорову гаму</b> у макеті, є два способи:
+            <ul>
+              <li><b>Швидко, все одразу:</b> відкрий вкладку 🎨 Color Picker і зміни базовий колір (нове фото, HEX-код чи повзунки) — уся палітра перерахується сама, і тут одразу з’являться нові кольори.</li>
+              <li><b>Точково, один колір:</b> відкрий вкладку 🎯 Palette і зміни одну конкретну роль, наприклад тільки «Основний» (primary) — тоді в макеті зміниться лише те, що використовує саме цю роль (наприклад, тільки кнопки й шапка), а решта залишиться як є.</li>
+            </ul>
+          </li>
+          <li>Нічого зберігати не треба — щойно змінив колір на Palette чи Picker, повертайся сюди (або просто перемкни вкладку назад) і побачиш оновлений макет.</li>
+        </ol>
+        <div className="cl-picker-top" style={{ marginTop: 6 }}>
+          <button className="harmony-btn" onClick={() => goTo('palette')}>🎯 Відкрити Palette (змінити окремі кольори)</button>
+          <button className="harmony-btn" onClick={() => goTo('picker')}>🎨 Відкрити Color Picker (змінити все одразу)</button>
+        </div>
+        <p className="cl-help-legend-title">Який колір за що відповідає в макетах нижче:</p>
+        <ul className="cl-help-legend">
+          {Object.entries(C.SEMANTIC_LABELS).map(([role, label]) => (
+            <li key={role}>
+              <span className="cl-legend-swatch" style={{ background: palette[role] }} />
+              <span><b>{label}</b> ({role}) — {ROLE_NOTES[role]}</span>
+            </li>
+          ))}
+        </ul>
+      </HelpBox>
       <div className="harmony-select">
         {PREVIEW_TYPES.map((t) => (
           <button key={t.key} className={'harmony-btn' + (type === t.key ? ' active' : '')} onClick={() => setType(t.key)}>
@@ -649,6 +768,14 @@ function ImageExtractTab({ onPick }) {
   return (
     <div>
       <p className="cl-tab-desc">Завантаж зображення — Color Lab знайде домінантні кольори й побудує з них палітру.</p>
+      <HelpBox>
+        <p>Маєш фото, логотип чи референс, і хочеш побудувати палітру саме з нього? Ця вкладка автоматично знаходить, які кольори на картинці зустрічаються найчастіше.</p>
+        <ol>
+          <li>Натисни на поле вибору файлу й обери зображення на своєму пристрої.</li>
+          <li>Color Lab проаналізує картинку й покаже 6 найголовніших кольорів.</li>
+          <li>Клікни на будь-який знайдений колір, щоб зробити його новим базовим (переходить на Color Picker), або збережи все кнопками нижче.</li>
+        </ol>
+      </HelpBox>
       <input type="file" accept="image/*" onChange={handleFile} />
       {error && <p className="pf-upload-error">{error}</p>}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -681,6 +808,10 @@ function InspectorTab() {
   return (
     <div>
       <p className="cl-tab-desc">Встав будь-який колір і отримай повний розбір — незалежно від базового кольору вкладки Picker.</p>
+      <HelpBox>
+        <p>Ця вкладка не звʼязана з рештою Color Lab — вона не впливає на палітру чи превʼю. Зручно, коли просто хочеш подивитись інформацію про якийсь окремий колір (наприклад, побачений на чужому сайті), не чіпаючи свій робочий базовий колір.</p>
+        <p>Введи HEX-код або вибери колір — і одразу побачиш усі його формати (RGB, HSL, CMYK, LAB, LCH), назву та теги «теплий/холодний», «світлий/темний».</p>
+      </HelpBox>
       <div className="cl-picker-top">
         <input type="color" className="cl-swatch-input" value={safeHex(hex)} onChange={(e) => { setHex(e.target.value); setText(e.target.value) }} />
         <input className="cl-hex-input" value={text} onChange={(e) => { setText(e.target.value); if (C.isValidHex(e.target.value)) setHex(safeHex(e.target.value)) }} spellCheck={false} />
@@ -714,6 +845,14 @@ function LightDarkTab({ hex }) {
   return (
     <div>
       <p className="cl-tab-desc">Автоматично згенеровані світла й темна теми з одного базового кольору.</p>
+      <HelpBox>
+        <p>Багато сайтів і застосунків мають перемикач ☀️/🌙 (світла/темна тема). Тут з одного базового кольору (вкладка Color Picker) автоматично будуються обидві версії одразу — так, щоб текст залишався читабельним на обох фонах.</p>
+        <ol>
+          <li>Зліва — світла тема, справа — темна. Обидві живі: клацни по CopyField, щоб скопіювати окрему змінну.</li>
+          <li>Щоб поміняти кольори теми — зміни базовий колір на Color Picker, теми перерахуються самі.</li>
+          <li>Готовий блок CSS унизу можна вставити прямо в проєкт: <code>:root</code> — стилі за замовчуванням (світла тема), <code>[data-theme="dark"]</code> — застосовуються, коли на сторінці стоїть темна тема.</li>
+        </ol>
+      </HelpBox>
       <div className="cl-theme-pair">
         <ThemeMini label="☀️ Light" theme={light} />
         <ThemeMini label="🌙 Dark" theme={dark} />
@@ -742,6 +881,17 @@ function ExperimentTab({ hex, setHex }) {
   return (
     <div>
       <p className="cl-tab-desc">Живі повзунки — експериментуй, не змінюючи базовий колір, поки не натиснеш «Застосувати».</p>
+      <HelpBox>
+        <p>Це «пісочниця» — можна крутити будь-який повзунок і одразу бачити результат у квадратику прев’ю вище, нічого при цьому не ламаючи. Базовий колір Color Lab не зміниться, поки сам не натиснеш кнопку.</p>
+        <ul>
+          <li><b>Hue</b> — відтінок (положення на кольоровому колі: червоний → жовтий → зелений → синій → фіолетовий → знову червоний).</li>
+          <li><b>Saturation</b> — насиченість: 0% = сірий, 100% = максимально яскравий колір.</li>
+          <li><b>Lightness</b> — світлота: 0% = чорний, 100% = білий, 50% = «чистий» колір.</li>
+          <li><b>Opacity</b> — прозорість квадратика прев’ю (не впливає на сам HEX-код).</li>
+          <li><b>Brightness / Contrast</b> — візуальні фільтри, як у фоторедакторі, теж лише для попереднього перегляду.</li>
+        </ul>
+        <p>Коли підібрав(ла) те, що подобається — натисни <b>«Застосувати як базовий колір»</b>, і саме цей колір стане новим базовим для всього Color Lab.</p>
+      </HelpBox>
       <div className="cl-experiment-preview" style={{ background: computed, opacity: opacity / 100, filter: `brightness(${brightness}%) contrast(${contrast}%)` }} />
       <div className="cl-editrow"><label>Hue {Math.round(h)}° <input type="range" min="0" max="360" value={h} onChange={(e) => setH(Number(e.target.value))} /></label></div>
       <div className="cl-editrow"><label>Saturation {Math.round(s)}% <input type="range" min="0" max="100" value={s} onChange={(e) => setS(Number(e.target.value))} /></label></div>
@@ -763,6 +913,14 @@ function SavedTab({ onPick }) {
   const { savedColors, removeColor, palettes, removePalette, savedGradients, removeGradient } = useProgress()
   return (
     <div>
+      <HelpBox>
+        <p>Усе, що ти зберігав(ла) кнопкою 💾 на будь-якій вкладці — окремі кольори, готові гармонії/палітри, градієнти — опиняється тут. Це твоя особиста колекція.</p>
+        <ol>
+          <li>Клікни на збережений колір, щоб одразу зробити його новим базовим (переходить на Color Picker).</li>
+          <li>✕ видаляє елемент назавжди.</li>
+          <li>Усе зберігається у твоєму акаунті (через Supabase) — доступно з будь-якого пристрою, де ти увійшла в акаунт, нічого не втратиться при перезавантаженні сторінки.</li>
+        </ol>
+      </HelpBox>
       <div className="cl-section-title">Кольори</div>
       {savedColors.length === 0 && <div className="empty-state">Ще немає збережених кольорів.</div>}
       <div className="cl-saved-colors">
@@ -842,6 +1000,17 @@ function ExportTab({ palette, baseHex }) {
   return (
     <div>
       <p className="cl-tab-desc">Експорт поточної палітри (з вкладки Palette) у зручному форматі.</p>
+      <HelpBox>
+        <p>Коли палітра готова — тут можна забрати її з собою, у форматі, який підходить для роботи.</p>
+        <ul>
+          <li><b>Copy CSS Variables</b> — список кольорів як CSS-змінні (<code>--primary: ...</code>), вставляється в <code>:root</code> будь-якого сайту.</li>
+          <li><b>Copy CSS</b> — готовий приклад стилів кнопки й картки, які вже використовують палітру.</li>
+          <li><b>Copy JSON</b> — палітра у форматі даних, зручно для розробника, який підключає її в код.</li>
+          <li><b>⬇ SVG / ⬇ PNG</b> — качає картинку з кольоровими прямокутниками й підписами (для показу клієнту чи в презентації).</li>
+          <li><b>⬇ JSON</b> — той самий JSON, але одразу файлом на диск.</li>
+        </ul>
+        <p>Кнопки з написом «Copy» кладуть текст у буфер обміну — просто натисни Ctrl+V (Cmd+V на Mac) там, куди хочеш вставити.</p>
+      </HelpBox>
       <div className="cl-section-title">Текст</div>
       <CopyField label="HEX (base)" value={baseHex.toUpperCase()} />
       <div className="cl-picker-top" style={{ marginTop: 10 }}>
@@ -897,7 +1066,7 @@ export default function ColorLab() {
         {tab === 'contrast' && <ContrastTab palette={palette} />}
         {tab === 'gradient' && <GradientTab baseHex={baseHex} />}
         {tab === 'typography' && <TypographyTab palette={palette} />}
-        {tab === 'preview' && <DesignPreviewTab palette={palette} />}
+        {tab === 'preview' && <DesignPreviewTab palette={palette} goTo={setTab} />}
         {tab === 'imageExtract' && <ImageExtractTab onPick={pickAsBase} />}
         {tab === 'inspector' && <InspectorTab />}
         {tab === 'lightDark' && <LightDarkTab hex={baseHex} />}
