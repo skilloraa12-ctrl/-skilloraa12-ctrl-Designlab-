@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
-import { supabase } from './supabaseClient.js'
-
-// This Supabase project also backs a separate platform (00100101), sharing
-// the same auth.users pool. Being signed in isn't enough on its own to see
-// Designlab specifically — course_access (email, app_id) is the extra layer
-// that says which app(s) a given email is actually allowed into. See
-// https://github.com/skilloraa12-ctrl/00100101-platform/blob/main/supabase/course_access.sql
-// for the table + RLS policy (same table, this platform's own app_id).
-const APP_ID = 'designlab'
+import { supabase, APP_ID } from './supabaseClient.js'
 
 export default function RequireAuth({ children }) {
   const { user, loading, profile, profileLoading, logout } = useAuth()
@@ -59,9 +51,9 @@ export default function RequireAuth({ children }) {
   if (access === 'denied') {
     return (
       <div style={{ maxWidth: 380 }}>
-        <h1 className="page-title">Доступ ще не надано</h1>
+        <h1 className="page-title">Доступу немає</h1>
         <p className="page-sub">{user.email}</p>
-        <p className="page-sub">Цей акаунт існує, але ще не має доступу саме до Designlab. Зверніться до адміністратора.</p>
+        <p className="page-sub">Зверніться до адміністратора.</p>
         <button className="complete-btn" onClick={logout}>Вийти</button>
       </div>
     )

@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext.jsx'
 function friendlyError(error) {
   const msg = error?.message || ''
   if (msg.toLowerCase().includes('signups not allowed') || error?.status === 400 || error?.status === 422) {
-    return 'Ця пошта ще не активована для доступу до курсу. Зверніться до адміністратора, щоб отримати доступ.'
+    return 'Доступу немає. Зверніться до адміністратора.'
   }
   return msg || 'Щось пішло не так. Спробуйте ще раз.'
 }

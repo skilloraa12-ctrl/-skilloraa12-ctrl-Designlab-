@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { supabase } from './supabaseClient.js'
+import { supabase, APP_ID } from './supabaseClient.js'
 
 const AuthContext = createContext(null)
 
@@ -46,6 +46,17 @@ export function AuthProvider({ children }) {
   }, [loadProfile])
 
   const sendMagicLink = useCallback(async (email) => {
+    // Checked BEFORE requesting the magic link: without this, anyone who
+    // exists in auth.users (e.g. invited on a different platform sharing
+    // this Supabase project) would still receive a sign-in email for
+    // Designlab, even with zero course_access grant here.
+    const { data: allowed, error: rpcError } = await supabase.rpc('has_course_access', {
+      check_email: email,
+      check_app_id: APP_ID,
+    })
+    if (rpcError || !allowed) {
+      return { error: { message: 'Signups not allowed for this app' } }
+    }
     const { error } = await supabase.auth.signInWithOtp({
       shouldCreateUser: false,
       email,
