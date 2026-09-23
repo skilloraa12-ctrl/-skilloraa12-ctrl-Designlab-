@@ -12,6 +12,8 @@ const EMPTY_STATE = {
   quizPassed: {},
   portfolio: [],
   palettes: [],
+  savedColors: [],
+  savedGradients: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -112,6 +114,24 @@ export function ProgressProvider({ children }) {
     setState((prev) => ({ ...prev, palettes: prev.palettes.filter((_, i) => i !== index) }))
   }, [])
 
+  const saveColor = useCallback((hex) => {
+    setState((prev) => (
+      prev.savedColors.includes(hex) ? prev : { ...prev, savedColors: [hex, ...prev.savedColors] }
+    ))
+  }, [])
+
+  const removeColor = useCallback((hex) => {
+    setState((prev) => ({ ...prev, savedColors: prev.savedColors.filter((c) => c !== hex) }))
+  }, [])
+
+  const saveGradient = useCallback((gradient) => {
+    setState((prev) => ({ ...prev, savedGradients: [{ id: crypto.randomUUID(), ...gradient }, ...prev.savedGradients] }))
+  }, [])
+
+  const removeGradient = useCallback((id) => {
+    setState((prev) => ({ ...prev, savedGradients: prev.savedGradients.filter((g) => g.id !== id) }))
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -161,6 +181,8 @@ export function ProgressProvider({ children }) {
     quizPassed: state.quizPassed, passQuiz, quizPassedCount,
     portfolio: state.portfolio, addPortfolioItem, removePortfolioItem,
     palettes: state.palettes, savePalette, removePalette,
+    savedColors: state.savedColors, saveColor, removeColor,
+    savedGradients: state.savedGradients, saveGradient, removeGradient,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,
