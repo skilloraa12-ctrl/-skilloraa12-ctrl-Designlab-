@@ -511,6 +511,28 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .cl-help-legend li { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 0; }
 .cl-legend-swatch { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--line); flex: none; margin-top: 1px; }
 
+.cl-beginner-note { font-size: 12px; color: var(--muted); margin-top: 10px; font-style: italic; }
+
+.cl-preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.cl-preset-btn {
+  border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 16px 10px 8px; cursor: pointer;
+  min-width: 92px; display: flex; align-items: flex-end; justify-content: center;
+}
+.cl-preset-btn span {
+  font-size: 10.5px; font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5);
+  background: rgba(0,0,0,.3); padding: 2px 7px; border-radius: 4px;
+}
+
+.cl-recent-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.cl-recent-swatch { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; padding: 0; }
+.cl-recent-swatch:hover { transform: scale(1.1); }
+
+.cl-cvd-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.cl-cvd-row { display: flex; align-items: center; gap: 10px; }
+.cl-cvd-label { width: 90px; flex: none; font-size: 12px; color: var(--muted); }
+.cl-cvd-swatch { flex: 1; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 10.5px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.cl-cvd-arrow { color: var(--muted); flex: none; }
+
 @media (max-width: 620px) {
   .cl-formats-grid { grid-template-columns: 1fr 1fr; }
   .cl-shade-row { grid-template-columns: repeat(4, 1fr); }
@@ -518,4 +540,80 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
   .cl-theme-pair { grid-template-columns: 1fr; }
   .cl-palette-grid { grid-template-columns: 1fr 1fr; }
   .cl-help-body { max-width: 100%; }
+  .cl-cvd-label { width: 68px; font-size: 10.5px; }
+}
+
+/* ---------- Lab Design System (shared by every /labs/* Lab) ---------- */
+
+.lab-shell { max-width: 900px; }
+.lab-shell-header { margin-bottom: 22px; }
+.lab-shell-back { font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; margin-bottom: 10px; }
+.lab-shell-back:hover { color: var(--ink); }
+.lab-shell-title-row { display: flex; align-items: center; gap: 10px; }
+.lab-shell-title { margin-bottom: 4px; }
+.lab-shell-sub { margin-bottom: 18px; }
+.lab-shell-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lab-toolbar-group { display: flex; gap: 6px; }
+.lab-tool-btn {
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface);
+  padding: 7px 12px; font-size: 12.5px; cursor: pointer; color: var(--ink);
+}
+.lab-tool-btn:disabled { opacity: .35; cursor: not-allowed; }
+.lab-tool-btn:not(:disabled):hover { border-color: var(--accent); }
+.lab-mode-toggle {
+  border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--surface);
+  padding: 7px 14px; font-size: 12.5px; cursor: pointer; color: var(--ink);
+}
+.lab-mode-toggle:hover { border-color: var(--accent); }
+.lab-shell-body { margin-top: 4px; }
+
+.lab-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: var(--radius-pill);
+  font-size: 13px; box-shadow: var(--shadow-md); z-index: 200; pointer-events: none;
+}
+
+.lab-infotip { position: relative; display: inline-flex; margin-left: 4px; }
+.lab-infotip-btn {
+  border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--muted);
+  width: 22px; height: 22px; font-size: 12px; cursor: pointer; padding: 0; line-height: 1;
+}
+.lab-infotip-btn:hover { border-color: var(--accent); color: var(--ink); }
+.lab-infotip-pop {
+  position: absolute; z-index: 40; top: 28px; left: 0; width: 260px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md); padding: 12px; font-size: 12px; line-height: 1.5; color: var(--muted);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.lab-infotip-pop b { color: var(--ink); }
+
+/* ---------- Labs Home (/labs) ---------- */
+
+.lab-search { max-width: 420px; margin-bottom: 18px; }
+.lab-filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.lab-sort-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; }
+
+.lab-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.lab-card {
+  display: block; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 16px; box-shadow: var(--shadow-sm); transition: box-shadow .15s ease, transform .15s ease;
+}
+.lab-card--available { cursor: pointer; }
+.lab-card--available:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--accent); }
+.lab-card--soon { opacity: .6; }
+.lab-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.lab-card-icon { font-size: 26px; line-height: 1; }
+.lab-card-fav { border: none; background: none; cursor: pointer; font-size: 16px; color: var(--amber); padding: 0; }
+.lab-card-badge { font-size: 10.5px; color: var(--muted); border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 3px 9px; }
+.lab-card-title { font-size: 14.5px; font-weight: 600; margin-bottom: 6px; }
+.lab-card-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 0 0 10px; }
+.lab-card-meta { font-size: 11px; color: var(--muted); }
+.lab-card-open { display: block; margin-top: 10px; font-size: 12px; color: var(--accent); font-weight: 600; }
+
+@media (max-width: 620px) {
+  .lab-shell-toolbar { gap: 8px; }
+  .lab-card-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 420px) {
+  .lab-card-grid { grid-template-columns: 1fr; }
 }

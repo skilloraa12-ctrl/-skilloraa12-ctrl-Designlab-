@@ -15,6 +15,7 @@ import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
 import RequireAuth from './RequireAuth.jsx'
 import Welcome from './Welcome.jsx'
+import LabsHome from './LabsHome.jsx'
 
 export default function App() {
   return (
@@ -33,6 +34,8 @@ export default function App() {
           <Route path="/achievements" element={<RequireAuth><Achievements /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/color-lab" element={<RequireAuth><ColorLabPage /></RequireAuth>} />
+          <Route path="/labs" element={<RequireAuth><LabsHome /></RequireAuth>} />
+          <Route path="/labs/color" element={<RequireAuth><ColorLabPage /></RequireAuth>} />
           <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />

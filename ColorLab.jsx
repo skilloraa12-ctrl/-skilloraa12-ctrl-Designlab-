@@ -1,6 +1,15 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useProgress } from './ProgressContext.jsx'
 import * as C from './colorMath.js'
+import LabShell from './labs/LabShell.jsx'
+import LabInfoTip from './labs/LabInfoTip.jsx'
+import { useLabHistory } from './labs/useLabHistory.js'
+import { useLabFavorites } from './labs/useLabFavorites.js'
+import { useLabRecent } from './labs/useLabRecent.js'
+import { useLabMode } from './labs/useLabMode.js'
+import { useLabToast } from './labs/useLabToast.js'
+import { useLabShortcuts } from './labs/useLabShortcuts.js'
+import { simulateColorBlindness, CVD_TYPES, CVD_DESCRIPTIONS } from './labs/colorBlindness.js'
 
 const TABS = [
   { key: 'picker', icon: '🎨', label: 'Color Picker' },
@@ -38,13 +47,16 @@ function CopyField({ label, value }) {
   )
 }
 
-function ColorFormatsTable({ hex }) {
+function ColorFormatsTable({ hex, alpha = 1, isPro = true }) {
   const { r, g, b } = C.hexToRgb(hex)
   const hsl = C.rgbToHsl(r, g, b)
   const hsv = C.rgbToHsv(r, g, b)
   const cmyk = C.rgbToCmyk(r, g, b)
+  const hwb = C.rgbToHwb(r, g, b)
   const lab = C.rgbToLab(r, g, b)
   const lch = C.rgbToLch(r, g, b)
+  const oklab = C.rgbToOklab(r, g, b)
+  const oklch = C.rgbToOklch(r, g, b)
   const name = C.nearestColorName(hex)
   const light = C.isLight(hex)
   const warm = C.isWarm(hex)
@@ -58,15 +70,24 @@ function ColorFormatsTable({ hex }) {
       </div>
       <div className="cl-formats-grid">
         <CopyField label="HEX" value={hex.toUpperCase()} />
+        <CopyField label="HEXA" value={C.rgbaToHexa(r, g, b, alpha).toUpperCase()} />
         <CopyField label="RGB" value={`rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`} />
-        <CopyField label="RGBA" value={`rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`} />
+        <CopyField label="RGBA" value={`rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, ${alpha})`} />
         <CopyField label="HSL" value={`hsl(${Math.round(hsl.h)}, ${Math.round(hsl.s)}%, ${Math.round(hsl.l)}%)`} />
-        <CopyField label="HSLA" value={`hsla(${Math.round(hsl.h)}, ${Math.round(hsl.s)}%, ${Math.round(hsl.l)}%, 1)`} />
+        <CopyField label="HSLA" value={`hsla(${Math.round(hsl.h)}, ${Math.round(hsl.s)}%, ${Math.round(hsl.l)}%, ${alpha})`} />
         <CopyField label="HSV / HSB" value={`hsv(${Math.round(hsv.h)}, ${Math.round(hsv.s)}%, ${Math.round(hsv.v)}%)`} />
         <CopyField label="CMYK" value={`cmyk(${Math.round(cmyk.c)}%, ${Math.round(cmyk.m)}%, ${Math.round(cmyk.y)}%, ${Math.round(cmyk.k)}%)`} />
-        <CopyField label="LAB" value={`lab(${lab.l.toFixed(1)}, ${lab.a.toFixed(1)}, ${lab.b.toFixed(1)})`} />
-        <CopyField label="LCH" value={`lch(${lch.l.toFixed(1)}, ${lch.c.toFixed(1)}, ${lch.h.toFixed(1)})`} />
+        {isPro && <CopyField label="HWB" value={`hwb(${Math.round(hwb.h)}, ${Math.round(hwb.w)}%, ${Math.round(hwb.b)}%)`} />}
+        {isPro && <CopyField label="LAB" value={`lab(${lab.l.toFixed(1)}, ${lab.a.toFixed(1)}, ${lab.b.toFixed(1)})`} />}
+        {isPro && <CopyField label="LCH" value={`lch(${lch.l.toFixed(1)}, ${lch.c.toFixed(1)}, ${lch.h.toFixed(1)})`} />}
+        {isPro && <CopyField label="OKLAB" value={`oklab(${oklab.l.toFixed(3)} ${oklab.a.toFixed(3)} ${oklab.b.toFixed(3)})`} />}
+        {isPro && <CopyField label="OKLCH" value={`oklch(${oklch.l.toFixed(3)} ${oklch.c.toFixed(3)} ${oklch.h.toFixed(1)})`} />}
       </div>
+      {!isPro && (
+        <p className="cl-beginner-note">
+          У режимі Beginner приховано точні формати (LAB, LCH, OKLAB, OKLCH, HWB) — перемкни на 🔵 Pro вгорі сторінки, щоб побачити їх.
+        </p>
+      )}
     </div>
   )
 }
@@ -82,11 +103,39 @@ function HelpBox({ children }) {
 
 // ---------- 1. Color Picker ----------
 
-function PickerTab({ hex, setHex }) {
+const PICKER_PRESETS = [
+  { label: 'Modern Blue', hex: '#3E63DD' },
+  { label: 'Warm', hex: '#E0673E' },
+  { label: 'Neutral', hex: '#6B7280' },
+  { label: 'Dark UI', hex: '#7C5CFF' },
+  { label: 'Light UI', hex: '#2F6FED' },
+  { label: 'Accessibility-safe', hex: '#0B5FFF' },
+]
+
+function PickerTab({ hex, setHex, isPro }) {
   const [text, setText] = useState(hex)
+  const [alpha, setAlpha] = useState(1)
   const { saveColor } = useProgress()
+  const { toggle: toggleFavorite, isFavorite } = useLabFavorites('color')
+  const { items: recentColors, push: pushRecent } = useLabRecent('color')
   const { r, g, b } = C.hexToRgb(hex)
   const hsl = C.rgbToHsl(r, g, b)
+  const eyedropperSupported = typeof window !== 'undefined' && 'EyeDropper' in window
+
+  // hex can change from outside this tab too (Undo/Redo, presets applied
+  // via keyboard, a color picked on another tab) - keep the text field in
+  // sync whenever that happens, without fighting the user's own typing
+  // (commitText only calls setHex once the typed value is a valid hex,
+  // at which point hex === what they just typed, so this is a no-op then).
+  useEffect(() => {
+    setText(hex)
+  }, [hex])
+
+  useEffect(() => {
+    const t = setTimeout(() => pushRecent(hex), 800)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hex])
 
   function commitText(v) {
     setText(v)
@@ -107,6 +156,20 @@ function PickerTab({ hex, setHex }) {
     setHex(h); setText(h)
   }
 
+  function applyPreset(p) {
+    setHex(p.hex); setText(p.hex)
+  }
+
+  async function pickWithEyedropper() {
+    try {
+      const ed = new window.EyeDropper()
+      const result = await ed.open()
+      setHex(result.sRGBHex); setText(result.sRGBHex)
+    } catch {
+      // користувач скасував вибір піпеткою — нічого робити не треба
+    }
+  }
+
   return (
     <div>
       <p className="cl-tab-desc">Базовий колір для всього Color Lab — гармонії, палітра, відтінки й превʼю нижче будуються саме з нього.</p>
@@ -114,9 +177,10 @@ function PickerTab({ hex, setHex }) {
         <ol>
           <li>Обери колір трьома способами: клікни на кольоровий квадратик зліва, впиши HEX-код у поле (наприклад <code>#3E37E0</code>), або зміни цифри R/G/B чи H/S/L нижче.</li>
           <li>Цей колір — <b>головний (базовий)</b> для всього Color Lab. Щойно він зміниться — автоматично перерахуються вкладки Harmonies, Palette, Shades, Contrast, Typography і Design Preview.</li>
-          <li>Кнопка <b>🎲 Random</b> підбирає випадковий колір, якщо не знаєш, з чого почати.</li>
-          <li>Кнопка <b>💾 Save</b> кладе колір у вкладку Saved, щоб не загубити — звідти його завжди можна повернути.</li>
-          <li>Таблиця «Усі формати» внизу — це той самий колір, записаний різними «мовами»: RGB/HSL для сайтів, CMYK для друку, LAB/LCH для точних розрахунків. Клікни на будь-яке поле, щоб скопіювати саме той запис.</li>
+          <li>Кнопка <b>💧 Піпетка</b> (якщо браузер підтримує) бере колір із будь-якого місця на екрані. Кнопка <b>🎲 Random</b> підбирає випадковий колір.</li>
+          <li>Кнопка <b>☆ Обране</b> зберігає колір у персональний список обраного (окремо від проєктних збережень), а <b>💾 Save</b> кладе колір у вкладку Saved.</li>
+          <li>Нижче — пресети (готові стартові кольори) і «Недавні» — останні кольори, якими ти користувалась(-ся) тут.</li>
+          <li>Таблиця «Усі формати» внизу — це той самий колір, записаний різними «мовами»: RGB/HSL для сайтів, CMYK для друку, LAB/LCH/OKLAB/OKLCH для точних розрахунків (видно в режимі 🔵 Pro). Клікни на будь-яке поле, щоб скопіювати саме той запис.</li>
         </ol>
       </HelpBox>
       <div className="cl-picker-top">
@@ -127,9 +191,12 @@ function PickerTab({ hex, setHex }) {
           onChange={(e) => commitText(e.target.value)}
           spellCheck={false}
         />
+        {eyedropperSupported && <button className="harmony-btn" onClick={pickWithEyedropper}>💧 Піпетка</button>}
         <button className="harmony-btn" onClick={randomColor}>🎲 Random</button>
         <button className="harmony-btn" onClick={() => copy(hex.toUpperCase())}>Copy HEX</button>
-        <button className="harmony-btn" onClick={() => copy(`rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`)}>Copy RGB</button>
+        <button className={'harmony-btn' + (isFavorite(hex) ? ' active' : '')} onClick={() => toggleFavorite(hex)}>
+          {isFavorite(hex) ? '★' : '☆'} Обране
+        </button>
         <button className="pf-add-btn" onClick={() => saveColor(hex)}>💾 Save</button>
       </div>
 
@@ -143,9 +210,32 @@ function PickerTab({ hex, setHex }) {
         <label>S <input type="number" min="0" max="100" value={Math.round(hsl.s)} onChange={(e) => setHsl(hsl.h, Number(e.target.value), hsl.l)} /></label>
         <label>L <input type="number" min="0" max="100" value={Math.round(hsl.l)} onChange={(e) => setHsl(hsl.h, hsl.s, Number(e.target.value))} /></label>
       </div>
+      <div className="cl-editrow">
+        <label>Alpha {Math.round(alpha * 100)}% <input type="range" min="0" max="100" value={Math.round(alpha * 100)} onChange={(e) => setAlpha(Number(e.target.value) / 100)} /></label>
+      </div>
+
+      <div className="cl-section-title">Пресети</div>
+      <div className="cl-preset-row">
+        {PICKER_PRESETS.map((p) => (
+          <button key={p.label} className="cl-preset-btn" style={{ background: p.hex }} onClick={() => applyPreset(p)} title={p.hex}>
+            <span>{p.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {recentColors.length > 0 && (
+        <>
+          <div className="cl-section-title">Недавні</div>
+          <div className="cl-recent-row">
+            {recentColors.map((hx) => (
+              <button key={hx} className="cl-recent-swatch" style={{ background: hx }} onClick={() => { setHex(hx); setText(hx) }} title={hx} />
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="cl-section-title">Усі формати</div>
-      <ColorFormatsTable hex={hex} />
+      <ColorFormatsTable hex={hex} alpha={alpha} isPro={isPro} />
     </div>
   )
 }
@@ -341,6 +431,38 @@ function ContrastRow({ label, fg, bg }) {
   )
 }
 
+const CVD_ROLES = ['primary', 'secondary', 'accent', 'success', 'warning', 'error', 'info']
+
+function ColorBlindSimulator({ palette }) {
+  const [type, setType] = useState('protanopia')
+  return (
+    <div>
+      <div className="harmony-select">
+        {Object.entries(CVD_TYPES).filter(([key]) => key !== 'none').map(([key, label]) => (
+          <button key={key} className={'harmony-btn' + (type === key ? ' active' : '')} onClick={() => setType(key)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      <p className="cl-harmony-info">{CVD_DESCRIPTIONS[type]}</p>
+      <div className="cl-cvd-grid">
+        {CVD_ROLES.map((role) => {
+          const original = palette[role]
+          const simulated = simulateColorBlindness(original, type)
+          return (
+            <div key={role} className="cl-cvd-row">
+              <div className="cl-cvd-label">{C.SEMANTIC_LABELS[role]}</div>
+              <div className="cl-cvd-swatch" style={{ background: original }}>Норма</div>
+              <span className="cl-cvd-arrow">→</span>
+              <div className="cl-cvd-swatch" style={{ background: simulated }}>Симуляція</div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function ContrastTab({ palette }) {
   const [fg, setFg] = useState(palette.text)
   const [bg, setBg] = useState(palette.background)
@@ -354,6 +476,7 @@ function ContrastTab({ palette }) {
           <li>WCAG — це міжнародний стандарт доступності. Він каже: для звичайного тексту потрібне співвідношення контрасту мінімум <b>4.5:1</b> (рівень AA) або <b>7:1</b> (суворіший рівень AAA); для великого тексту вимоги мʼякші.</li>
           <li>Зелена галочка ✓ = пройшло перевірку, можна використовувати. Червоний хрестик ✕ = текст буде важко читати, варто замінити колір фону або тексту.</li>
           <li>Обери колір тексту й фону вгорі, щоб перевірити довільну пару кольорів, або дивись автоматичну перевірку кожної кнопки нижче.</li>
+          <li>Внизу — симуляція дальтонізму: показує, як твою палітру бачить людина з тим чи іншим типом порушення кольорового зору.</li>
         </ol>
       </HelpBox>
       <div className="cl-editrow">
@@ -372,6 +495,9 @@ function ContrastTab({ palette }) {
         const best = onWhite >= onBlack ? '#FFFFFF' : '#000000'
         return <ContrastRow key={role} label={`${C.SEMANTIC_LABELS[role]} — ${best === '#FFFFFF' ? 'білий' : 'чорний'} текст`} fg={best} bg={palette[role]} />
       })}
+
+      <div className="cl-section-title">Симуляція дальтонізму</div>
+      <ColorBlindSimulator palette={palette} />
     </div>
   )
 }
@@ -1032,48 +1158,122 @@ function ExportTab({ palette, baseHex }) {
 // ---------- Root ----------
 
 export default function ColorLab() {
-  const [baseHex, setBaseHex] = useState('#3E37E0')
+  const [baseHex, setBaseHexState] = useState('#3E37E0')
+  const [paletteOverrides, setPaletteOverridesState] = useState({})
   const [tab, setTab] = useState('picker')
-  const [paletteOverrides, setPaletteOverrides] = useState({})
+  const { savePalette } = useProgress()
+
+  // Undo/redo history: rapid edits (dragging a slider, typing digit by
+  // digit) are debounced into one history entry instead of flooding the
+  // stack, but every commit is a real, restorable snapshot.
+  const hist = useLabHistory({ baseHex: '#3E37E0', paletteOverrides: {} })
+  const baseHexRef = useRef(baseHex)
+  const overridesRef = useRef(paletteOverrides)
+  const debounceRef = useRef(null)
+
+  function scheduleHistoryCommit() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      hist.set({ baseHex: baseHexRef.current, paletteOverrides: overridesRef.current })
+    }, 400)
+  }
+
+  function setBaseHex(hexValue) {
+    baseHexRef.current = hexValue
+    setBaseHexState(hexValue)
+    scheduleHistoryCommit()
+  }
+  function setPaletteColor(role, hx) {
+    overridesRef.current = { ...overridesRef.current, [role]: hx }
+    setPaletteOverridesState(overridesRef.current)
+    scheduleHistoryCommit()
+  }
+  function resetPaletteOverrides() {
+    overridesRef.current = {}
+    setPaletteOverridesState({})
+    scheduleHistoryCommit()
+  }
+  function handleUndo() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    hist.undo()
+  }
+  function handleRedo() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    hist.redo()
+  }
+  useEffect(() => {
+    baseHexRef.current = hist.value.baseHex
+    overridesRef.current = hist.value.paletteOverrides
+    setBaseHexState(hist.value.baseHex)
+    setPaletteOverridesState(hist.value.paletteOverrides)
+  }, [hist.value])
+
+  const labMode = useLabMode()
+  const toastApi = useLabToast()
+  const { push: pushRecentLab } = useLabRecent('lab')
+
+  useEffect(() => {
+    pushRecentLab('color')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const palette = useMemo(() => ({ ...C.semanticPalette(baseHex), ...paletteOverrides }), [baseHex, paletteOverrides])
 
-  function setPaletteColor(role, hx) {
-    setPaletteOverrides((prev) => ({ ...prev, [role]: hx }))
-  }
-  function resetPaletteOverrides() {
-    setPaletteOverrides({})
-  }
   function pickAsBase(hx) {
     setBaseHex(safeHex(hx))
     setTab('picker')
   }
 
+  useLabShortcuts({
+    onUndo: hist.canUndo ? handleUndo : undefined,
+    onRedo: hist.canRedo ? handleRedo : undefined,
+    onSave: () => { savePalette(Object.values(palette)); toastApi.show('✓ Палітру збережено') },
+    onCopy: () => { copy(baseHex.toUpperCase()); toastApi.show('✓ HEX скопійовано') },
+  })
+
   return (
-    <div className="cl">
-      <div className="cl-tabs">
-        {TABS.map((t) => (
-          <button key={t.key} className={'cl-tab' + (tab === t.key ? ' active' : '')} onClick={() => setTab(t.key)}>
-            <span className="cl-tab-icon">{t.icon}</span>{t.label}
-          </button>
-        ))}
+    <LabShell
+      title="Color Lab"
+      subtitle="Повноцінна кольорова лабораторія для всіх напрямків дизайну — від вибору кольору до готової палітри, градієнтів і превʼю в реальних макетах."
+      icon="🎨"
+      mode={labMode.mode}
+      onToggleMode={labMode.toggle}
+      canUndo={hist.canUndo}
+      canRedo={hist.canRedo}
+      onUndo={handleUndo}
+      onRedo={handleRedo}
+      toast={toastApi.toast}
+      extra={
+        <LabInfoTip title="Гарячі клавіші">
+          Ctrl/Cmd+Z — Undo · Ctrl/Cmd+Shift+Z — Redo · Ctrl/Cmd+S — зберегти палітру · Ctrl/Cmd+C — скопіювати HEX (поза текстовими полями).
+        </LabInfoTip>
+      }
+    >
+      <div className="cl">
+        <div className="cl-tabs">
+          {TABS.map((t) => (
+            <button key={t.key} className={'cl-tab' + (tab === t.key ? ' active' : '')} onClick={() => setTab(t.key)}>
+              <span className="cl-tab-icon">{t.icon}</span>{t.label}
+            </button>
+          ))}
+        </div>
+        <div className="cl-panel">
+          {tab === 'picker' && <PickerTab hex={baseHex} setHex={setBaseHex} isPro={labMode.isPro} />}
+          {tab === 'harmonies' && <HarmoniesTab hex={baseHex} setHex={setBaseHex} />}
+          {tab === 'palette' && <PaletteTab palette={palette} onChange={setPaletteColor} onReset={resetPaletteOverrides} />}
+          {tab === 'shades' && <ShadesTab hex={baseHex} />}
+          {tab === 'contrast' && <ContrastTab palette={palette} />}
+          {tab === 'gradient' && <GradientTab baseHex={baseHex} />}
+          {tab === 'typography' && <TypographyTab palette={palette} />}
+          {tab === 'preview' && <DesignPreviewTab palette={palette} goTo={setTab} />}
+          {tab === 'imageExtract' && <ImageExtractTab onPick={pickAsBase} />}
+          {tab === 'inspector' && <InspectorTab />}
+          {tab === 'lightDark' && <LightDarkTab hex={baseHex} />}
+          {tab === 'experiment' && <ExperimentTab hex={baseHex} setHex={setBaseHex} />}
+          {tab === 'saved' && <SavedTab onPick={pickAsBase} />}
+          {tab === 'export' && <ExportTab palette={palette} baseHex={baseHex} />}
+        </div>
       </div>
-      <div className="cl-panel">
-        {tab === 'picker' && <PickerTab hex={baseHex} setHex={setBaseHex} />}
-        {tab === 'harmonies' && <HarmoniesTab hex={baseHex} setHex={setBaseHex} />}
-        {tab === 'palette' && <PaletteTab palette={palette} onChange={setPaletteColor} onReset={resetPaletteOverrides} />}
-        {tab === 'shades' && <ShadesTab hex={baseHex} />}
-        {tab === 'contrast' && <ContrastTab palette={palette} />}
-        {tab === 'gradient' && <GradientTab baseHex={baseHex} />}
-        {tab === 'typography' && <TypographyTab palette={palette} />}
-        {tab === 'preview' && <DesignPreviewTab palette={palette} goTo={setTab} />}
-        {tab === 'imageExtract' && <ImageExtractTab onPick={pickAsBase} />}
-        {tab === 'inspector' && <InspectorTab />}
-        {tab === 'lightDark' && <LightDarkTab hex={baseHex} />}
-        {tab === 'experiment' && <ExperimentTab hex={baseHex} setHex={setBaseHex} />}
-        {tab === 'saved' && <SavedTab onPick={pickAsBase} />}
-        {tab === 'export' && <ExportTab palette={palette} baseHex={baseHex} />}
-      </div>
-    </div>
+    </LabShell>
   )
 }
