@@ -19,6 +19,10 @@
 // не посилання), а не фейкові порожні уроки; уроки додаються партіями,
 // кожна підкатегорія отримує запис тут лише коли її файл готовий.
 import { LESSONS as webDesignBasics } from './lessons/web-design-basics.js'
+import { LESSONS as designSystems } from './lessons/design-systems.js'
+import { LESSONS as wireframing } from './lessons/wireframing.js'
+import { LESSONS as prototyping } from './lessons/prototyping.js'
+import { LESSONS as motionAnimation } from './lessons/motion-animation.js'
 import { LESSONS as accessibility } from './lessons/accessibility.js'
 import { LESSONS as figmaBasics } from './lessons/figma-basics.js'
 import { LESSONS as figmaLayout } from './lessons/figma-layout.js'
@@ -29,6 +33,10 @@ import { LESSONS as webDesignerPortfolio } from './lessons/web-designer-portfoli
 
 export const MODULES = [
   ...webDesignBasics,
+  ...designSystems,
+  ...wireframing,
+  ...prototyping,
+  ...motionAnimation,
   ...accessibility,
   ...figmaBasics,
   ...figmaLayout,
