@@ -14,11 +14,16 @@
 // Ієрархія: напрямок (directions.js) → підкатегорія (subcategories.js,
 // 24 штуки для Web Design) → уроки (файли в lessons/).
 //
-// Підкатегорії без власного файлу в lessons/ поки не мають написаних
-// уроків - AcademySubcategory чесно показує заплановані теми (список,
-// не посилання), а не фейкові порожні уроки; уроки додаються партіями,
-// кожна підкатегорія отримує запис тут лише коли її файл готовий.
+// Усі 24 підкатегорії Web Design мають написані уроки (96 уроків
+// загалом). Якщо в майбутньому додасться підкатегорія без власного
+// файлу в lessons/ (новий напрямок дизайну), AcademySubcategory чесно
+// покаже заплановані теми (список, не посилання) замість фейкового
+// порожнього уроку, поки для неї не буде написано реальний вміст.
 import { LESSONS as webDesignBasics } from './lessons/web-design-basics.js'
+import { LESSONS as visualDesignBasics } from './lessons/visual-design-basics.js'
+import { LESSONS as compositionLayout } from './lessons/composition-layout.js'
+import { LESSONS as color } from './lessons/color.js'
+import { LESSONS as typography } from './lessons/typography.js'
 import { LESSONS as visualAssets } from './lessons/visual-assets.js'
 import { LESSONS as websiteStructure } from './lessons/website-structure.js'
 import { LESSONS as webComponents } from './lessons/web-components.js'
@@ -41,6 +46,10 @@ import { LESSONS as webDesignerPortfolio } from './lessons/web-designer-portfoli
 
 export const MODULES = [
   ...webDesignBasics,
+  ...visualDesignBasics,
+  ...compositionLayout,
+  ...color,
+  ...typography,
   ...visualAssets,
   ...websiteStructure,
   ...webComponents,
