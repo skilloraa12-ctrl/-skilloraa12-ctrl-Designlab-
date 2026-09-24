@@ -22,6 +22,9 @@ import DictionaryTerm from './DictionaryTerm.jsx'
 import GuideHome from './GuideHome.jsx'
 import GuideCategory from './GuideCategory.jsx'
 import GuideLesson from './GuideLesson.jsx'
+import ToolsHome from './ToolsHome.jsx'
+import ToolsCategory from './ToolsCategory.jsx'
+import ToolsDetail from './ToolsDetail.jsx'
 
 export default function App() {
   return (
@@ -43,6 +46,9 @@ export default function App() {
           <Route path="/guide" element={<GuideHome />} />
           <Route path="/guide/:category" element={<GuideCategory />} />
           <Route path="/guide/:category/:lesson" element={<GuideLesson />} />
+          <Route path="/tools" element={<ToolsHome />} />
+          <Route path="/tools/:category" element={<ToolsCategory />} />
+          <Route path="/tools/:category/:tool" element={<ToolsDetail />} />
           <Route path="/achievements" element={<RequireAuth><Achievements /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/color-lab" element={<RequireAuth><ColorLabPage /></RequireAuth>} />

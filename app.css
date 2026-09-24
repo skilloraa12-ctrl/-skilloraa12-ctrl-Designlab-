@@ -656,13 +656,21 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .dict-card-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
 .dict-card-en { font-family: var(--serif); font-size: 16px; }
 .dict-card-ua { font-size: 12.5px; color: var(--muted); flex: 1; }
-.dict-card-fav { border: none; background: none; cursor: pointer; font-size: 15px; color: var(--coral); padding: 0; flex: none; }
+.dict-card-fav { border: none; background: none; cursor: pointer; font-size: 15px; color: var(--coral); padding: 0; flex: none; margin-left: auto; }
 .dict-card-def { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 0 0 10px; }
 .dict-card-meta { display: flex; flex-wrap: wrap; gap: 5px; }
 
 .dict-tag { font-size: 10.5px; color: var(--muted); border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 2px 9px; }
 .dict-tag-level { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
 .dict-tag-type { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 35%, var(--line)); }
+
+.tools-price-badge { font-size: 10.5px; font-weight: 600; border-radius: var(--radius-pill); padding: 2px 9px; flex: none; border: 1px solid transparent; }
+.tools-price-free, .tools-price-open-source { color: var(--green); background: color-mix(in srgb, var(--green) 14%, transparent); }
+.tools-price-freemium { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.tools-price-paid { color: var(--coral); background: color-mix(in srgb, var(--coral) 12%, transparent); }
+.tools-price-one-time { color: var(--amber); background: color-mix(in srgb, var(--amber) 16%, transparent); }
+.tools-tag-ai { color: var(--accent-2); border-color: color-mix(in srgb, var(--accent-2) 35%, var(--line)); }
+.tools-tag-free { color: var(--green); border-color: color-mix(in srgb, var(--green) 35%, var(--line)); }
 
 .dict-breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .dict-breadcrumb a { color: var(--muted); }

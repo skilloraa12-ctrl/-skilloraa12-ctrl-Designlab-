@@ -6,7 +6,7 @@ const HUB = [
   { to: '/dictionary', title: 'Словник', desc: 'Що означає термін?' },
   { to: '/guide', title: 'Довідник', desc: 'Як навчитися / як це працює?' },
   { title: 'Шпаргалки', desc: 'Як швидко згадати потрібне?', soon: true },
-  { title: 'Інструменти', desc: 'Чим це зробити?', soon: true },
+  { to: '/tools', title: 'Інструменти', desc: 'Чим це зробити?' },
   { to: '/portfolio', title: 'Портфоліо', desc: 'Що я створила?' },
 ]
 
