@@ -51,15 +51,25 @@ export default function Home() {
         <h3>Напрямки дизайну</h3>
       </div>
       <div className="direction-grid">
-        {DIRECTIONS.map((d) => (
-          <div className="direction-card" key={d.name}>
-            <span className="direction-emoji">{d.emoji}</span>
-            <div>
-              <div className="direction-name">{d.name}</div>
-              <div className="direction-desc">{d.desc}</div>
+        {DIRECTIONS.map((d) =>
+          d.id === 'web-design' ? (
+            <Link className="direction-card" key={d.id} to="/academy">
+              <span className="direction-emoji">{d.emoji}</span>
+              <div>
+                <div className="direction-name">{d.name}</div>
+                <div className="direction-desc">{d.desc}</div>
+              </div>
+            </Link>
+          ) : (
+            <div className="direction-card" key={d.id} style={{ cursor: 'default' }}>
+              <span className="direction-emoji">{d.emoji}</span>
+              <div>
+                <div className="direction-name">{d.name}</div>
+                <div className="direction-desc">{d.desc}</div>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
     </div>
   )

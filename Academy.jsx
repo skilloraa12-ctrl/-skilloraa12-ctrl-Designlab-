@@ -18,7 +18,7 @@ export default function Academy() {
   return (
     <div>
       <h1 className="page-title">Академія</h1>
-      <p className="page-sub">Повна програма з 44 модулів, організована по 9 рівнях — від візуального сприйняття до кар'єри.</p>
+      <p className="page-sub">Навчання за напрямками дизайну — Web Design уже доступний, інші напрямки (UI Design, UX Design, Game Design та інші) додаються далі.</p>
 
       {LEVEL_ORDER.map((lv) => {
         const mods = MODULES.filter((m) => m.level === lv)

@@ -71,7 +71,7 @@ export const ACHIEVEMENTS = [
   {
     slug: 'job-ready',
     title: 'Job Ready',
-    description: 'Завершіть усі 44 модулі академії.',
+    description: 'Завершіть усі доступні модулі академії.',
     check: (stats) => stats.completedCount >= stats.total,
   },
 ]
