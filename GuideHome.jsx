@@ -18,7 +18,7 @@ export default function GuideHome() {
 
   return (
     <div>
-      <h1 className="page-title">🧭 Довідник</h1>
+      <h1 className="page-title">Довідник</h1>
       <p className="page-sub">Структуроване навчання дизайну — від основ до практики, з міні-тестами й прогресом. Як цьому навчитися?</p>
 
       <div className="search-box dict-search">
@@ -28,6 +28,10 @@ export default function GuideHome() {
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Пошук уроків"
         />
+      </div>
+
+      <div className="dict-quicklinks">
+        <Link to="/dictionary" className="pf-filter-btn">Словник термінів →</Link>
       </div>
 
       {q ? (

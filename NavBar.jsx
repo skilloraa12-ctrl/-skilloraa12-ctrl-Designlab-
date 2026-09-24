@@ -8,9 +8,8 @@ const LINKS = [
   { to: '/', label: 'Головна', end: true },
   { to: '/academy', label: 'Академія' },
   { to: '/portfolio', label: 'Портфоліо' },
-  { to: '/labs', label: '🧪 Design Labs' },
-  { to: '/dictionary', label: '📖 Словник' },
-  { to: '/guide', label: '🧭 Довідник' },
+  { to: '/labs', label: 'Design Labs' },
+  { to: '/guide', label: 'Довідник' },
   { to: '/career', label: "Кар'єра" },
   { to: '/achievements', label: 'Досягнення' },
 ]
