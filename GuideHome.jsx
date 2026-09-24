@@ -30,10 +30,6 @@ export default function GuideHome() {
         />
       </div>
 
-      <div className="dict-quicklinks">
-        <Link to="/dictionary" className="pf-filter-btn">Словник термінів →</Link>
-      </div>
-
       {q ? (
         <>
           <div className="dict-section-title">Знайдено: {searchResults.length}</div>

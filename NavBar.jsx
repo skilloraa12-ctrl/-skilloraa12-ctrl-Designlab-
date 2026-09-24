@@ -4,12 +4,21 @@ import { useAuth } from './AuthContext.jsx'
 import { useProgress } from './ProgressContext.jsx'
 import { loadJSON, saveJSON } from './storage.js'
 
-const LINKS = [
+const NAV_TOP = [
   { to: '/', label: 'Головна', end: true },
   { to: '/academy', label: 'Академія' },
   { to: '/portfolio', label: 'Портфоліо' },
   { to: '/labs', label: 'Design Labs' },
+]
+
+// Grouped like 00100101's "Довідка" section — Словник і Довідник живуть
+// поруч, а не губляться одне в іншому.
+const NAV_REFERENCE = [
+  { to: '/dictionary', label: 'Словник' },
   { to: '/guide', label: 'Довідник' },
+]
+
+const NAV_BOTTOM = [
   { to: '/career', label: "Кар'єра" },
   { to: '/achievements', label: 'Досягнення' },
 ]
@@ -40,7 +49,32 @@ export default function NavBar() {
       </div>
 
       <nav className="nav">
-        {LINKS.map((link) => (
+        {NAV_TOP.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            end={link.end}
+            className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}
+          >
+            <span className="dot" />
+            {link.label}
+          </NavLink>
+        ))}
+
+        <div className="nav-section-title">Довідка</div>
+        {NAV_REFERENCE.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            end={link.end}
+            className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}
+          >
+            <span className="dot" />
+            {link.label}
+          </NavLink>
+        ))}
+
+        {NAV_BOTTOM.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
