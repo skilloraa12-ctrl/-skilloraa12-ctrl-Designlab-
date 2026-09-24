@@ -143,6 +143,7 @@ export default function Module() {
 
           {sketchOpen && (
             <SketchPad
+              module={module}
               onClose={() => setSketchOpen(false)}
               onSave={(dataUrl) => {
                 addPortfolioItem({

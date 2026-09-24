@@ -298,6 +298,14 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .sketchpad-size { width: 110px; }
 .sketchpad-inline-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 .harmony-btn:disabled { opacity: .35; cursor: not-allowed; }
+.sketchpad-select { font-size: 12.5px; padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); }
+.sketchpad-hint-text { color: var(--muted); font-style: italic; }
+
+.sketchpad-hints { border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--radius); background: var(--bg); padding: 14px 16px; margin-bottom: 14px; }
+.sketchpad-hints-task { font-size: 13.5px; line-height: 1.55; margin: 4px 0 10px; }
+.sketchpad-checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sketchpad-checklist label { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.45; cursor: pointer; }
+.sketchpad-checklist input[type="checkbox"] { margin-top: 3px; flex: none; }
 
 .sketchpad-canvas-wrap { position: relative; width: 100%; max-width: 900px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: inset 0 1px 4px rgba(0,0,0,.06); }
 .sketchpad-canvas-wrap--grid {
@@ -310,6 +318,16 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .sketchpad-canvas { display: block; width: 100%; height: auto; touch-action: none; }
 .sketchpad-canvas--base { position: relative; z-index: 1; pointer-events: none; }
 .sketchpad-canvas--preview { position: absolute; top: 0; left: 0; z-index: 2; cursor: crosshair; }
+.sketchpad-layers { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; max-height: 180px; overflow-y: auto; }
+.sketchpad-layers-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.sketchpad-layers-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; padding: 4px 6px; border-radius: var(--radius-sm); }
+.sketchpad-layers-list li:hover { background: var(--bg); }
+.sketchpad-layer--hidden { opacity: .4; }
+.sketchpad-layer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sketchpad-layer-actions { display: flex; gap: 2px; flex: none; }
+.sketchpad-layer-actions button { border: none; background: none; cursor: pointer; font-size: 13px; padding: 2px 5px; border-radius: 4px; }
+.sketchpad-layer-actions button:hover { background: var(--line); }
+
 .sketchpad-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 
 /* ---------- Career / Progress bars ---------- */
