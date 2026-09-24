@@ -53,7 +53,7 @@ export default function Home() {
       <div className="direction-grid">
         {DIRECTIONS.map((d) =>
           d.id === 'web-design' ? (
-            <Link className="direction-card" key={d.id} to="/academy">
+            <Link className="direction-card" key={d.id} to="/academy/web-design">
               <span className="direction-emoji">{d.emoji}</span>
               <div>
                 <div className="direction-name">{d.name}</div>

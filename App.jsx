@@ -4,6 +4,7 @@ import Home from './Home.jsx'
 import Register from './Register.jsx'
 import Login from './Login.jsx'
 import Academy from './Academy.jsx'
+import AcademyDirection from './AcademyDirection.jsx'
 import AcademySubcategory from './AcademySubcategory.jsx'
 import Module from './Module.jsx'
 import ProgressPage from './Progress.jsx'
@@ -39,7 +40,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/academy" element={<RequireAuth><Academy /></RequireAuth>} />
-          <Route path="/academy/:subcategory" element={<RequireAuth><AcademySubcategory /></RequireAuth>} />
+          <Route path="/academy/:direction" element={<RequireAuth><AcademyDirection /></RequireAuth>} />
+          <Route path="/academy/:direction/:subcategory" element={<RequireAuth><AcademySubcategory /></RequireAuth>} />
           <Route path="/module/:id" element={<RequireAuth><Module /></RequireAuth>} />
           <Route path="/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
           <Route path="/glossary" element={<Glossary />} />
