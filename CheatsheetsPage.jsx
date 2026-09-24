@@ -38,6 +38,8 @@ export default function CheatsheetsPage() {
         ))}
       </div>
 
+      {sheet.hint && <p className="cheat-hint">{sheet.hint}</p>}
+
       <div className="search-box" style={{ maxWidth: 420, marginBottom: 20 }}>
         <input
           value={query}
