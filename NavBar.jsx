@@ -16,6 +16,7 @@ const NAV_TOP = [
 const NAV_REFERENCE = [
   { to: '/dictionary', label: 'Словник' },
   { to: '/guide', label: 'Довідник' },
+  { to: '/cheatsheets', label: 'Шпаргалки' },
   { to: '/tools', label: 'Інструменти' },
 ]
 

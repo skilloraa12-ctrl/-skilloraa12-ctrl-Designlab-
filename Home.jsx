@@ -5,7 +5,7 @@ import { DIRECTIONS } from './directions.js'
 const HUB = [
   { to: '/dictionary', title: 'Словник', desc: 'Що означає термін?' },
   { to: '/guide', title: 'Довідник', desc: 'Як навчитися / як це працює?' },
-  { title: 'Шпаргалки', desc: 'Як швидко згадати потрібне?', soon: true },
+  { to: '/cheatsheets', title: 'Шпаргалки', desc: 'Як швидко згадати потрібне?' },
   { to: '/tools', title: 'Інструменти', desc: 'Чим це зробити?' },
   { to: '/portfolio', title: 'Портфоліо', desc: 'Що я створила?' },
 ]
