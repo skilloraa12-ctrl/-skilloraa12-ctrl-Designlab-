@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { getModule, MODULES } from './modules.js'
-import { LEVELS } from './levels.js'
+import { getSubcategory } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
@@ -20,14 +20,16 @@ export default function Module() {
 
   const done = !!completed[module.id]
   const testDone = !!quizPassed[module.id]
-  const idx = MODULES.findIndex((m) => m.id === module.id)
-  const prev = MODULES[idx - 1]
-  const next = MODULES[idx + 1]
+  const subcategory = getSubcategory(module.subcategory)
+  const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
+  const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
+  const prev = lessonsInSubcat[idx - 1]
+  const next = lessonsInSubcat[idx + 1]
 
   return (
     <div>
-      <Link to="/academy" className="back-link">← Уся академія</Link>
-      <p className="eyebrow">{LEVELS[module.level].title} · Модуль {String(module.id).padStart(2, '0')}</p>
+      <Link to={`/academy/${module.subcategory}`} className="back-link">← {subcategory?.title || 'Академія'}</Link>
+      <p className="eyebrow">{subcategory?.emoji} {subcategory?.title} · Урок {String(module.id).padStart(2, '0')}</p>
 
       <div className="module-header">
         <h1 className="page-title" style={{ marginBottom: 0 }}>{module.title}</h1>

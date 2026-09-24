@@ -1,12 +1,13 @@
+import { Link } from 'react-router-dom'
 import { MODULES } from './modules.js'
 import { LEVELS, LEVEL_ORDER } from './levels.js'
+import { getSubcategoriesByLevel } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
-import ModuleCard from './ModuleCard.jsx'
 
 export default function Academy() {
   const { completed } = useProgress()
 
-  if (MODULES.length === 0) {
+  if (LEVEL_ORDER.length === 0) {
     return (
       <div>
         <h1 className="page-title">Академія</h1>
@@ -21,16 +22,36 @@ export default function Academy() {
       <p className="page-sub">Навчання за напрямками дизайну — Web Design уже доступний, інші напрямки (UI Design, UX Design, Game Design та інші) додаються далі.</p>
 
       {LEVEL_ORDER.map((lv) => {
-        const mods = MODULES.filter((m) => m.level === lv)
-        if (mods.length === 0) return null
-        const doneInLevel = mods.filter((m) => completed[m.id]).length
+        const subcats = getSubcategoriesByLevel(lv)
+        if (subcats.length === 0) return null
+        const allModsInLevel = MODULES.filter((m) => m.level === lv)
+        const doneInLevel = allModsInLevel.filter((m) => completed[m.id]).length
         return (
           <div className="level-group" key={lv}>
             <div className="level-title">
-              <span className="n">{lv}</span>
-              {LEVELS[lv].title} · {LEVELS[lv].ua} · {doneInLevel}/{mods.length}
+              {LEVELS[lv].title} · {LEVELS[lv].ua} · {doneInLevel}/{allModsInLevel.length} уроків пройдено
             </div>
-            {mods.map((m) => <ModuleCard key={m.id} module={m} />)}
+            <div className="guide-cat-grid">
+              {subcats.map((sc) => {
+                const lessons = MODULES.filter((m) => m.subcategory === sc.id)
+                const doneCount = lessons.filter((m) => completed[m.id]).length
+                const pct = lessons.length > 0 ? Math.round((doneCount / lessons.length) * 100) : 0
+                return (
+                  <Link key={sc.id} to={`/academy/${sc.id}`} className="guide-cat-card">
+                    <div className="guide-cat-title">{sc.emoji} {sc.title}</div>
+                    <div className="guide-cat-en">{sc.desc}</div>
+                    {lessons.length > 0 ? (
+                      <>
+                        <div className="guide-progress-bar"><div className="guide-progress-fill" style={{ width: `${pct}%` }} /></div>
+                        <div className="guide-progress-label">{doneCount}/{lessons.length} уроків · {pct}%</div>
+                      </>
+                    ) : (
+                      <span className="lab-card-badge">У розробці</span>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
           </div>
         )
       })}
