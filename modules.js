@@ -27,6 +27,10 @@ import { LESSONS as accessibility } from './lessons/accessibility.js'
 import { LESSONS as figmaBasics } from './lessons/figma-basics.js'
 import { LESSONS as figmaLayout } from './lessons/figma-layout.js'
 import { LESSONS as figmaDesignSystem } from './lessons/figma-design-system.js'
+import { LESSONS as figmaPrototype } from './lessons/figma-prototype.js'
+import { LESSONS as figmaWebDesign } from './lessons/figma-web-design.js'
+import { LESSONS as techMinimum } from './lessons/tech-minimum.js'
+import { LESSONS as designToDevelopment } from './lessons/design-to-development.js'
 import { LESSONS as websiteTypesPractice } from './lessons/website-types-practice.js'
 import { LESSONS as realProjects } from './lessons/real-projects.js'
 import { LESSONS as webDesignerPortfolio } from './lessons/web-designer-portfolio.js'
@@ -41,6 +45,10 @@ export const MODULES = [
   ...figmaBasics,
   ...figmaLayout,
   ...figmaDesignSystem,
+  ...figmaPrototype,
+  ...figmaWebDesign,
+  ...techMinimum,
+  ...designToDevelopment,
   ...websiteTypesPractice,
   ...realProjects,
   ...webDesignerPortfolio,
