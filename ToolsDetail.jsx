@@ -31,6 +31,29 @@ function ListField({ label, items }) {
   )
 }
 
+function UiGuideField({ items }) {
+  if (!items || items.length === 0) return null
+  return (
+    <div className="dict-field">
+      <div className="dict-field-label">Що ви побачите на екрані</div>
+      <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: '0 0 10px' }}>
+        Інтерфейс цих програм переважно англійською — ось як звуться і за що відповідають основні елементи.
+      </p>
+      <div className="tools-ui-guide">
+        {items.map((it, i) => (
+          <div className="tools-ui-guide-item" key={i}>
+            <div className="tools-ui-guide-term">
+              <span className="tools-ui-guide-en">{it.en}</span>
+              <span className="tools-ui-guide-ua">{it.ua}</span>
+            </div>
+            <p className="tools-ui-guide-desc">{it.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function ToolsDetail() {
   const { category: categoryId, tool: toolId } = useParams()
   const tool = getTool(toolId)
@@ -85,6 +108,7 @@ export default function ToolsDetail() {
       <Field label="Для чого" value={tool.purpose} />
       <ListField label="Що вміє" items={tool.features} />
       <ListField label="З чого почати" items={tool.steps} />
+      <UiGuideField items={tool.uiGuide} />
       <Field label="Ціна" value={tool.priceFrom} />
       {tool.note && <Field label="Важливо знати" value={tool.note} />}
 
