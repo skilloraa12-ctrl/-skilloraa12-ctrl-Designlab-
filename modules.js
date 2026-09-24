@@ -19,6 +19,10 @@
 // не посилання), а не фейкові порожні уроки; уроки додаються партіями,
 // кожна підкатегорія отримує запис тут лише коли її файл готовий.
 import { LESSONS as webDesignBasics } from './lessons/web-design-basics.js'
+import { LESSONS as visualAssets } from './lessons/visual-assets.js'
+import { LESSONS as websiteStructure } from './lessons/website-structure.js'
+import { LESSONS as webComponents } from './lessons/web-components.js'
+import { LESSONS as responsiveWebDesign } from './lessons/responsive-web-design.js'
 import { LESSONS as designSystems } from './lessons/design-systems.js'
 import { LESSONS as wireframing } from './lessons/wireframing.js'
 import { LESSONS as prototyping } from './lessons/prototyping.js'
@@ -37,6 +41,10 @@ import { LESSONS as webDesignerPortfolio } from './lessons/web-designer-portfoli
 
 export const MODULES = [
   ...webDesignBasics,
+  ...visualAssets,
+  ...websiteStructure,
+  ...webComponents,
+  ...responsiveWebDesign,
   ...designSystems,
   ...wireframing,
   ...prototyping,
