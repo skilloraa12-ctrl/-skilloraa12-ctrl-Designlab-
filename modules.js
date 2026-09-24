@@ -19,9 +19,15 @@
 // не посилання), а не фейкові порожні уроки; уроки додаються партіями,
 // кожна підкатегорія отримує запис тут лише коли її файл готовий.
 import { LESSONS as webDesignBasics } from './lessons/web-design-basics.js'
+import { LESSONS as websiteTypesPractice } from './lessons/website-types-practice.js'
+import { LESSONS as realProjects } from './lessons/real-projects.js'
+import { LESSONS as webDesignerPortfolio } from './lessons/web-designer-portfolio.js'
 
 export const MODULES = [
   ...webDesignBasics,
+  ...websiteTypesPractice,
+  ...realProjects,
+  ...webDesignerPortfolio,
 ]
 
 export function getModule(id) {
