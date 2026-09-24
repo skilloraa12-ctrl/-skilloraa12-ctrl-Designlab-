@@ -670,6 +670,8 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .tools-price-paid { color: var(--coral); background: color-mix(in srgb, var(--coral) 12%, transparent); }
 .tools-price-one-time { color: var(--amber); background: color-mix(in srgb, var(--amber) 16%, transparent); }
 .tools-tag-ai { color: var(--accent-2); border-color: color-mix(in srgb, var(--accent-2) 35%, var(--line)); }
+.tools-logo { border-radius: 4px; flex: none; }
+.tools-logo-lg { border-radius: 8px; flex: none; background: var(--surface-2); }
 .tools-tag-free { color: var(--green); border-color: color-mix(in srgb, var(--green) 35%, var(--line)); }
 
 .dict-breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }

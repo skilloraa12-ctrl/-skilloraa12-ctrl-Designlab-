@@ -1,6 +1,18 @@
 import { Link } from 'react-router-dom'
 import { getToolsCategory } from '../data/tools/categories.js'
 
+// Ми не робимо власних скріншотів чужих інтерфейсів (це чужий UI, який
+// застаріє за тиждень і вимагає прав) — натомість показуємо офіційну
+// іконку сайту через публічний favicon-сервіс, виведену з officialUrl.
+export function toolLogoUrl(tool, size = 64) {
+  try {
+    const domain = new URL(tool.officialUrl).hostname
+    return `https://www.google.com/s2/favicons?sz=${size}&domain=${domain}`
+  } catch {
+    return null
+  }
+}
+
 export const PRICING_LABELS = {
   free: 'Безкоштовно',
   'open-source': 'Відкритий код',
@@ -16,6 +28,7 @@ export default function ToolCard({ tool, showCategory = false, favorite, onToggl
   return (
     <Link to={`/tools/${tool.category}/${tool.id}`} className="dict-card">
       <div className="dict-card-top">
+        <img src={toolLogoUrl(tool)} alt="" className="tools-logo" width="18" height="18" loading="lazy" onError={(e) => { e.target.style.visibility = 'hidden' }} />
         <span className="dict-card-en">{tool.name}</span>
         <span className={'tools-price-badge tools-price-' + tool.pricing}>{PRICING_LABELS[tool.pricing]}</span>
         {onToggleFavorite && (
