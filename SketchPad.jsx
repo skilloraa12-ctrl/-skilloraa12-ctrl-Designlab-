@@ -4,6 +4,7 @@ const COLORS = ['#17171A', '#3E37E0', '#E0523E', '#C8912B', '#2FA36B', '#FFFFFF'
 const BG_COLORS = ['#F5F1E8', '#FFFFFF', '#ECEAE3', '#17171A', '#EAF3EC']
 
 const TOOLS = [
+  { id: 'select', label: '🖱️ Вибрати' },
   { id: 'pen', label: '✏️ Пензель' },
   { id: 'line', label: '➖ Лінія' },
   { id: 'rect', label: '▭ Прямокутник' },
@@ -40,16 +41,87 @@ function layerLabel(l) {
 
 let nextLayerId = 1
 
+// Обчислює рамку виділення (bounding box) для будь-якого типу шару —
+// потрібна і для хіт-тесту при кліку, і для малювання ручок resize.
+function getBBox(l, measureCtx) {
+  if (l.type === 'rect' || l.type === 'ellipse' || l.type === 'line') {
+    return { x: Math.min(l.x1, l.x2), y: Math.min(l.y1, l.y2), w: Math.abs(l.x2 - l.x1), h: Math.abs(l.y2 - l.y1) }
+  }
+  if (l.type === 'frame' || l.type === 'block') {
+    return { x: l.x, y: l.y, w: l.w, h: l.h }
+  }
+  if (l.type === 'text') {
+    measureCtx.font = `${l.fontSize}px Georgia, serif`
+    const w = measureCtx.measureText(l.text).width
+    return { x: l.x, y: l.y - l.fontSize * 0.85, w, h: l.fontSize * 1.15 }
+  }
+  if (l.type === 'pen') {
+    const xs = l.points.map((p) => p.x), ys = l.points.map((p) => p.y)
+    return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
+  }
+  return { x: 0, y: 0, w: 0, h: 0 }
+}
+
+function distToSegment(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y
+  const lenSq = dx * dx + dy * dy
+  if (lenSq === 0) return Math.hypot(p.x - a.x, p.y - a.y)
+  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq
+  t = Math.max(0, Math.min(1, t))
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
+}
+
+function translateLayer(l, dx, dy) {
+  if (l.type === 'rect' || l.type === 'ellipse' || l.type === 'line') return { ...l, x1: l.x1 + dx, y1: l.y1 + dy, x2: l.x2 + dx, y2: l.y2 + dy }
+  if (l.type === 'frame' || l.type === 'block' || l.type === 'text') return { ...l, x: l.x + dx, y: l.y + dy }
+  if (l.type === 'pen') return { ...l, points: l.points.map((p) => ({ x: p.x + dx, y: p.y + dy })) }
+  return l
+}
+
+function resizeLayer(l, handle, p, measureCtx) {
+  if (l.type === 'line') {
+    return handle === 'p1' ? { ...l, x1: p.x, y1: p.y } : { ...l, x2: p.x, y2: p.y }
+  }
+  const bb = getBBox(l, measureCtx)
+  let nx = bb.x, ny = bb.y, nw = bb.w, nh = bb.h
+  if (handle === 'nw') { nw = bb.x + bb.w - p.x; nh = bb.y + bb.h - p.y; nx = p.x; ny = p.y }
+  else if (handle === 'ne') { nw = p.x - bb.x; nh = bb.y + bb.h - p.y; ny = p.y }
+  else if (handle === 'sw') { nw = bb.x + bb.w - p.x; nh = p.y - bb.y; nx = p.x }
+  else if (handle === 'se') { nw = p.x - bb.x; nh = p.y - bb.y }
+  nw = Math.max(nw, 12)
+  nh = Math.max(nh, 12)
+  if (l.type === 'frame' || l.type === 'block') return { ...l, x: nx, y: ny, w: nw, h: nh }
+  return { ...l, x1: nx, y1: ny, x2: nx + nw, y2: ny + nh }
+}
+
+function hitHandle(l, p, measureCtx) {
+  const R = 9
+  if (l.type === 'line') {
+    if (Math.hypot(p.x - l.x1, p.y - l.y1) <= R) return 'p1'
+    if (Math.hypot(p.x - l.x2, p.y - l.y2) <= R) return 'p2'
+    return null
+  }
+  if (l.type === 'text' || l.type === 'pen') return null
+  const bb = getBBox(l, measureCtx)
+  const corners = { nw: [bb.x, bb.y], ne: [bb.x + bb.w, bb.y], sw: [bb.x, bb.y + bb.h], se: [bb.x + bb.w, bb.y + bb.h] }
+  for (const [name, [cx, cy]] of Object.entries(corners)) {
+    if (Math.hypot(p.x - cx, p.y - cy) <= R) return name
+  }
+  return null
+}
+
 export default function SketchPad({ module, onSave, onClose }) {
   const baseRef = useRef(null)
   const previewRef = useRef(null)
   const dragging = useRef(false)
   const startPos = useRef({ x: 0, y: 0 })
   const strokeRef = useRef(null)
+  const selectDrag = useRef(null)
   const historyRef = useRef([])
   const redoRef = useRef([])
 
   const [layers, setLayers] = useState([])
+  const [selectedId, setSelectedId] = useState(null)
   const [tool, setTool] = useState('pen')
   const [color, setColor] = useState('#17171A')
   const [size, setSize] = useState(4)
@@ -98,6 +170,7 @@ export default function SketchPad({ module, onSave, onClose }) {
 
   function deleteLayer(id) {
     commit(layers.filter((l) => l.id !== id))
+    if (selectedId === id) setSelectedId(null)
   }
 
   function moveLayer(id, dir) {
@@ -211,9 +284,93 @@ export default function SketchPad({ module, onSave, onClose }) {
     drawLayer(ctx, makeLayer)
   }
 
+  function hitTest(p) {
+    const ctx = baseRef.current.getContext('2d')
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const l = layers[i]
+      if (l.visible === false) continue
+      if (l.type === 'ellipse') {
+        const cx = (l.x1 + l.x2) / 2, cy = (l.y1 + l.y2) / 2
+        const rx = Math.abs(l.x2 - l.x1) / 2, ry = Math.abs(l.y2 - l.y1) / 2
+        if (rx === 0 || ry === 0) continue
+        const dx = (p.x - cx) / rx, dy = (p.y - cy) / ry
+        if (dx * dx + dy * dy <= 1) return l
+        continue
+      }
+      if (l.type === 'line') {
+        if (distToSegment(p, { x: l.x1, y: l.y1 }, { x: l.x2, y: l.y2 }) <= Math.max(l.size, 6)) return l
+        continue
+      }
+      const bb = getBBox(l, ctx)
+      if (p.x >= bb.x && p.x <= bb.x + bb.w && p.y >= bb.y && p.y <= bb.y + bb.h) return l
+    }
+    return null
+  }
+
+  function drawSelectionBox(ctx, l) {
+    if (l.type === 'line') {
+      ctx.fillStyle = '#3E37E0'
+      for (const pt of [{ x: l.x1, y: l.y1 }, { x: l.x2, y: l.y2 }]) {
+        ctx.beginPath()
+        ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      return
+    }
+    const bb = getBBox(l, ctx)
+    ctx.save()
+    ctx.strokeStyle = '#3E37E0'
+    ctx.lineWidth = 1.5
+    ctx.setLineDash([4, 3])
+    ctx.strokeRect(bb.x - 2, bb.y - 2, bb.w + 4, bb.h + 4)
+    ctx.setLineDash([])
+    if (l.type !== 'text' && l.type !== 'pen') {
+      ctx.fillStyle = '#3E37E0'
+      for (const [hx, hy] of [[bb.x, bb.y], [bb.x + bb.w, bb.y], [bb.x, bb.y + bb.h], [bb.x + bb.w, bb.y + bb.h]]) {
+        ctx.fillRect(hx - 5, hy - 5, 10, 10)
+      }
+    }
+    ctx.restore()
+  }
+
+  // Коли нічого не тягнемо, але щось вибрано — тримаємо рамку виділення
+  // намальованою на прев'ю-полотні (окремо від базового, щоб не «запікалась»).
+  useEffect(() => {
+    if (dragging.current) return
+    const preview = previewRef.current
+    if (!preview) return
+    const ctx = preview.getContext('2d')
+    ctx.clearRect(0, 0, preview.width, preview.height)
+    if (tool !== 'select') return
+    const sel = layers.find((l) => l.id === selectedId)
+    if (sel && sel.visible !== false) drawSelectionBox(ctx, sel)
+  }, [tool, selectedId, layers])
+
   function start(e) {
     const p = pos(e)
     startPos.current = p
+
+    if (tool === 'select') {
+      const ctx = baseRef.current.getContext('2d')
+      const sel = layers.find((l) => l.id === selectedId)
+      if (sel && sel.visible !== false) {
+        const handle = hitHandle(sel, p, ctx)
+        if (handle) {
+          selectDrag.current = { mode: 'resize', handle, orig: sel }
+          dragging.current = true
+          return
+        }
+      }
+      const hit = hitTest(p)
+      if (hit) {
+        setSelectedId(hit.id)
+        selectDrag.current = { mode: 'move', orig: hit, startP: p }
+        dragging.current = true
+      } else {
+        setSelectedId(null)
+      }
+      return
+    }
 
     if (tool === 'text') {
       const text = window.prompt('Текст для полотна:')
@@ -253,6 +410,21 @@ export default function SketchPad({ module, onSave, onClose }) {
     e.preventDefault()
     const p = pos(e)
 
+    if (tool === 'select') {
+      const drag = selectDrag.current
+      if (!drag) return
+      const ctx = baseRef.current.getContext('2d')
+      const updated = drag.mode === 'move'
+        ? translateLayer(drag.orig, p.x - drag.startP.x, p.y - drag.startP.y)
+        : resizeLayer(drag.orig, drag.handle, p, ctx)
+      const preview = previewRef.current
+      const pctx = preview.getContext('2d')
+      pctx.clearRect(0, 0, preview.width, preview.height)
+      drawLayer(pctx, updated)
+      drawSelectionBox(pctx, updated)
+      return
+    }
+
     if (tool === 'pen' || tool === 'eraser') {
       strokeRef.current.points.push(p)
       const ctx = baseRef.current.getContext('2d')
@@ -270,6 +442,19 @@ export default function SketchPad({ module, onSave, onClose }) {
   function end(e) {
     if (!dragging.current) return
     dragging.current = false
+
+    if (tool === 'select') {
+      const drag = selectDrag.current
+      selectDrag.current = null
+      if (!drag) return
+      const p = pos(e)
+      const ctx = baseRef.current.getContext('2d')
+      const updated = drag.mode === 'move'
+        ? translateLayer(drag.orig, p.x - drag.startP.x, p.y - drag.startP.y)
+        : resizeLayer(drag.orig, drag.handle, p, ctx)
+      commit(layers.map((l) => (l.id === updated.id ? updated : l)))
+      return
+    }
 
     if (tool === 'pen' || tool === 'eraser') {
       baseRef.current.getContext('2d').globalCompositeOperation = 'source-over'
@@ -354,7 +539,11 @@ export default function SketchPad({ module, onSave, onClose }) {
       </div>
 
       <div className="sketchpad-toolbar">
-        {tool === 'frame' ? (
+        {tool === 'select' ? (
+          <span className="sketchpad-hint-text">
+            {selectedId ? 'Тягни, щоб перемістити; за кутик — щоб змінити розмір' : 'Клікни об’єкт на полотні або в списку шарів, щоб вибрати'}
+          </span>
+        ) : tool === 'frame' ? (
           <label className="sketchpad-inline-label">
             Розмір екрана
             <select className="sketchpad-select" value={framePreset} onChange={(e) => setFramePreset(e.target.value)}>
@@ -449,6 +638,7 @@ export default function SketchPad({ module, onSave, onClose }) {
           width={1200}
           height={750}
           className="sketchpad-canvas sketchpad-canvas--preview"
+          style={{ cursor: tool === 'select' ? 'default' : 'crosshair' }}
           onMouseDown={start}
           onMouseMove={move}
           onMouseUp={end}
@@ -464,8 +654,21 @@ export default function SketchPad({ module, onSave, onClose }) {
           <p className="eyebrow">Шари ({layers.length})</p>
           <ul className="sketchpad-layers-list">
             {[...layers].reverse().map((l) => (
-              <li key={l.id} className={l.visible === false ? 'sketchpad-layer--hidden' : ''}>
-                <span className="sketchpad-layer-name">{LAYER_ICONS[l.type]} {layerLabel(l)}</span>
+              <li
+                key={l.id}
+                className={
+                  (l.visible === false ? 'sketchpad-layer--hidden ' : '') +
+                  (l.id === selectedId ? 'sketchpad-layer--selected' : '')
+                }
+              >
+                <span
+                  className="sketchpad-layer-name"
+                  onClick={() => { setTool('select'); setSelectedId(l.id) }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {LAYER_ICONS[l.type]} {layerLabel(l)}
+                </span>
                 <span className="sketchpad-layer-actions">
                   <button onClick={() => moveLayer(l.id, 1)} title="Вище" aria-label="Перемістити шар вище">↑</button>
                   <button onClick={() => moveLayer(l.id, -1)} title="Нижче" aria-label="Перемістити шар нижче">↓</button>

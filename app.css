@@ -323,7 +323,8 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .sketchpad-layers-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; padding: 4px 6px; border-radius: var(--radius-sm); }
 .sketchpad-layers-list li:hover { background: var(--bg); }
 .sketchpad-layer--hidden { opacity: .4; }
-.sketchpad-layer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sketchpad-layer--selected { background: rgba(62,55,224,0.1); }
+.sketchpad-layer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .sketchpad-layer-actions { display: flex; gap: 2px; flex: none; }
 .sketchpad-layer-actions button { border: none; background: none; cursor: pointer; font-size: 13px; padding: 2px 5px; border-radius: 4px; }
 .sketchpad-layer-actions button:hover { background: var(--line); }
