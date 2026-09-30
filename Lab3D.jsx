@@ -7,24 +7,41 @@ import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
 import { createThreeScene, PRIMITIVES } from './labs/threeScene.js'
+import { TEMPLATES } from './labs/threeTemplates.js'
 
 const TABS = [
   { key: 'objects', icon: '🧊', label: 'Об’єкти' },
+  { key: 'templates', icon: '🏠', label: 'Шаблони' },
   { key: 'transform', icon: '🔄', label: 'Трансформація' },
   { key: 'material', icon: '🎨', label: 'Матеріал' },
   { key: 'export', icon: '📤', label: 'Експорт' },
 ]
 
 let idCounter = 0
-function makeObject(type = 'box') {
+function nextId() {
   idCounter += 1
+  return `obj-${Date.now()}-${idCounter}`
+}
+function makeObject(type = 'box') {
   return {
-    id: `obj-${Date.now()}-${idCounter}`,
+    id: nextId(),
+    name: null,
     type,
     position: { x: 0, y: 0.65, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
     material: { color: '#3E37E0', metalness: 0.2, roughness: 0.5, wireframe: false, opacity: 1 },
+  }
+}
+function makeObjectFromRecipe(recipe) {
+  const base = makeObject(recipe.type)
+  return {
+    ...base,
+    name: recipe.name || null,
+    position: { ...base.position, ...recipe.position },
+    rotation: { ...base.rotation, ...recipe.rotation },
+    scale: { ...base.scale, ...recipe.scale },
+    material: { ...base.material, ...recipe.material },
   }
 }
 
@@ -84,13 +101,14 @@ function AxisRow({ label, values, onChange, min = -5, max = 5, step = 0.05, isPr
   )
 }
 
-function ObjectsTab({ objects, selectedId, onSelect, onAdd, onDelete, selected, setPosition, isPro }) {
+function ObjectsTab({ objects, selectedId, onSelect, onAdd, onDelete, onDuplicate, onRename, selected, setPosition, isPro }) {
   return (
     <div>
-      <p className="cl-tab-desc">Додай прості фігури в сцену, вибери одну зі списку (або клікни по ній у 3D-вʼюпорті) і подивись, як зміниться позиція.</p>
+      <p className="cl-tab-desc">Додай прості фігури в сцену, вибери одну зі списку (або клікни по ній у 3D-вʼюпорті) і подивись, як зміниться позиція. Хочеш зібрати щось складніше (будинок, фігурку) одразу — загляни на вкладку «Шаблони».</p>
       <HelpBox>
         <p>3D-сцена складається з окремих обʼєктів (мешів). Кожен має свою геометрію (форма), позицію в просторі (X — вправо/вліво, Y — вгору/вниз, Z — вперед/назад) і матеріал (як він виглядає — колір, блиск).</p>
         <p>Клікни лівою кнопкою миші по фігурі в 3D-вʼюпорті, щоб вибрати її — обраний обʼєкт підсвічується жовтим контуром. Перетягуй правою кнопкою / колесо миші, щоб обертати й наближати камеру.</p>
+        <p>Складніші форми (будинок, людина) — це просто кілька простих фігур, поставлених поруч і пофарбованих по-різному. Кнопка ⧉ дублює обрану фігуру, щоб швидше зібрати схожі частини (наприклад другу ногу чи ще один пелюсток).</p>
       </HelpBox>
 
       <div className="cl-section-title">Додати фігуру</div>
@@ -104,7 +122,7 @@ function ObjectsTab({ objects, selectedId, onSelect, onAdd, onDelete, selected, 
 
       <div className="cl-section-title">Обʼєкти в сцені ({objects.length})</div>
       {objects.length === 0 ? (
-        <p className="cl-tab-desc">Сцена порожня — додай фігуру вище.</p>
+        <p className="cl-tab-desc">Сцена порожня — додай фігуру вище або готовий шаблон.</p>
       ) : (
         <div className="l3d-object-list">
           {objects.map((o, i) => {
@@ -112,8 +130,9 @@ function ObjectsTab({ objects, selectedId, onSelect, onAdd, onDelete, selected, 
             return (
               <div key={o.id} className={'l3d-object-row' + (o.id === selectedId ? ' active' : '')}>
                 <button className="l3d-object-select" onClick={() => onSelect(o.id)}>
-                  {meta?.icon} {meta?.label || o.type} #{i + 1}
+                  {meta?.icon} {o.name || `${meta?.label || o.type} #${i + 1}`}
                 </button>
+                <button className="cl-mini-btn" onClick={() => onDuplicate(o.id)} title="Дублювати">⧉</button>
                 <button className="cl-mini-btn" onClick={() => onDelete(o.id)} title="Видалити">✕</button>
               </div>
             )
@@ -123,10 +142,45 @@ function ObjectsTab({ objects, selectedId, onSelect, onAdd, onDelete, selected, 
 
       {selected && (
         <>
+          <div className="cl-section-title">Назва обраного обʼєкта</div>
+          <input
+            className="cl-hex-input"
+            value={selected.name || ''}
+            placeholder="Наприклад: Дах, Голова, Стебло…"
+            onChange={(e) => onRename(e.target.value)}
+            style={{ textTransform: 'none', marginBottom: 16 }}
+          />
+
           <div className="cl-section-title">Позиція обраного обʼєкта</div>
           <AxisRow label="Position" values={selected.position} onChange={setPosition} min={-4} max={4} step={0.05} isPro={isPro} />
         </>
       )}
+    </div>
+  )
+}
+
+function TemplatesTab({ onAddTemplate, onClearScene }) {
+  return (
+    <div>
+      <p className="cl-tab-desc">Готові композиції з кількох фігур одразу — швидкий старт, якщо хочеш зібрати щось впізнаване, а не лише один примітив.</p>
+      <HelpBox>
+        <p>Кожен шаблон додає одразу кілька обʼєктів (наприклад «стіни», «дах», «двері») з уже підібраними кольорами й позиціями. Далі кожну частину можна редагувати окремо — вибери її в списку на вкладці «Обʼєкти» й покрути, пересунь або перефарбуй.</p>
+        <p>Шаблон додається поверх того, що вже є в сцені — необов'язково починати спочатку. Хочеш чисту сцену — натисни «Очистити сцену» нижче.</p>
+      </HelpBox>
+
+      <div className="l3d-template-grid">
+        {TEMPLATES.map((t) => (
+          <button key={t.id} className="l3d-template-card" onClick={() => onAddTemplate(t.id)}>
+            <span className="l3d-template-icon">{t.icon}</span>
+            <span className="l3d-template-label">{t.label}</span>
+            <span className="l3d-template-count">{t.parts.length} частин</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="cl-picker-top" style={{ marginTop: 20 }}>
+        <button className="harmony-btn" onClick={onClearScene}>🗑 Очистити сцену</button>
+      </div>
     </div>
   )
 }
@@ -210,7 +264,8 @@ function sceneToThreeSnippet(objects) {
   const lines = objects.map((o, i) => {
     const geomArgs = { box: '1, 1, 1', sphere: '0.65, 32, 20', cone: '0.65, 1.3, 32', cylinder: '0.6, 0.6, 1.2, 32', torus: '0.55, 0.22, 20, 48', plane: '1.3, 1.3' }[o.type] || '1, 1, 1'
     const geomClass = { box: 'BoxGeometry', sphere: 'SphereGeometry', cone: 'ConeGeometry', cylinder: 'CylinderGeometry', torus: 'TorusGeometry', plane: 'PlaneGeometry' }[o.type] || 'BoxGeometry'
-    return `const mesh${i} = new THREE.Mesh(\n  new THREE.${geomClass}(${geomArgs}),\n  new THREE.MeshStandardMaterial({ color: '${o.material.color}', metalness: ${o.material.metalness}, roughness: ${o.material.roughness}, wireframe: ${o.material.wireframe}, transparent: ${o.material.opacity < 1}, opacity: ${o.material.opacity} })\n)\nmesh${i}.position.set(${o.position.x}, ${o.position.y}, ${o.position.z})\nmesh${i}.rotation.set(${(o.rotation.x * Math.PI / 180).toFixed(3)}, ${(o.rotation.y * Math.PI / 180).toFixed(3)}, ${(o.rotation.z * Math.PI / 180).toFixed(3)})\nmesh${i}.scale.set(${o.scale.x}, ${o.scale.y}, ${o.scale.z})\nscene.add(mesh${i})`
+    const comment = o.name ? `// ${o.name}\n` : ''
+    return `${comment}const mesh${i} = new THREE.Mesh(\n  new THREE.${geomClass}(${geomArgs}),\n  new THREE.MeshStandardMaterial({ color: '${o.material.color}', metalness: ${o.material.metalness}, roughness: ${o.material.roughness}, wireframe: ${o.material.wireframe}, transparent: ${o.material.opacity < 1}, opacity: ${o.material.opacity} })\n)\nmesh${i}.position.set(${o.position.x}, ${o.position.y}, ${o.position.z})\nmesh${i}.rotation.set(${(o.rotation.x * Math.PI / 180).toFixed(3)}, ${(o.rotation.y * Math.PI / 180).toFixed(3)}, ${(o.rotation.z * Math.PI / 180).toFixed(3)})\nmesh${i}.scale.set(${o.scale.x}, ${o.scale.y}, ${o.scale.z})\nscene.add(mesh${i})`
   })
   return lines.join('\n\n')
 }
@@ -331,6 +386,37 @@ export default function Lab3D() {
     applyObjects(next)
     if (selectedIdRef.current === id) applySelected(next[0]?.id ?? null)
   }
+  function duplicateObject(id) {
+    const obj = objectsRef.current.find((o) => o.id === id)
+    if (!obj) return
+    const clone = {
+      ...obj,
+      id: nextId(),
+      name: obj.name ? `${obj.name} (копія)` : null,
+      position: { ...obj.position, x: obj.position.x + 0.4 },
+    }
+    const next = [...objectsRef.current, clone]
+    applyObjects(next)
+    applySelected(clone.id)
+    toastApi.show('✓ Обʼєкт здубльовано')
+  }
+  function renameSelected(name) {
+    patchSelected(() => ({ name: name || null }))
+  }
+  function addTemplate(templateId) {
+    const tpl = TEMPLATES.find((t) => t.id === templateId)
+    if (!tpl) return
+    const newObjs = tpl.parts.map(makeObjectFromRecipe)
+    const next = [...objectsRef.current, ...newObjs]
+    applyObjects(next)
+    applySelected(newObjs[newObjs.length - 1].id)
+    toastApi.show(`✓ Додано: ${tpl.label}`)
+  }
+  function clearScene() {
+    applyObjects([])
+    applySelected(null)
+    toastApi.show('✓ Сцену очищено')
+  }
   function patchSelected(patch) {
     if (!selectedIdRef.current) return
     const next = objectsRef.current.map((o) => (o.id === selectedIdRef.current ? { ...o, ...patch(o) } : o))
@@ -360,7 +446,7 @@ export default function Lab3D() {
   return (
     <LabShell
       title="3D Lab"
-      subtitle="Легкі 3D-обʼєкти прямо в браузері: додавай фігури, керуй позицією, обертанням і матеріалом, експортуй сцену."
+      subtitle="Легкі 3D-обʼєкти прямо в браузері: готові шаблони (будинок, людина, рослина, іграшка) або окремі фігури — керуй позицією, обертанням і матеріалом, експортуй сцену."
       icon="🧊"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -393,10 +479,13 @@ export default function Lab3D() {
               onSelect={applySelected}
               onAdd={addObject}
               onDelete={deleteObject}
+              onDuplicate={duplicateObject}
+              onRename={renameSelected}
               setPosition={setPosition}
               isPro={labMode.isPro}
             />
           )}
+          {tab === 'templates' && <TemplatesTab onAddTemplate={addTemplate} onClearScene={clearScene} />}
           {tab === 'transform' && (
             <TransformTab selected={selected} setRotation={setRotation} setScale={setScale} onResetTransform={resetTransform} isPro={labMode.isPro} />
           )}
