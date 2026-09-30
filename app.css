@@ -116,6 +116,10 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .module-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 14px; flex-wrap: wrap; }
 .module-theory { font-size: 14.5px; line-height: 1.7; color: var(--ink); max-width: 70ch; margin: 0 0 14px; }
 
+.lesson-video { margin-bottom: 20px; }
+.lesson-video .eyebrow { margin-bottom: 8px; }
+.lesson-video-player { display: block; width: 100%; max-width: 640px; border-radius: var(--radius); background: #000; }
+
 .module-media-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
 .audio-narration { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .audio-note { font-size: 11px; color: var(--muted); }

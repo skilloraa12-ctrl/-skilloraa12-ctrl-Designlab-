@@ -9,6 +9,7 @@ import LessonMentor from './LessonMentor.jsx'
 import AudioNarration from './AudioNarration.jsx'
 import PresentationMode from './PresentationMode.jsx'
 import GlossaryText from './GlossaryText.jsx'
+import LessonVideo from './LessonVideo.jsx'
 
 export default function Module() {
   const { id } = useParams()
@@ -43,12 +44,14 @@ export default function Module() {
         </button>
       </div>
 
+      <LessonVideo video={module.video} moduleId={module.id} />
+
       {module.theory && <p className="module-theory"><GlossaryText text={module.theory} /></p>}
 
       {module.theory && (
         <div className="module-media-row">
           <button className="harmony-btn" onClick={() => setPresentationOpen(true)}>
-            🎬 Режим презентації (відео-урок)
+            🗣️ Слайди з голосом (автоматично)
           </button>
           <AudioNarration
             key={module.id}
