@@ -10,6 +10,7 @@ import AudioNarration from './AudioNarration.jsx'
 import PresentationMode from './PresentationMode.jsx'
 import GlossaryText from './GlossaryText.jsx'
 import LessonVideo from './LessonVideo.jsx'
+import LessonReel from './LessonReel.jsx'
 
 export default function Module() {
   const { id } = useParams()
@@ -44,6 +45,7 @@ export default function Module() {
         </button>
       </div>
 
+      <LessonReel module={module} />
       <LessonVideo video={module.video} moduleId={module.id} />
 
       {module.theory && <p className="module-theory"><GlossaryText text={module.theory} /></p>}

@@ -125,6 +125,41 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
   border-radius: var(--radius); background: #000; object-fit: cover;
 }
 
+/* Короткий код-згенерований огляд уроку (LessonReel.jsx) — той самий
+   9:16 вертикальний формат, без відео-файлу: SVG-мокап сайту + підпис
+   сцени + озвучення вбудованим голосом (Piper TTS). */
+.lesson-reel { margin-bottom: 20px; }
+.lesson-reel .eyebrow { margin-bottom: 8px; }
+.lesson-reel-card {
+  position: relative; width: 100%; max-width: 280px; aspect-ratio: 9 / 16;
+  border-radius: var(--radius); background: #0c0c10; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.lesson-reel-mockup { width: 78%; height: auto; }
+.lesson-reel-cover {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 16px; text-align: center; background: rgba(12,12,16,.35);
+}
+.lesson-reel-cover-title { color: #fff; font-weight: 700; font-size: 15px; line-height: 1.4; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+.lesson-reel-caption-wrap {
+  position: absolute; left: 0; right: 0; bottom: 34px; padding: 0 14px;
+}
+.lesson-reel-caption {
+  background: rgba(0,0,0,.78); color: #fff; font-weight: 700; font-size: 13px; line-height: 1.4;
+  padding: 10px 12px; border-radius: 10px; margin: 0; text-align: center;
+}
+.lesson-reel-flag {
+  display: inline-block; background: var(--coral); color: #fff; font-size: 10.5px; font-weight: 700;
+  padding: 3px 9px; border-radius: var(--radius-pill); margin: 0 auto 6px; text-align: center;
+}
+.lesson-reel-progress {
+  position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; gap: 5px;
+}
+.lesson-reel-dot { width: 18px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.25); }
+.lesson-reel-dot.active { background: var(--accent); }
+.lesson-reel-dot.done { background: rgba(255,255,255,.6); }
+.lesson-reel-controls { margin-top: 10px; }
+
 .module-media-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
 .audio-narration { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .audio-note { font-size: 11px; color: var(--muted); }
