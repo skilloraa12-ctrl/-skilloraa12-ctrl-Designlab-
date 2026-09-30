@@ -94,7 +94,7 @@ function ObjectsTab({ objects, selectedId, onSelect, onAdd, onDelete, selected, 
       </HelpBox>
 
       <div className="cl-section-title">Додати фігуру</div>
-      <div className="l3d-primitive-row">
+      <div className="cl-btn-row">
         {PRIMITIVES.map((p) => (
           <button key={p.type} className="harmony-btn" onClick={() => onAdd(p.type)}>
             {p.icon} {p.label}

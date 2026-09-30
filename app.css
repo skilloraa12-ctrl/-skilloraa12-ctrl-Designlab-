@@ -473,6 +473,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 }
 
 /* ---------- Color Lab ---------- */
+.cl-btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .cl-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
 .cl-tab {
   display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius-pill);
@@ -746,7 +747,6 @@ button.tool-badge--action:hover { border-color: var(--green); }
 }
 .l3d-viewport:active { cursor: grabbing; }
 .l3d-viewport canvas { display: block; }
-.l3d-primitive-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .l3d-object-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 .l3d-object-row {
   display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--radius-sm);
@@ -766,6 +766,26 @@ button.tool-badge--action:hover { border-color: var(--green); }
 
 @media (max-width: 620px) {
   .l3d-viewport { height: 280px; }
+}
+
+/* ---------- Typography Lab ---------- */
+.tl-scale-list { display: flex; flex-direction: column; gap: 4px; }
+.tl-scale-row { display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid var(--line); padding: 10px 0; }
+.tl-scale-tag { width: 40px; flex: none; font-size: 11px; color: var(--muted); text-transform: uppercase; }
+.tl-scale-sample { flex: 1; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-scale-meta { flex: none; font-size: 11.5px; color: var(--muted); font-family: var(--sans); }
+.tl-lh-preview {
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 16px 18px; margin: 10px 0 20px; color: var(--ink); overflow-wrap: break-word; max-width: 100%;
+}
+.tl-article-preview {
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 30px 32px; color: var(--ink); overflow-wrap: break-word; max-width: 100%; overflow-x: hidden;
+}
+
+@media (max-width: 620px) {
+  .tl-scale-row { gap: 10px; }
+  .tl-article-preview { padding: 22px 18px; }
 }
 
 /* ---------- Dictionary (Словник) ---------- */
