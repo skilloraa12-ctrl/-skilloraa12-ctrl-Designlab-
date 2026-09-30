@@ -154,8 +154,12 @@ export default function Module() {
             <button className="complete-btn" onClick={() => setSketchOpen(true)}>
               🖊 Створити ескіз у застосунку
             </button>
-            <button className="complete-btn" onClick={() => setMentorOpen(true)}>
-              💬 Запитати про урок
+            <button className="mentor-cta" onClick={() => setMentorOpen(true)}>
+              <span className="mentor-cta-icon">💬<span className="dot" /></span>
+              <span>
+                <span className="mentor-cta-title" style={{ display: 'block' }}>Запитати про урок</span>
+                <span className="mentor-cta-sub" style={{ display: 'block' }}>Чат-бот відповість, якщо щось незрозуміло</span>
+              </span>
             </button>
             <Link
               to="/portfolio"
