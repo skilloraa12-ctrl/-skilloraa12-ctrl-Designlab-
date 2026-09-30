@@ -36,7 +36,7 @@ export default function AcademySubcategory() {
         </div>
       ) : (
         <div className="guide-lesson-list">
-          {lessons.map((m) => <ModuleCard key={m.id} module={m} />)}
+          {lessons.map((m, i) => <ModuleCard key={m.id} module={m} index={i + 1} />)}
         </div>
       )}
     </div>

@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useProgress } from './ProgressContext.jsx'
 
-export default function ModuleCard({ module }) {
+export default function ModuleCard({ module, index }) {
   const { completed, toggleModule } = useProgress()
   const done = !!completed[module.id]
 
   return (
     <div className="mod-row">
-      <span className="mod-num">{String(module.id).padStart(2, '0')}</span>
+      <span className="mod-num">{String(index ?? module.id).padStart(2, '0')}</span>
       <button
         className={'mod-check' + (done ? ' done' : '')}
         onClick={(e) => { e.preventDefault(); toggleModule(module.id) }}

@@ -29,7 +29,7 @@ export default function Module() {
   return (
     <div>
       <Link to={`/academy/${module.level}/${module.subcategory}`} className="back-link">← {subcategory?.title || 'Академія'}</Link>
-      <p className="eyebrow">{subcategory?.emoji} {subcategory?.title} · Урок {String(module.id).padStart(2, '0')}</p>
+      <p className="eyebrow">{subcategory?.emoji} {subcategory?.title} · Урок {String(idx + 1).padStart(2, '0')} з {lessonsInSubcat.length}</p>
 
       <div className="module-header">
         <h1 className="page-title" style={{ marginBottom: 0 }}>{module.title}</h1>
