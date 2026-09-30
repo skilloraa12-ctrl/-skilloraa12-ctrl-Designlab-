@@ -331,6 +331,23 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 
 .sketchpad-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 
+/* ---------- Lesson Mentor ---------- */
+.lesson-mentor { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 18px; margin-top: 16px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 12px; }
+.lesson-mentor-header { display: flex; align-items: center; justify-content: space-between; }
+.lesson-mentor-messages { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.lesson-mentor-msg { max-width: 85%; padding: 10px 14px; border-radius: var(--radius); font-size: 13.5px; line-height: 1.5; }
+.lesson-mentor-msg--user { align-self: flex-end; background: var(--accent); color: #fff; }
+.lesson-mentor-msg--user p { margin: 0; }
+.lesson-mentor-msg--bot { align-self: flex-start; background: var(--bg); border: 1px solid var(--line); }
+.lesson-mentor-intro { margin: 0 0 6px; font-weight: 600; }
+.lesson-mentor-passages { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.lesson-mentor-passages li { padding-left: 10px; border-left: 2px solid var(--accent); }
+.lesson-mentor-passage-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 2px; }
+.lesson-mentor-footer { margin: 0; color: var(--muted); font-size: 12.5px; font-style: italic; }
+.lesson-mentor-input-row { display: flex; gap: 8px; }
+.lesson-mentor-input { flex: 1; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 13.5px; background: var(--surface); color: var(--ink); }
+.lesson-mentor-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 /* ---------- Career / Progress bars ---------- */
 .career-row { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--line); }
 .career-row:first-child { border-top: 1px solid var(--line); }

@@ -5,6 +5,7 @@ import { getSubcategory } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
+import LessonMentor from './LessonMentor.jsx'
 import AudioNarration from './AudioNarration.jsx'
 import PresentationMode from './PresentationMode.jsx'
 import GlossaryText from './GlossaryText.jsx'
@@ -15,6 +16,7 @@ export default function Module() {
   const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem } = useProgress()
   const [sketchOpen, setSketchOpen] = useState(false)
   const [presentationOpen, setPresentationOpen] = useState(false)
+  const [mentorOpen, setMentorOpen] = useState(false)
 
   if (!module) return <Navigate to="/academy" replace />
 
@@ -131,6 +133,9 @@ export default function Module() {
             <button className="complete-btn" onClick={() => setSketchOpen(true)}>
               🖊 Створити ескіз у застосунку
             </button>
+            <button className="complete-btn" onClick={() => setMentorOpen(true)}>
+              💬 Запитати про урок
+            </button>
             <Link
               to="/portfolio"
               state={{ prefillTitle: module.title, prefillTags: [module.title] }}
@@ -140,6 +145,10 @@ export default function Module() {
               Додати виконану роботу в портфоліо →
             </Link>
           </div>
+
+          {mentorOpen && (
+            <LessonMentor module={module} onClose={() => setMentorOpen(false)} />
+          )}
 
           {sketchOpen && (
             <SketchPad
