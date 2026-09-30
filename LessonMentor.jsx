@@ -1,32 +1,40 @@
 import { useState, useRef, useEffect } from 'react'
 import { answerFromLesson } from './mentorMatch.js'
 import { loadFeedback, rate } from './mentorFeedback.js'
+import { useAuth } from './AuthContext.jsx'
 
 let nextMsgId = 1
 
 export default function LessonMentor({ module, onClose }) {
+  const { user } = useAuth()
   const [messages, setMessages] = useState(() => [
     {
       id: nextMsgId++,
       role: 'bot',
       intro: `Привіт! Запитай мене про щось із уроку «${module.title}» своїми словами.`,
-      footer: 'Я не жива розмова й не штучний інтелект — лише шукаю збіги в тексті цього уроку (теорія, ключові принципи, типові помилки, практика). Постав 👍/👎 під відповіддю — я запам\'ятаю це в цьому браузері й наступного разу при схожому питанні підніму корисні фрагменти вище. Якщо питання не стосується уроку, чесно так і скажу.',
+      footer: 'Я не жива розмова й не штучний інтелект — лише шукаю збіги в тексті цього уроку (теорія, ключові принципи, типові помилки, практика). Постав 👍/👎 під відповіддю — це спільна оцінка від УСІХ учнів курсу, і корисні фрагменти з часом підіймаються вище для всіх, хто питатиме схоже. Якщо питання не стосується уроку, чесно так і скажу.',
     },
   ])
   const [input, setInput] = useState('')
-  const [ratedMap, setRatedMap] = useState({})
+  const [sending, setSending] = useState(false)
+  // Власні голоси поточного користувача по тексту фрагмента (не по
+  // конкретному повідомленню — той самий фрагмент може випасти в кількох
+  // відповідях, і голос по ньому має бути один спільний).
+  const [myVotes, setMyVotes] = useState({})
   const scrollRef = useRef(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  function send() {
+  async function send() {
     const question = input.trim()
-    if (!question) return
+    if (!question || sending) return
+    setSending(true)
 
-    const feedback = loadFeedback(module.id)
-    const result = answerFromLesson(module, question, feedback)
+    const { aggregate, mine } = await loadFeedback(module.id, user?.email)
+    setMyVotes((prev) => ({ ...mine, ...prev }))
+    const result = answerFromLesson(module, question, aggregate)
     const botMsg = { id: nextMsgId++, role: 'bot' }
 
     if (!result.matched) {
@@ -43,14 +51,16 @@ export default function LessonMentor({ module, onClose }) {
 
     setMessages((prev) => [...prev, { id: nextMsgId++, role: 'user', text: question }, botMsg])
     setInput('')
+    setSending(false)
   }
 
-  function handleRate(msgId, i, passageText, value) {
-    const key = `${msgId}:${i}`
-    const old = ratedMap[key] || 0
-    if (old === value) return
-    rate(module.id, passageText, value - old)
-    setRatedMap((prev) => ({ ...prev, [key]: value }))
+  async function handleRate(passageText, value) {
+    if (!user?.email) return
+    const current = myVotes[passageText] || 0
+    // Оптимістично оновлюємо кнопку одразу, не чекаючи відповіді мережі.
+    setMyVotes((prev) => ({ ...prev, [passageText]: value === current ? 0 : value }))
+    const saved = await rate(module.id, passageText, value, current, user.email)
+    setMyVotes((prev) => ({ ...prev, [passageText]: saved }))
   }
 
   return (
@@ -71,8 +81,7 @@ export default function LessonMentor({ module, onClose }) {
                 {m.passages && m.passages.length > 0 && (
                   <ul className="lesson-mentor-passages">
                     {m.passages.map((p, i) => {
-                      const key = `${m.id}:${i}`
-                      const voted = ratedMap[key] || 0
+                      const voted = myVotes[p.text] || 0
                       return (
                         <li key={i}>
                           <span className="lesson-mentor-passage-label">{p.label}</span>
@@ -80,13 +89,13 @@ export default function LessonMentor({ module, onClose }) {
                           <span className="lesson-mentor-rate">
                             <button
                               className={voted === 1 ? 'active' : ''}
-                              onClick={() => handleRate(m.id, i, p.text, 1)}
+                              onClick={() => handleRate(p.text, 1)}
                               aria-label="Корисно"
                               title="Корисно"
                             >👍</button>
                             <button
                               className={voted === -1 ? 'active' : ''}
-                              onClick={() => handleRate(m.id, i, p.text, -1)}
+                              onClick={() => handleRate(p.text, -1)}
                               aria-label="Не допомогло"
                               title="Не допомогло"
                             >👎</button>
@@ -111,8 +120,11 @@ export default function LessonMentor({ module, onClose }) {
           onKeyDown={(e) => { if (e.key === 'Enter') send() }}
           placeholder="Запитай про цей урок своїми словами…"
           className="lesson-mentor-input"
+          disabled={sending}
         />
-        <button className="pf-add-btn" onClick={send}>Надіслати</button>
+        <button className="pf-add-btn" onClick={send} disabled={sending}>
+          {sending ? '…' : 'Надіслати'}
+        </button>
       </div>
     </div>
   )

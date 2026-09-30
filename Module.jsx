@@ -108,11 +108,27 @@ export default function Module() {
             <div className="tools-block">
               <p className="eyebrow" style={{ marginTop: 16 }}>ДЕ ВИКОНАТИ ЗАВДАННЯ</p>
               <div className="tools-row">
-                {module.tools.free.map((t, i) => (
-                  t.url
-                    ? <a key={'f' + i} href={t.url} target="_blank" rel="noreferrer" className="tool-badge tool-badge--free">{t.name} · безкоштовно</a>
-                    : <span key={'f' + i} className="tool-badge tool-badge--free">{t.name} · безкоштовно</span>
-                ))}
+                {module.tools.free.map((t, i) => {
+                  if (t.url) {
+                    return <a key={'f' + i} href={t.url} target="_blank" rel="noreferrer" className="tool-badge tool-badge--free">{t.name} · безкоштовно</a>
+                  }
+                  // Бейдж про вбудований ескізник має сам відкривати SketchPad,
+                  // а не бути просто написом, що дублює кнопку нижче —
+                  // інакше клік по ньому виглядає як кнопка, що не працює.
+                  if (t.name.includes('ескізник')) {
+                    return (
+                      <button
+                        key={'f' + i}
+                        type="button"
+                        className="tool-badge tool-badge--free tool-badge--action"
+                        onClick={() => setSketchOpen(true)}
+                      >
+                        {t.name} · безкоштовно
+                      </button>
+                    )
+                  }
+                  return <span key={'f' + i} className="tool-badge tool-badge--free">{t.name} · безкоштовно</span>
+                })}
                 {module.tools.paid.map((t, i) => (
                   <a key={'p' + i} href={t.url} target="_blank" rel="noreferrer" className="tool-badge tool-badge--paid">{t.name} · платно</a>
                 ))}

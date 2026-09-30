@@ -201,6 +201,9 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .tool-badge--free { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 10%, var(--surface)); }
 .tool-badge--paid { border-color: var(--amber); color: var(--amber); background: color-mix(in srgb, var(--amber) 10%, var(--surface)); }
 .tool-badge:hover { opacity: .8; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+/* Бейдж-кнопка (напр. "Вбудований ескізник") — скидаємо системні стилі <button> */
+button.tool-badge--action { font: inherit; }
+button.tool-badge--action:hover { border-color: var(--green); }
 
 .module-nav { display: flex; justify-content: space-between; gap: 16px; margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 
