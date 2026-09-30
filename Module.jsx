@@ -11,6 +11,7 @@ import PresentationMode from './PresentationMode.jsx'
 import GlossaryText from './GlossaryText.jsx'
 import LessonVideo from './LessonVideo.jsx'
 import LessonReel from './LessonReel.jsx'
+import { getPracticeTools } from './practiceTools.js'
 
 export default function Module() {
   const { id } = useParams()
@@ -29,6 +30,7 @@ export default function Module() {
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
   const prev = lessonsInSubcat[idx - 1]
   const next = lessonsInSubcat[idx + 1]
+  const practiceTools = getPracticeTools(module.subcategory)
 
   return (
     <div>
@@ -138,6 +140,24 @@ export default function Module() {
                   <a key={'p' + i} href={t.url} target="_blank" rel="noreferrer" className="tool-badge tool-badge--paid">{t.name} · платно</a>
                 ))}
               </div>
+            </div>
+          )}
+
+          {practiceTools.length > 0 && (
+            <div className="practice-tools">
+              <p className="practice-tools-title">Де ще можна попрактикуватися</p>
+              <div className="tools-row">
+                {practiceTools.map((t, i) => {
+                  const href = t.internal ? `/tools/${t.category}/${t.id}` : t.href
+                  const label = `${t.name} · ${t.tag === 'free' ? 'безкоштовно' : t.tag === 'paid' ? 'платно' : 'freemium'}`
+                  return t.internal ? (
+                    <Link key={i} to={href} title={t.note} className={`tool-badge tool-badge--${t.tag}`}>{label}</Link>
+                  ) : (
+                    <a key={i} href={href} target="_blank" rel="noreferrer" title={t.note} className={`tool-badge tool-badge--${t.tag}`}>{label}</a>
+                  )
+                })}
+              </div>
+              <p className="practice-tools-note">Це не «або-або»: ескізник у застосунку теж рахується як виконане завдання — ці інструменти корисні, якщо вже хочеш попрацювати в справжньому сервісі.</p>
             </div>
           )}
 
