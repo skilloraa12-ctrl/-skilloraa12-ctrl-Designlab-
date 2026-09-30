@@ -163,7 +163,7 @@ export default function Module() {
           </div>
 
           {mentorOpen && (
-            <LessonMentor module={module} onClose={() => setMentorOpen(false)} />
+            <LessonMentor module={module} prev={prev} next={next} onClose={() => setMentorOpen(false)} />
           )}
 
           {sketchOpen && (

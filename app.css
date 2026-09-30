@@ -328,6 +328,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .sketchpad-layer--hidden { opacity: .4; }
 .sketchpad-layer--selected { background: rgba(62,55,224,0.1); }
 .sketchpad-layer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.sketchpad-layer-info { margin-left: 4px; cursor: help; opacity: .7; }
 .sketchpad-layer-actions { display: flex; gap: 2px; flex: none; }
 .sketchpad-layer-actions button { border: none; background: none; cursor: pointer; font-size: 13px; padding: 2px 5px; border-radius: 4px; }
 .sketchpad-layer-actions button:hover { background: var(--line); }
@@ -351,6 +352,14 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .lesson-mentor-rate button.active { border-color: var(--accent); background: rgba(62,55,224,0.12); }
 .lesson-mentor-rate button:hover { border-color: var(--accent); }
 .lesson-mentor-footer { margin: 0; color: var(--muted); font-size: 12.5px; font-style: italic; }
+.lesson-mentor-quick-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.lesson-mentor-quick-btn {
+  font-family: var(--sans); font-size: 12px; padding: 5px 10px; border-radius: var(--radius-pill);
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.lesson-mentor-quick-btn:hover { opacity: .8; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.lesson-mentor-quick-btn:disabled { opacity: .5; cursor: default; transform: none; }
 .lesson-mentor-input-row { display: flex; gap: 8px; }
 .lesson-mentor-input { flex: 1; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 13.5px; background: var(--surface); color: var(--ink); }
 .lesson-mentor-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }

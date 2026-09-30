@@ -26,6 +26,24 @@ const FRAME_PRESETS = [
 
 const BLOCK_PRESETS = ['Header', 'Navigation', 'Hero', 'Section', 'Content', 'Card', 'Sidebar', 'Footer', 'CTA', 'Image', 'Button', 'Form']
 
+// Новачок бачить у списку шарів лише назву блоку (напр. "Header") і не
+// знає, за що той блок відповідає на сайті — пояснюємо одним коротким
+// реченням кожен тип, а не лише показуємо англійську назву.
+const BLOCK_PRESET_INFO = {
+  Header: 'Шапка сайту вгорі — зазвичай лого, меню й кнопка входу/реєстрації.',
+  Navigation: 'Меню навігації — список посилань на розділи сайту.',
+  Hero: 'Перший великий екран під шапкою — головний заголовок і заклик до дії, те, що бачать одразу.',
+  Section: 'Смислова секція сторінки — один блок контенту з власною темою.',
+  Content: 'Основний контент сторінки — текст, список, опис.',
+  Card: 'Картка — самодостатній блок із зображенням/заголовком/текстом, які часто повторюються в сітці.',
+  Sidebar: 'Бічна панель — додаткова навігація чи інформація поруч з основним контентом.',
+  Footer: 'Підвал сайту внизу — контакти, копірайт, додаткові посилання.',
+  CTA: 'Call To Action — блок із кнопкою, що закликає до дії (купити, підписатись тощо).',
+  Image: 'Місце під зображення чи ілюстрацію.',
+  Button: 'Кнопка — елемент для кліку (наприклад, "Замовити", "Дізнатись більше").',
+  Form: 'Форма — поля для введення даних (наприклад, контактна форма чи підписка).',
+}
+
 const LAYER_ICONS = { pen: '✏️', line: '➖', rect: '▭', ellipse: '⬭', text: '🅰', frame: '🖼️', block: '🧱' }
 
 function layerLabel(l) {
@@ -557,7 +575,7 @@ export default function SketchPad({ module, onSave, onClose }) {
             <select className="sketchpad-select" value={blockPreset} onChange={(e) => setBlockPreset(e.target.value)}>
               {BLOCK_PRESETS.map((b) => <option key={b} value={b}>{b}</option>)}
             </select>
-            <span className="sketchpad-hint-text">Потягни на полотні, щоб намалювати блок</span>
+            <span className="sketchpad-hint-text">{BLOCK_PRESET_INFO[blockPreset]}</span>
           </label>
         ) : (
           <>
@@ -666,8 +684,12 @@ export default function SketchPad({ module, onSave, onClose }) {
                   onClick={() => { setTool('select'); setSelectedId(l.id) }}
                   role="button"
                   tabIndex={0}
+                  title={l.type === 'block' ? BLOCK_PRESET_INFO[l.label] : undefined}
                 >
                   {LAYER_ICONS[l.type]} {layerLabel(l)}
+                  {l.type === 'block' && BLOCK_PRESET_INFO[l.label] && (
+                    <span className="sketchpad-layer-info" aria-label={BLOCK_PRESET_INFO[l.label]}>ⓘ</span>
+                  )}
                 </span>
                 <span className="sketchpad-layer-actions">
                   <button onClick={() => moveLayer(l.id, 1)} title="Вище" aria-label="Перемістити шар вище">↑</button>
