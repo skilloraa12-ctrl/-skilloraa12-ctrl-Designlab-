@@ -16,7 +16,7 @@ const TABS = [
   { key: 'harmonies', icon: '🌈', label: 'Harmonies' },
   { key: 'palette', icon: '🎯', label: 'Palette' },
   { key: 'shades', icon: '🌗', label: 'Shades' },
-  { key: 'contrast', icon: '♿', label: 'Contrast' },
+  { key: 'contrast', icon: '◐', label: 'Contrast' },
   { key: 'gradient', icon: '🎨', label: 'Gradient' },
   { key: 'typography', icon: '🔤', label: 'Typography' },
   { key: 'preview', icon: '🖼', label: 'Design Preview' },

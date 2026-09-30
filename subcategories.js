@@ -76,7 +76,7 @@ export const SUBCATEGORIES = [
     topics: ['Motion Design', 'Animation Principles', 'Hover', 'Focus', 'Active', 'Loading', 'Microinteractions', 'Transitions', 'Page Transitions', 'Scroll Animation'],
   },
   {
-    id: 'accessibility', level: 'web-design', order: 14, emoji: '♿', title: 'Accessibility',
+    id: 'accessibility', level: 'web-design', order: 14, emoji: '🔓', title: 'Accessibility',
     desc: 'Контраст кольору, клавіатурна навігація, доступні форми й компоненти',
     topics: ['Що таке Accessibility', 'Color Contrast', 'Typography & Readability', 'Keyboard Navigation', 'Focus', 'Color Blindness', 'Accessible Forms', 'Accessible Components', 'Visual Accessibility'],
   },

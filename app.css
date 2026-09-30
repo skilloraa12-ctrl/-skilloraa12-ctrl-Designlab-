@@ -739,6 +739,35 @@ button.tool-badge--action:hover { border-color: var(--green); }
   .lab-card-grid { grid-template-columns: 1fr; }
 }
 
+/* ---------- 3D Lab ---------- */
+.l3d-viewport {
+  width: 100%; height: 360px; border-radius: var(--radius); border: 1px solid var(--line);
+  margin-bottom: 20px; overflow: hidden; background: #16161d; cursor: grab;
+}
+.l3d-viewport:active { cursor: grabbing; }
+.l3d-viewport canvas { display: block; }
+.l3d-primitive-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.l3d-object-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.l3d-object-row {
+  display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--surface); padding: 4px 6px 4px 4px;
+}
+.l3d-object-row.active { border-color: var(--accent); }
+.l3d-object-select {
+  flex: 1; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px;
+  color: var(--ink); padding: 7px 8px;
+}
+.l3d-axis-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.l3d-axis-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.l3d-axis-field { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.l3d-axis-field span:first-child { width: 14px; flex: none; font-weight: 600; }
+.l3d-axis-field input[type="range"] { flex: 1; }
+.l3d-axis-field input[type="number"] { width: 64px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); color: var(--ink); padding: 5px 7px; font-size: 12px; }
+
+@media (max-width: 620px) {
+  .l3d-viewport { height: 280px; }
+}
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }

@@ -12,6 +12,7 @@ import Glossary from './Glossary.jsx'
 import Achievements from './Achievements.jsx'
 import Profile from './Profile.jsx'
 import ColorLabPage from './ColorLabPage.jsx'
+import Lab3D from './Lab3D.jsx'
 import Portfolio from './Portfolio.jsx'
 import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="/color-lab" element={<RequireAuth><ColorLabPage /></RequireAuth>} />
           <Route path="/labs" element={<RequireAuth><LabsHome /></RequireAuth>} />
           <Route path="/labs/color" element={<RequireAuth><ColorLabPage /></RequireAuth>} />
+          <Route path="/labs/3d" element={<RequireAuth><Lab3D /></RequireAuth>} />
           <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />
