@@ -57,27 +57,46 @@ function BrowserMockup({ kind }) {
   )
 }
 
+// Час "на читання" для мовчазного режиму (без голосу) — орієнтовно
+// швидкість читання дорослою людиною, з розумними межами, щоб і короткий,
+// і довгий підпис встигали прочитатись, не затягуючи огляд надовго.
+function readingDuration(text) {
+  return Math.min(6000, Math.max(2200, text.length * 55))
+}
+
 export default function LessonReel({ module }) {
   const scenes = buildScenes(module)
   const [state, setState] = useState('idle') // idle | loading | playing | error | done
   const [sceneIndex, setSceneIndex] = useState(0)
+  const [voiceOn, setVoiceOn] = useState(true)
   const audioRef = useRef(null)
   const blobUrlRef = useRef(null)
   const requestIdRef = useRef(0)
+  const timeoutRef = useRef(null)
 
   function cleanup() {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.onended = null; audioRef.current = null }
     if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null }
+    if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
   }
 
   useEffect(() => () => cleanup(), [])
 
-  async function playScene(i, myId) {
+  async function playScene(i, myId, withVoice) {
     if (i >= scenes.length) {
       if (myId === requestIdRef.current) { setState('done'); cleanup() }
       return
     }
     setSceneIndex(i)
+
+    if (!withVoice) {
+      // Беззвучний режим — просто текстові слайди, що гортаються за часом
+      // на читання, без жодного звернення до голосового рушія.
+      setState('playing')
+      timeoutRef.current = setTimeout(() => { if (myId === requestIdRef.current) playScene(i + 1, myId, withVoice) }, readingDuration(scenes[i].caption))
+      return
+    }
+
     setState('loading')
     try {
       const blob = await withTimeout(synthesizeSpeechWav(scenes[i].caption))
@@ -87,8 +106,8 @@ export default function LessonReel({ module }) {
       blobUrlRef.current = url
       const audio = new Audio(url)
       audioRef.current = audio
-      audio.onended = () => { if (myId === requestIdRef.current) playScene(i + 1, myId) }
-      audio.onerror = () => { if (myId === requestIdRef.current) playScene(i + 1, myId) }
+      audio.onended = () => { if (myId === requestIdRef.current) playScene(i + 1, myId, withVoice) }
+      audio.onerror = () => { if (myId === requestIdRef.current) playScene(i + 1, myId, withVoice) }
       await audio.play()
       if (myId !== requestIdRef.current) return
       setState('playing')
@@ -97,13 +116,13 @@ export default function LessonReel({ module }) {
       // перейдемо далі за часом, щоб короткий огляд не завис назавжди.
       if (myId !== requestIdRef.current) return
       setState('playing')
-      setTimeout(() => { if (myId === requestIdRef.current) playScene(i + 1, myId) }, 2500)
+      timeoutRef.current = setTimeout(() => { if (myId === requestIdRef.current) playScene(i + 1, myId, withVoice) }, 2500)
     }
   }
 
   function start() {
     const myId = ++requestIdRef.current
-    playScene(0, myId)
+    playScene(0, myId, voiceOn)
   }
 
   function stop() {
@@ -119,7 +138,7 @@ export default function LessonReel({ module }) {
 
   return (
     <div className="lesson-reel">
-      <p className="eyebrow">🎬 Короткий огляд (з голосом)</p>
+      <p className="eyebrow">🎬 Короткий огляд</p>
       <div className="lesson-reel-card">
         <BrowserMockup kind={isActive ? scene.kind : 'intro'} />
 
@@ -144,6 +163,12 @@ export default function LessonReel({ module }) {
       </div>
 
       <div className="lesson-reel-controls">
+        {!isActive && (
+          <label className="lesson-reel-voice-toggle">
+            <input type="checkbox" checked={voiceOn} onChange={(e) => setVoiceOn(e.target.checked)} />
+            🔊 Зі звуком
+          </label>
+        )}
         {!isActive && state !== 'done' && (
           <button className="pf-add-btn" onClick={start}>▶ Переглянути огляд</button>
         )}

@@ -158,7 +158,8 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .lesson-reel-dot { width: 18px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.25); }
 .lesson-reel-dot.active { background: var(--accent); }
 .lesson-reel-dot.done { background: rgba(255,255,255,.6); }
-.lesson-reel-controls { margin-top: 10px; }
+.lesson-reel-controls { margin-top: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lesson-reel-voice-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); cursor: pointer; }
 
 .module-media-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
 .audio-narration { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
