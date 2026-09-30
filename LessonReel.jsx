@@ -202,6 +202,10 @@ export default function LessonReel({ module }) {
   const blobUrlRef = useRef(null)
   const requestIdRef = useRef(0)
   const timeoutRef = useRef(null)
+  // playScene читає ЦЕ, а не параметр функції чи замкнене значення стану —
+  // інакше кнопка звуку, натиснута ПІД ЧАС відтворення, ніяк не впливала б
+  // на наступні сцени (voiceOn із замикання застиг би на моменті старту).
+  const voiceOnRef = useRef(true)
 
   function cleanup() {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.onended = null; audioRef.current = null }
@@ -211,18 +215,29 @@ export default function LessonReel({ module }) {
 
   useEffect(() => () => cleanup(), [])
 
-  async function playScene(i, myId, withVoice) {
+  // Кнопка звуку працює в будь-який момент, і навіть коли аудіо вже
+  // грає — миттєво вмикає/вимикає його через .muted, без перезапуску сцени.
+  function toggleVoice() {
+    setVoiceOn((v) => {
+      const next = !v
+      voiceOnRef.current = next
+      if (audioRef.current) audioRef.current.muted = !next
+      return next
+    })
+  }
+
+  async function playScene(i, myId) {
     if (i >= scenes.length) {
       if (myId === requestIdRef.current) { setState('done'); cleanup() }
       return
     }
     setSceneIndex(i)
 
-    if (!withVoice) {
+    if (!voiceOnRef.current) {
       // Беззвучний режим — просто текстові слайди, що гортаються за часом
       // на читання, без жодного звернення до голосового рушія.
       setState('playing')
-      timeoutRef.current = setTimeout(() => { if (myId === requestIdRef.current) playScene(i + 1, myId, withVoice) }, readingDuration(scenes[i].caption))
+      timeoutRef.current = setTimeout(() => { if (myId === requestIdRef.current) playScene(i + 1, myId) }, readingDuration(scenes[i].caption))
       return
     }
 
@@ -234,9 +249,10 @@ export default function LessonReel({ module }) {
       const url = URL.createObjectURL(blob)
       blobUrlRef.current = url
       const audio = new Audio(url)
+      audio.muted = !voiceOnRef.current
       audioRef.current = audio
-      audio.onended = () => { if (myId === requestIdRef.current) playScene(i + 1, myId, withVoice) }
-      audio.onerror = () => { if (myId === requestIdRef.current) playScene(i + 1, myId, withVoice) }
+      audio.onended = () => { if (myId === requestIdRef.current) playScene(i + 1, myId) }
+      audio.onerror = () => { if (myId === requestIdRef.current) playScene(i + 1, myId) }
       await audio.play()
       if (myId !== requestIdRef.current) return
       setState('playing')
@@ -245,13 +261,14 @@ export default function LessonReel({ module }) {
       // перейдемо далі за часом, щоб короткий огляд не завис назавжди.
       if (myId !== requestIdRef.current) return
       setState('playing')
-      timeoutRef.current = setTimeout(() => { if (myId === requestIdRef.current) playScene(i + 1, myId, withVoice) }, 2500)
+      timeoutRef.current = setTimeout(() => { if (myId === requestIdRef.current) playScene(i + 1, myId) }, 2500)
     }
   }
 
   function start() {
     const myId = ++requestIdRef.current
-    playScene(0, myId, voiceOn)
+    voiceOnRef.current = voiceOn
+    playScene(0, myId)
   }
 
   function stop() {
@@ -292,12 +309,14 @@ export default function LessonReel({ module }) {
       </div>
 
       <div className="lesson-reel-controls">
-        {!isActive && (
-          <label className="lesson-reel-voice-toggle">
-            <input type="checkbox" checked={voiceOn} onChange={(e) => setVoiceOn(e.target.checked)} />
-            🔊 Зі звуком
-          </label>
-        )}
+        <button
+          className="harmony-btn"
+          onClick={toggleVoice}
+          title={voiceOn ? 'Вимкнути звук' : 'Увімкнути звук'}
+          aria-label={voiceOn ? 'Вимкнути звук' : 'Увімкнути звук'}
+        >
+          {voiceOn ? '🔊' : '🔇'}
+        </button>
         {!isActive && state !== 'done' && (
           <button className="pf-add-btn" onClick={start}>▶ Переглянути огляд</button>
         )}
