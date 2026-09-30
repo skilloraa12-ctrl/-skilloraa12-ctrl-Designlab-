@@ -343,6 +343,10 @@ h1.page-title { font-family: var(--serif); font-size: 32px; line-height: 1.15; m
 .lesson-mentor-passages { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .lesson-mentor-passages li { padding-left: 10px; border-left: 2px solid var(--accent); }
 .lesson-mentor-passage-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 2px; }
+.lesson-mentor-rate { display: inline-flex; gap: 2px; margin-left: 8px; }
+.lesson-mentor-rate button { border: 1px solid var(--line); background: var(--surface); border-radius: 4px; padding: 1px 5px; font-size: 12px; cursor: pointer; line-height: 1.4; }
+.lesson-mentor-rate button.active { border-color: var(--accent); background: rgba(62,55,224,0.12); }
+.lesson-mentor-rate button:hover { border-color: var(--accent); }
 .lesson-mentor-footer { margin: 0; color: var(--muted); font-size: 12.5px; font-style: italic; }
 .lesson-mentor-input-row { display: flex; gap: 8px; }
 .lesson-mentor-input { flex: 1; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 13.5px; background: var(--surface); color: var(--ink); }

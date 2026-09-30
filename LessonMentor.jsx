@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { answerFromLesson } from './mentorMatch.js'
+import { loadFeedback, rate } from './mentorFeedback.js'
 
 let nextMsgId = 1
 
@@ -9,10 +10,11 @@ export default function LessonMentor({ module, onClose }) {
       id: nextMsgId++,
       role: 'bot',
       intro: `Привіт! Запитай мене про щось із уроку «${module.title}» своїми словами.`,
-      footer: 'Я не жива розмова й не штучний інтелект — лише шукаю збіги в тексті цього уроку (теорія, ключові принципи, типові помилки, практика). Якщо питання не стосується уроку, чесно так і скажу.',
+      footer: 'Я не жива розмова й не штучний інтелект — лише шукаю збіги в тексті цього уроку (теорія, ключові принципи, типові помилки, практика). Постав 👍/👎 під відповіддю — я запам\'ятаю це в цьому браузері й наступного разу при схожому питанні підніму корисні фрагменти вище. Якщо питання не стосується уроку, чесно так і скажу.',
     },
   ])
   const [input, setInput] = useState('')
+  const [ratedMap, setRatedMap] = useState({})
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -23,7 +25,8 @@ export default function LessonMentor({ module, onClose }) {
     const question = input.trim()
     if (!question) return
 
-    const result = answerFromLesson(module, question)
+    const feedback = loadFeedback(module.id)
+    const result = answerFromLesson(module, question, feedback)
     const botMsg = { id: nextMsgId++, role: 'bot' }
 
     if (!result.matched) {
@@ -40,6 +43,14 @@ export default function LessonMentor({ module, onClose }) {
 
     setMessages((prev) => [...prev, { id: nextMsgId++, role: 'user', text: question }, botMsg])
     setInput('')
+  }
+
+  function handleRate(msgId, i, passageText, value) {
+    const key = `${msgId}:${i}`
+    const old = ratedMap[key] || 0
+    if (old === value) return
+    rate(module.id, passageText, value - old)
+    setRatedMap((prev) => ({ ...prev, [key]: value }))
   }
 
   return (
@@ -59,12 +70,30 @@ export default function LessonMentor({ module, onClose }) {
                 {m.intro && <p className="lesson-mentor-intro">{m.intro}</p>}
                 {m.passages && m.passages.length > 0 && (
                   <ul className="lesson-mentor-passages">
-                    {m.passages.map((p, i) => (
-                      <li key={i}>
-                        <span className="lesson-mentor-passage-label">{p.label}</span>
-                        {p.text}
-                      </li>
-                    ))}
+                    {m.passages.map((p, i) => {
+                      const key = `${m.id}:${i}`
+                      const voted = ratedMap[key] || 0
+                      return (
+                        <li key={i}>
+                          <span className="lesson-mentor-passage-label">{p.label}</span>
+                          {p.text}
+                          <span className="lesson-mentor-rate">
+                            <button
+                              className={voted === 1 ? 'active' : ''}
+                              onClick={() => handleRate(m.id, i, p.text, 1)}
+                              aria-label="Корисно"
+                              title="Корисно"
+                            >👍</button>
+                            <button
+                              className={voted === -1 ? 'active' : ''}
+                              onClick={() => handleRate(m.id, i, p.text, -1)}
+                              aria-label="Не допомогло"
+                              title="Не допомогло"
+                            >👎</button>
+                          </span>
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
                 {m.footer && <p className="lesson-mentor-footer">{m.footer}</p>}

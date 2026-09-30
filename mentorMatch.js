@@ -59,8 +59,15 @@ function buildCorpus(module) {
   return corpus
 }
 
+// feedback — мапа { [текст фрагмента]: сумарний бал 👍/👎 з цього браузера
+// (localStorage, див. mentorFeedback.js) } — це і є те, чим бот «вчиться
+// з часом»: серед кількох однаково релевантних фрагментів ті, що раніше
+// позначили як корисні, спливають вище. Бонус діє лише серед фрагментів,
+// які й так пройшли збіг по словах, — оцінки самі по собі не можуть
+// підняти геть нерелевантний фрагмент.
+//
 // Повертає { matched: bool, passages: [{source,label,text,score}], flaggedMistake }
-export function answerFromLesson(module, question) {
+export function answerFromLesson(module, question, feedback = {}) {
   const queryTokens = tokenize(question)
   if (queryTokens.length === 0) {
     return { matched: false, passages: [], flaggedMistake: null }
@@ -70,6 +77,7 @@ export function answerFromLesson(module, question) {
   const scored = corpus
     .map((entry) => ({ ...entry, score: overlapScore(queryTokens, entry.text) }))
     .filter((entry) => entry.score > 0)
+    .map((entry) => ({ ...entry, score: entry.score + (feedback[entry.text] || 0) * 0.5 }))
     .sort((a, b) => b.score - a.score)
 
   if (scored.length === 0) {
