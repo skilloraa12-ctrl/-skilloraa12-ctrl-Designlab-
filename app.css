@@ -788,6 +788,21 @@ button.tool-badge--action:hover { border-color: var(--green); }
   .tl-article-preview { padding: 22px 18px; }
 }
 
+/* ---------- Grid Lab ---------- */
+.gl-column-preview { display: flex; margin: 0 auto 20px; }
+.gl-column-bar { flex: 1; height: 120px; background: color-mix(in srgb, var(--accent) 20%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: 2px; }
+.gl-modules-preview { display: grid; margin-bottom: 20px; }
+.gl-module-cell { background: color-mix(in srgb, var(--accent) 20%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: var(--radius-sm); width: 100%; }
+.gl-baseline-preview {
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 16px 18px; margin-bottom: 20px; color: var(--ink); font-size: 15px;
+}
+.gl-iso-preview {
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 16px; margin-bottom: 20px; overflow: auto; display: flex; justify-content: center;
+}
+.gl-iso-preview svg { max-width: 100%; height: auto; }
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }

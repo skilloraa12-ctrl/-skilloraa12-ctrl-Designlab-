@@ -23,7 +23,7 @@ export const LABS = [
   { id: 'shape', route: '/labs/shape', icon: '🔷', title: 'Shape & Vector Lab', desc: 'Фігури, трансформації, булеві операції, редагування шляхів, SVG.', category: 'visual', tools: 5, status: 'soon' },
   { id: 'brush', route: '/labs/brush', icon: '🖌️', title: 'Brush Lab', desc: 'Кистьовий рушій: олівець, чорнило, акварель, аерограф, власні пресети кистей.', category: 'visual', tools: 4, status: 'soon' },
   { id: 'drawing', route: '/labs/drawing', icon: '✏️', title: 'Drawing Lab', desc: 'Малювання з шарами, історією дій та експортом.', category: 'visual', tools: 5, status: 'soon' },
-  { id: 'grid', route: '/labs/grid', icon: '📐', title: 'Grid Lab', desc: 'Колонкові, модульні, базові та ізометричні сітки з експортом у CSS.', category: 'layout', tools: 4, status: 'soon' },
+  { id: 'grid', route: '/labs/grid', icon: '📐', title: 'Grid Lab', desc: 'Колонкові, модульні, базові та ізометричні сітки з експортом у CSS.', category: 'layout', tools: 4, status: 'available' },
   { id: 'layout', route: '/labs/layout', icon: '🧩', title: 'Layout Lab', desc: 'Фрейми, контейнери, секції та готові пресети макетів.', category: 'layout', tools: 4, status: 'soon' },
   { id: 'typography', route: '/labs/typography', icon: '🔤', title: 'Typography Lab', desc: 'Типографічні шкали, міжрядковий інтервал, трекінг, превʼю в контексті.', category: 'typography', tools: 5, status: 'available' },
   { id: 'image', route: '/labs/image', icon: '🖼️', title: 'Image Lab', desc: 'Кадрування, корекція кольору, ефекти та експорт зображень.', category: 'visual', tools: 5, status: 'soon' },
