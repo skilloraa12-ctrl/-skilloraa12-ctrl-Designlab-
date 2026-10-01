@@ -6,12 +6,13 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { buildLinearCss, buildRadialCss, buildConicCss, RADIAL_SHAPES, makeStop, defaultStops, sortStops } from './labs/gradientBuilder.js'
+import { buildLinearCss, buildRadialCss, buildConicCss, RADIAL_SHAPES, makeStop, defaultStops, sortStops, GRADIENT_PRESETS } from './labs/gradientBuilder.js'
 
 const TABS = [
   { key: 'linear', icon: '🔵', label: 'Лінійний' },
   { key: 'radial', icon: '⚪', label: 'Радіальний' },
   { key: 'conic', icon: '🎯', label: 'Конічний' },
+  { key: 'presets', icon: '✨', label: 'Пресети' },
 ]
 
 function copy(text) {
@@ -87,6 +88,7 @@ function LinearTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Лінійний градієнт переходить від однієї точки кольору до іншої вздовж прямої лінії під заданим кутом.</p>
       <HelpBox>
         <p>Angle — напрямок переходу: 0deg — знизу вгору, 90deg — зліва направо, 180deg — згори вниз. Кожна точка (stop) має колір і позицію у відсотках уздовж цієї лінії.</p>
+        <p>Наприклад, <code>linear-gradient(90deg, #3E37E0 0%, #6B62FF 100%)</code> читається так: «почни з фіолетового зліва (0%) і плавно перейди до синього справа (100%), рухаючись по горизонталі (90°)». Якщо додати третю точку на позиції 50%, вийде перехід у три кольори замість двох — браузер сам плавно змішує сусідні точки.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -117,6 +119,7 @@ function RadialTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Радіальний градієнт розходиться колами (чи еліпсами) від центру назовні.</p>
       <HelpBox>
         <p>Circle дає рівномірне коло незалежно від пропорцій контейнера, Ellipse підлаштовується під ширину/висоту елемента.</p>
+        <p>Радіальні градієнти добре підходять для ефекту «світла з центру» — кнопки hover-стану, фон-«прожектор» за заголовком, або м'яка тінь-виноска (vignette) по краях картки. Позиція 0% — колір у самому центрі, 100% — колір на межі форми.</p>
       </HelpBox>
 
       <div className="cl-section-title">Форма</div>
@@ -147,6 +150,7 @@ function ConicTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Конічний градієнт обертається навколо центру по колу, як стрілка годинника — зручно для кольорових колес і індикаторів прогресу.</p>
       <HelpBox>
         <p>From — звідки починається обертання (0deg — згори). Точки розташовані по колу у відсотках від повного оберту (360°).</p>
+        <p>Класичне застосування — колесо вибору кольору (color wheel) з точками 0%/33%/66%/100% у червоному/зеленому/синьому/червоному знову (щоб коло замкнулось без різкого стику), або круговий індикатор прогресу, де одна точка — колір прогресу, а решта кола — прозорий/сірий фон.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -166,6 +170,36 @@ function ConicTab({ state, patch, toastApi }) {
         <button className="harmony-btn" onClick={() => { copy(`background: ${css};`); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button>
       </div>
       <pre className="cl-code-block">background: {css};</pre>
+    </div>
+  )
+}
+
+function PresetsTab({ patch, setTab, toastApi }) {
+  return (
+    <div>
+      <p className="cl-tab-desc">Готові комбінації кольорів і типу градієнта — для натхнення або швидкого старту.</p>
+      <HelpBox>
+        <p>Кожен пресет — це повний набір налаштувань (тип, кут, кольорові точки), готовий до використання. Клік одразу перемикає тебе на відповідну вкладку (Лінійний/Радіальний/Конічний) з уже застосованими кольорами — звідти можна продовжити редагувати як завгодно: змінити кут, додати чи прибрати точки.</p>
+      </HelpBox>
+      <div className="l3d-template-grid">
+        {GRADIENT_PRESETS.map((p) => (
+          <button
+            key={p.key}
+            className="l3d-template-card"
+            style={{ background: p.type === 'linear' ? buildLinearCss({ angle: p.angle, stops: p.stops }) : p.type === 'radial' ? buildRadialCss({ shape: p.shape, stops: p.stops }) : buildConicCss({ angle: p.angle, stops: p.stops }) }}
+            onClick={() => {
+              const stops = p.stops.map((s) => makeStop(s.color, s.pos))
+              if (p.type === 'linear') patch('linear', { angle: p.angle, stops })
+              if (p.type === 'radial') patch('radial', { shape: p.shape, stops })
+              if (p.type === 'conic') patch('conic', { angle: p.angle, stops })
+              toastApi.show(`✓ Застосовано «${p.label}»`)
+              setTab(p.type)
+            }}
+          >
+            <span className="l3d-template-label" style={{ color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{p.icon} {p.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -252,6 +286,7 @@ export default function GradientLab() {
           {tab === 'linear' && <LinearTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'radial' && <RadialTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'conic' && <ConicTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'presets' && <PresetsTab state={state} patch={patch} setTab={setTab} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>
