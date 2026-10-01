@@ -6,7 +6,7 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { ASPECTS, buildColumnGridCss, buildModularGridCss, buildBaselineGridCss, buildIsometricSvg } from './labs/gridPatterns.js'
+import { ASPECTS, buildColumnGridCss, buildModularGridCss, buildBaselineGridCss, buildIsometricSvg, buildResponsiveGridCss } from './labs/gridPatterns.js'
 
 const TABS = [
   { key: 'column', icon: '📊', label: 'Колонкова' },
@@ -14,6 +14,7 @@ const TABS = [
   { key: 'baseline', icon: '📏', label: 'Базова лінія' },
   { key: 'isometric', icon: '🔺', label: 'Ізометрична' },
   { key: 'overlay', icon: '🧭', label: 'Накладання' },
+  { key: 'breakpoints', icon: '📱', label: 'Брейкпоінти' },
 ]
 
 function copy(text) {
@@ -47,6 +48,7 @@ function ColumnTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Columns — скільки колонок у сітці (12 — найпоширеніший вибір, ділиться на 2/3/4/6). Gutter — відступ між колонками. Margin — відступ від краю екрана до першої/останньої колонки.</p>
         <p>Чому саме 12? Воно ділиться без остачі на 2, 3, 4 і 6 — тому блок може займати «половину» (6 колонок), «третину» (4 колонки) чи «чверть» (3 колонки) сітки без дробових значень. Bootstrap, Material Design і більшість CSS-фреймворків використовують саме 12-колонкову сітку з цієї причини. Подивись на вкладці «Накладання», як ця сітка лягає поверх справжнього макета.</p>
+        <p>Margin і gutter — не взаємозамінні, хоч обидва й "простір": margin — фіксований відступ від краю екрана, який не повторюється (лише з двох боків), а gutter повторюється між кожною парою сусідніх колонок, тому на вузькому екрані з 12 колонками накопичений gutter (11 проміжків) може зʼїсти більше простору, ніж самі колонки — тому мобільні версії сітки майже завжди зменшують і кількість колонок, і gutter одночасно (див. вкладку "Брейкпоінти").</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -97,6 +99,7 @@ function ModularTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Aspect ratio модуля визначає форму кожної плитки незалежно від того, скільки їх у рядку — зручно, коли контент (фото, відео, картки товару) має бути однакових пропорцій.</p>
         <p>У CSS це найпростіше реалізувати через <code>display: grid; grid-template-columns: repeat(N, 1fr);</code> разом з <code>aspect-ratio</code> на кожній плитці — браузер сам підганяє висоту під ширину колонки, тому сітка лишається рівною навіть при зміні ширини екрана.</p>
+        <p>Коли контент не завжди відповідає заданому aspect-ratio (наприклад, фото з іншими пропорціями, ніж 4:3), саме зображення всередині плитки варто ставити з <code>object-fit: cover</code> — тоді воно заповнить комірку без спотворення, обрізавшись по краях замість того, щоб стискатись або лишати порожні смуги. Це той самий принцип, що розбирає вкладка "Обрізка" в Ratio Lab.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -149,6 +152,7 @@ function BaselineTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Baseline — крок сітки в px (4 або 8 — типові значення). Multiple — у скільки кроків вкладається line-height тексту: 8px × 3 = 24px line-height, наприклад.</p>
         <p>Якщо заголовок має line-height 32px (4 кроки по 8px), а звичайний текст — 24px (3 кроки по 8px), обидва все одно «приземляються» на тих самих горизонтальних лініях — саме тому текст різних розмірів на сторінці виглядає впорядковано, а не хаотично зсунутим.</p>
+        <p>Базова лінія діє не лише на текст: зображення, картки й відступи між блоками теж варто округлювати до кратного кроку сітки (8px, 16px, 24px...) — тоді ритм тримається навіть у місцях без тексту. Саме тому крок spacing-шкали в Design Calculator Lab і крок базової лінії тут часто збігаються: 8px — найпоширеніший спільний знаменник для обох.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -192,6 +196,7 @@ function IsometricTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Cell size — розмір однієї ромбовидної комірки. Columns/Rows — скільки комірок по горизонталі й вертикалі вміщається в експортований SVG.</p>
         <p>Кут 30° — не випадковий: це стандартний кут ізометричної проєкції, яким малюють «гру-кубики» (think SimCity, Monument Valley). Експортований SVG можна відкрити в Figma/Illustrator як направляючі (guide layer) і малювати ілюстрацію поверх, щоб усі обʼєкти мали однаковий «нахил».</p>
+        <p>Ізометрія — не справжня 3D-перспектива (де далекі обʼєкти зменшуються), а паралельна проєкція: лінії, які в реальності паралельні, лишаються паралельними на малюнку, незалежно від відстані. Саме тому ізометричні ілюстрації виглядають "технічними" й акуратними — і саме тому це улюблений стиль для схем, інфографіки та гри-менеджерів, де важлива читабельність розташування обʼєктів, а не фотореалістична глибина.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -233,6 +238,7 @@ function OverlayTab({ state, patch }) {
       <p className="cl-tab-desc">Та сама колонкова сітка (з вкладки "Колонкова"), накладена поверх макета сторінки — щоб перевірити, чи дійсно елементи до неї прив'язані.</p>
       <HelpBox>
         <p>Дизайнери й розробники часто сперечаються, чи «на око» картка дійсно вирівняна по сітці, чи просто здається такою. Накладання знімає це питання: якщо край блоку збігається з лінією колонки — все вирівняно правильно.</p>
+        <p>У Figma та інших дизайн-інструментах ця ж перевірка називається "layout grid overlay" і вмикається гарячою клавішею (зазвичай Ctrl/Cmd+G чи через панель View) просто поверх макета — звичка перевіряти вирівнювання так само, як орфографію в тексті, рятує від непомітних на перший погляд "на піксель вбік" помилок, які псують враження охайності цілого макета.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -264,12 +270,69 @@ function OverlayTab({ state, patch }) {
   )
 }
 
+function BreakpointRow({ label, widthLabel, previewWidth, cfg, onChange }) {
+  const cols = Array.from({ length: cfg.columns })
+  return (
+    <div className="l3d-object-row" style={{ flexWrap: 'wrap', alignItems: 'flex-start' }}>
+      <div style={{ width: 150, flex: 'none' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 11, color: 'var(--muted)' }}>{widthLabel}</div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Колонок</span>
+        <input type="range" min={1} max={12} value={cfg.columns} onChange={(e) => onChange({ columns: parseInt(e.target.value, 10) })} style={{ width: 100 }} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Gutter</span>
+        <input type="range" min={0} max={32} value={cfg.gutter} onChange={(e) => onChange({ gutter: parseInt(e.target.value, 10) })} style={{ width: 100 }} />
+      </div>
+      <div className="gl-column-preview" style={{ width: previewWidth, gap: Math.round(cfg.gutter * (previewWidth / 1200)), padding: 0, maxWidth: 'none' }}>
+        {cols.map((_, i) => <div key={i} className="gl-column-bar" style={{ height: 36 }} />)}
+      </div>
+    </div>
+  )
+}
+
+function BreakpointsTab({ state, patch, toastApi }) {
+  const css = buildResponsiveGridCss(state.breakpoints)
+  return (
+    <div>
+      <p className="cl-tab-desc">Та сама колонкова сітка не повинна лишатись однаковою на всіх екранах — тут можна задати окрему кількість колонок і gutter для мобільного, планшета й десктопа.</p>
+      <HelpBox>
+        <p>12 колонок по ~25px кожна на екрані телефону 375px шириною — це вже нижче за комфортний мінімум для контенту (менше за типовий розмір пальця для тапу). Тому відповідальні сітки "складаються" на вузьких екранах: мобільний зазвичай отримує 4 колонки, планшет — 8, десктоп — усі 12. Це називається mobile-first підхід: базові стилі пишуться для найменшого екрана, а ширші екрани додають стилі поверх через <code>min-width</code> медіа-запити (а не навпаки).</p>
+        <p>Чому саме mobile-first, а не desktop-first (з <code>max-width</code>): мобільний трафік сьогодні зазвичай більший за десктопний, тому "базовий", найпростіший варіант стилів повинен бути для мобільного — старіші браузери на слабких пристроях не завантажують зайвий CSS для широких екранів, якого вони ніколи не побачать.</p>
+        <ol>
+          <li>Налаштуйте колонки/gutter окремо для кожного брейкпоінта — мініпревʼю праворуч масштабоване пропорційно (не піксель-у-піксель) для порівняння тіснішої й просторішої сітки.</li>
+          <li>Готовий CSS внизу використовує саме <code>min-width</code> медіа-запити в mobile-first порядку.</li>
+        </ol>
+      </HelpBox>
+
+      <div className="l3d-object-list">
+        <BreakpointRow label="📱 Мобільний" widthLabel="база, до 768px" previewWidth={90} cfg={state.breakpoints.mobile} onChange={(p) => patch('breakpoints', { mobile: { ...state.breakpoints.mobile, ...p } })} />
+        <BreakpointRow label="📱 Планшет" widthLabel={`від ${state.breakpoints.tablet.minWidth}px`} previewWidth={140} cfg={state.breakpoints.tablet} onChange={(p) => patch('breakpoints', { tablet: { ...state.breakpoints.tablet, ...p } })} />
+        <BreakpointRow label="🖥️ Десктоп" widthLabel={`від ${state.breakpoints.desktop.minWidth}px`} previewWidth={200} cfg={state.breakpoints.desktop} onChange={(p) => patch('breakpoints', { desktop: { ...state.breakpoints.desktop, ...p } })} />
+      </div>
+
+      <div className="cl-section-title">CSS (mobile-first)</div>
+      <div className="cl-picker-top">
+        <button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button>
+      </div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
 const DEFAULT_STATE = {
   column: { columns: 12, gutter: 24, margin: 24, maxWidth: 1200 },
   modular: { columns: 4, rows: 2, gap: 16, aspect: '4 / 3' },
   baseline: { baseline: 8, multiple: 3 },
   isometric: { cellSize: 48, cols: 8, rows: 6 },
   overlay: { show: true, opacity: 30 },
+  breakpoints: {
+    mobile: { columns: 4, gutter: 16 },
+    tablet: { columns: 8, gutter: 20, minWidth: 768 },
+    desktop: { columns: 12, gutter: 24, minWidth: 1200 },
+  },
 }
 
 export default function GridLab() {
@@ -318,7 +381,7 @@ export default function GridLab() {
   return (
     <LabShell
       title="Grid Lab"
-      subtitle="Колонкові, модульні, базові та ізометричні сітки — з живим превʼю й готовим CSS/SVG для кожної."
+      subtitle="Колонкові, модульні, базові та ізометричні сітки, плюс брейкпоінти — з живим превʼю й готовим CSS/SVG для кожної."
       icon="📐"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -347,6 +410,7 @@ export default function GridLab() {
           {tab === 'baseline' && <BaselineTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'isometric' && <IsometricTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'overlay' && <OverlayTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'breakpoints' && <BreakpointsTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>

@@ -59,6 +59,34 @@ export function buildBaselineGridCss({ baseline, multiple }) {
   ].join('\n')
 }
 
+// A responsive column grid rarely uses the same column count at every
+// screen width — this builds the standard mobile-first media-query
+// CSS for three breakpoints at once (fewer columns on narrow screens,
+// since 12 columns of ~30px each on a 375px phone is useless).
+export function buildResponsiveGridCss({ mobile, tablet, desktop }) {
+  return [
+    `.container {`,
+    `  display: grid;`,
+    `  gap: ${mobile.gutter}px;`,
+    `  grid-template-columns: repeat(${mobile.columns}, 1fr); /* mobile-first default */`,
+    `}`,
+    ``,
+    `@media (min-width: ${tablet.minWidth}px) {`,
+    `  .container {`,
+    `    gap: ${tablet.gutter}px;`,
+    `    grid-template-columns: repeat(${tablet.columns}, 1fr);`,
+    `  }`,
+    `}`,
+    ``,
+    `@media (min-width: ${desktop.minWidth}px) {`,
+    `  .container {`,
+    `    gap: ${desktop.gutter}px;`,
+    `    grid-template-columns: repeat(${desktop.columns}, 1fr);`,
+    `  }`,
+    `}`,
+  ].join('\n')
+}
+
 // Two families of lines at +30°/-30° from horizontal, tiled across a
 // viewBox, forming a rhombus (diamond) isometric grid — the same layout
 // used by isometric graph paper and most 2.5D pixel-art/game-design grids.
