@@ -41,6 +41,17 @@ export function computeScale(baseSize, ratio) {
   })
 }
 
+// Line length ("measure"): the classic readability guideline is 45-75
+// characters per line, ~66 being the oft-cited sweet spot. The CSS `ch`
+// unit (width of the "0" glyph) is the standard, widely-used proxy for
+// "characters per line" in real stylesheets (e.g. `max-width: 65ch`),
+// so the measure slider's value IS the approximate character count.
+export function rateMeasure(ch) {
+  if (ch < 45) return { rating: 'short', label: 'Занадто коротко — часті переноси рядків стомлюють око' }
+  if (ch > 75) return { rating: 'long', label: 'Занадто довго — важко знайти початок наступного рядка' }
+  return { rating: 'good', label: 'Комфортна довжина рядка (45–75 символів)' }
+}
+
 export const TRACKING_PRESETS = [
   { label: 'Щільний', value: -0.02 },
   { label: 'Звичайний', value: 0 },
