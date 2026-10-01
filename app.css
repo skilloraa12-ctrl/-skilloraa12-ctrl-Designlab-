@@ -883,6 +883,31 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .cp-card-demo-title { font-size: 13px; font-weight: 700; color: #17171A; margin-bottom: 4px; }
 .cp-card-demo-text { font-size: 12px; color: #5B5B66; }
 
+/* ---------- Accessibility Lab ---------- */
+.a11y-ok { font-size: 13px; color: var(--mint, #1D8A5E); font-weight: 600; }
+.a11y-issue-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.a11y-issue { font-size: 13px; color: var(--coral, #C23B3B); }
+.a11y-target-stage { display: flex; align-items: center; justify-content: center; padding: 30px; border-radius: var(--radius); background: #EDEDF0; }
+.a11y-target-min-outline { display: flex; align-items: center; justify-content: center; border: 2px dashed #9D9DA8; border-radius: 6px; }
+.a11y-target-box { background: var(--accent); border-radius: 4px; }
+.a11y-heading-list { display: flex; flex-direction: column; gap: 8px; }
+.a11y-heading-row, .a11y-image-row, .a11y-field-row {
+  display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 8px 10px; background: var(--surface); flex-wrap: wrap;
+}
+.a11y-heading-row { flex-wrap: nowrap; }
+.a11y-heading-sample { font-size: 13px; color: var(--ink); flex: 1; }
+.a11y-image-row, .a11y-field-row { flex-direction: column; align-items: stretch; }
+.a11y-field-row { flex-direction: row; align-items: center; justify-content: space-between; }
+.a11y-field-preview { display: flex; flex-direction: column; gap: 4px; min-width: 180px; }
+.a11y-field-label { font-size: 12px; font-weight: 600; color: var(--ink); }
+.a11y-motion-stage { display: flex; align-items: center; justify-content: center; padding: 30px; border-radius: var(--radius); background: #EDEDF0; margin-bottom: 10px; }
+.a11y-motion-box { width: 90px; height: 90px; border-radius: var(--radius); }
+.a11y-progress-track { width: 100%; height: 8px; border-radius: 999px; background: #E4E4EA; overflow: hidden; margin-top: 6px; }
+.a11y-progress-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+.a11y-checklist-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.a11y-checklist-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); cursor: pointer; }
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }
