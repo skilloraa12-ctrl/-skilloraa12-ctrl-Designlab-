@@ -6,12 +6,13 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { buildLinearCss, buildRadialCss, buildConicCss, RADIAL_SHAPES, makeStop, defaultStops, sortStops, GRADIENT_PRESETS } from './labs/gradientBuilder.js'
+import { buildLinearCss, buildRadialCss, buildConicCss, RADIAL_SHAPES, makeStop, defaultStops, sortStops, GRADIENT_PRESETS, buildAnimatedGradientCss } from './labs/gradientBuilder.js'
 
 const TABS = [
   { key: 'linear', icon: '🔵', label: 'Лінійний' },
   { key: 'radial', icon: '⚪', label: 'Радіальний' },
   { key: 'conic', icon: '🎯', label: 'Конічний' },
+  { key: 'animated', icon: '🎬', label: 'Анімований' },
   { key: 'presets', icon: '✨', label: 'Пресети' },
 ]
 
@@ -89,6 +90,7 @@ function LinearTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Angle — напрямок переходу: 0deg — знизу вгору, 90deg — зліва направо, 180deg — згори вниз. Кожна точка (stop) має колір і позицію у відсотках уздовж цієї лінії.</p>
         <p>Наприклад, <code>linear-gradient(90deg, #3E37E0 0%, #6B62FF 100%)</code> читається так: «почни з фіолетового зліва (0%) і плавно перейди до синього справа (100%), рухаючись по горизонталі (90°)». Якщо додати третю точку на позиції 50%, вийде перехід у три кольори замість двох — браузер сам плавно змішує сусідні точки.</p>
+        <p>Популярні кути для реальних інтерфейсів: 180° (зверху вниз) для затемнення фото під підписом, 135° для hero-секцій (діагональ "з кута в кут" виглядає динамічніше за просту вертикаль), 90° для кнопок і бейджів. Уникайте довільних кутів типу 37° чи 142° без причини — вони виглядають випадково, тоді як круглі значення (0/45/90/135/180) читаються як навмисний дизайнерський вибір.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -120,6 +122,7 @@ function RadialTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Circle дає рівномірне коло незалежно від пропорцій контейнера, Ellipse підлаштовується під ширину/висоту елемента.</p>
         <p>Радіальні градієнти добре підходять для ефекту «світла з центру» — кнопки hover-стану, фон-«прожектор» за заголовком, або м'яка тінь-виноска (vignette) по краях картки. Позиція 0% — колір у самому центрі, 100% — колір на межі форми.</p>
+        <p>За замовчуванням радіальний градієнт центрується в середині елемента, але CSS дозволяє задати довільну точку (<code>radial-gradient(circle at 20% 30%, ...)</code>) — зсунутий у кут "прожектор" часто виглядає природніше за ідеально центрований, особливо на великих hero-банерах, де джерело світла рідко буває рівно посередині кадру.</p>
       </HelpBox>
 
       <div className="cl-section-title">Форма</div>
@@ -151,6 +154,7 @@ function ConicTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>From — звідки починається обертання (0deg — згори). Точки розташовані по колу у відсотках від повного оберту (360°).</p>
         <p>Класичне застосування — колесо вибору кольору (color wheel) з точками 0%/33%/66%/100% у червоному/зеленому/синьому/червоному знову (щоб коло замкнулось без різкого стику), або круговий індикатор прогресу, де одна точка — колір прогресу, а решта кола — прозорий/сірий фон.</p>
+        <p>Хитрість для різкої межі замість плавного переходу (наприклад, щоб 70% прогрес-бару було чітко кольоровим, а решта — чітко сірим, без розмитості): постав дві точки одного кольору поруч, на одній і тій самій позиції або дуже близько (наприклад <code>#3E37E0 70%, #E4E4EA 70%</code>) — градієнт "стрибне" миттєво замість плавного змішування.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -174,12 +178,46 @@ function ConicTab({ state, patch, toastApi }) {
   )
 }
 
+function AnimatedTab({ state, patch, toastApi }) {
+  const { gradient, css } = buildAnimatedGradientCss(state.animated)
+  return (
+    <div>
+      <p className="cl-tab-desc">Той самий градієнт, але «живий» — кольори плавно перетікають без жодного JavaScript, лише CSS-анімація.</p>
+      <HelpBox>
+        <p>Трюк простий, але неочевидний: градієнт робиться набагато більшим за сам елемент (<code>background-size: 400% 400%</code>), а потім анімується властивість <code>background-position</code> — елемент ніби "рухається" по великому градієнтному полотну, хоча насправді статичний, рухається лише видима ділянка фону.</p>
+        <p>Це дешевше для продуктивності, ніж анімувати сам градієнт (генерувати новий <code>background</code> на кожному кадрі): анімація <code>background-position</code>, як і <code>transform</code>/<code>opacity</code>, не змушує браузер перераховувати layout — лише перемальовує, тому рух лишається плавним навіть на слабких пристроях.</p>
+        <p>Популярне застосування — "живі" фони на лендингах і заставках застосунків (ефект "aurora"/"mesh"), анімовані бейджі "Pro"/"New", чи фон кнопки при завантаженні. Не зловживайте: постійний рух на фоні під текстом, який читають, швидко втомлює око — тримайте тривалість циклу довгою (8-15 секунд) і використовуйте лише там, де немає тексту для читання поверх.</p>
+      </HelpBox>
+
+      <div className="cl-editrow">
+        <label>Тривалість циклу
+          <input type="range" min={2} max={20} step={1} value={state.animated.durationS} onChange={(e) => patch('animated', { durationS: parseInt(e.target.value, 10) })} />
+          <span>{state.animated.durationS}с</span>
+        </label>
+      </div>
+
+      <div className="cl-section-title">Превʼю</div>
+      <style>{css}</style>
+      <div className="gr-preview anim-gradient" style={{ background: gradient, backgroundSize: '400% 400%', animation: `gradientShift ${state.animated.durationS}s ease infinite` }} />
+
+      <StopEditor stops={state.animated.stops} onChange={(stops) => patch('animated', { stops })} toastApi={toastApi} />
+
+      <div className="cl-section-title">CSS</div>
+      <div className="cl-picker-top">
+        <button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button>
+      </div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
 function PresetsTab({ patch, setTab, toastApi }) {
   return (
     <div>
       <p className="cl-tab-desc">Готові комбінації кольорів і типу градієнта — для натхнення або швидкого старту.</p>
       <HelpBox>
         <p>Кожен пресет — це повний набір налаштувань (тип, кут, кольорові точки), готовий до використання. Клік одразу перемикає тебе на відповідну вкладку (Лінійний/Радіальний/Конічний) з уже застосованими кольорами — звідти можна продовжити редагувати як завгодно: змінити кут, додати чи прибрати точки.</p>
+        <p>Пресети тут навмисно різностильові — від теплого "Fire" до монохромного "Mono" — щоб показати діапазон того, на що здатен один і той самий інструмент. Хороша вправа: застосуйте пресет, що найменше схожий на ваш звичайний смак, і спробуйте підібрати йому застосування (банер, фон кнопки, обкладинка картки) — це тренує погляд ширше, ніж завжди підбирати кольори з нуля у звичній зоні комфорту.</p>
       </HelpBox>
       <div className="l3d-template-grid">
         {GRADIENT_PRESETS.map((p) => (
@@ -209,6 +247,7 @@ function defaultState() {
     linear: { angle: 90, stops: defaultStops() },
     radial: { shape: 'circle', stops: defaultStops() },
     conic: { angle: 0, stops: defaultStops() },
+    animated: { durationS: 8, stops: [makeStop('#3E37E0', 0), makeStop('#E0373E', 50), makeStop('#3E37E0', 100)] },
   }
 }
 
@@ -259,7 +298,7 @@ export default function GradientLab() {
   return (
     <LabShell
       title="Gradient Lab"
-      subtitle="Лінійні, радіальні й конічні градієнти з кількома точками кольору — живе превʼю й готовий CSS."
+      subtitle="Лінійні, радіальні, конічні й анімовані градієнти з кількома точками кольору — живе превʼю й готовий CSS."
       icon="🌈"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -286,6 +325,7 @@ export default function GradientLab() {
           {tab === 'linear' && <LinearTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'radial' && <RadialTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'conic' && <ConicTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'animated' && <AnimatedTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'presets' && <PresetsTab state={state} patch={patch} setTab={setTab} toastApi={toastApi} />}
         </div>
       </div>

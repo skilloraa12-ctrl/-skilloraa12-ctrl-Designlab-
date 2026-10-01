@@ -36,6 +36,28 @@ export function defaultStops() {
   return [makeStop('#3E37E0', 0), makeStop('#6B62FF', 100)]
 }
 
+// An animated "shifting" gradient: the trick is to make the gradient
+// larger than its box (background-size: 400% 400%) and animate
+// background-position, so the same linear-gradient appears to flow and
+// shift color continuously — no JS, pure CSS keyframes.
+export function buildAnimatedGradientCss({ stops, durationS }) {
+  const gradient = `linear-gradient(120deg, ${stopsToCssList(stops)})`
+  const css = [
+    `.anim-gradient {`,
+    `  background: ${gradient};`,
+    `  background-size: 400% 400%;`,
+    `  animation: gradientShift ${durationS}s ease infinite;`,
+    `}`,
+    ``,
+    `@keyframes gradientShift {`,
+    `  0% { background-position: 0% 50%; }`,
+    `  50% { background-position: 100% 50%; }`,
+    `  100% { background-position: 0% 50%; }`,
+    `}`,
+  ].join('\n')
+  return { gradient, css }
+}
+
 // Ready-made gradient presets — each one a full {type, angle, shape, stops}
 // config that can replace the lab's current state in one click.
 export const GRADIENT_PRESETS = [
