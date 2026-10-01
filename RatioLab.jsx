@@ -12,7 +12,10 @@ const TABS = [
   { key: 'calculator', icon: '🧮', label: 'Калькулятор' },
   { key: 'presets', icon: '📐', label: 'Пресети' },
   { key: 'compare', icon: '⚖️', label: 'Порівняння' },
+  { key: 'custom', icon: '⭐', label: 'Мої пресети' },
 ]
+
+let customIdCounter = 1
 
 const numInputStyle = { width: 90, border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', background: 'var(--bg)', color: 'var(--ink)', padding: '7px 9px', fontSize: 13 }
 
@@ -57,6 +60,7 @@ function CalculatorTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Введіть співвідношення сторін і відому ширину — лаба порахує відповідну висоту (і навпаки).</p>
       <HelpBox>
         <p>Співвідношення сторін (aspect ratio) — це пропорція ширини до висоти. Якщо вона фіксована, то знаючи одну сторону, завжди можна порахувати другу: height = width × (ratioH / ratioW).</p>
+        <p>Приклад: банер шириною 1200px у співвідношенні 16:9 має висоту 1200 × (9/16) = 675px. У CSS те саме можна задати однією властивістю замість ручного рахунку: <code>aspect-ratio: 16 / 9;</code> на елементі з фіксованою шириною — браузер сам порахує висоту.</p>
       </HelpBox>
 
       <div className="cl-section-title">Співвідношення</div>
@@ -100,6 +104,9 @@ function PresetsTab({ state, patch, toastApi }) {
   return (
     <div>
       <p className="cl-tab-desc">Готові співвідношення для екранів, соцмереж і друку. Клік застосовує пресет у калькулятор.</p>
+      <HelpBox>
+        <p>Ці значення — не випадкові: 16:9 став стандартом відео й моніторів, бо близький до того, як працює периферійний зір людини; A4 заснований на пропорції √2:1, завдяки якій аркуш, складений навпіл, дає той самий пропорційний формат меншого розміру; золотий перетин (1.618:1) століттями використовують в архітектурі й друку як «природно приємну» пропорцію.</p>
+      </HelpBox>
       {groups.map((g) => (
         <div key={g}>
           <div className="cl-section-title">{g}</div>
@@ -128,6 +135,9 @@ function CompareTab({ state, patch }) {
   return (
     <div>
       <p className="cl-tab-desc">Візуальне порівняння поточного співвідношення (з калькулятора) з двома іншими пресетами в одному масштабі.</p>
+      <HelpBox>
+        <p>Числа на кшталт «1.33» проти «1.78» важко уявити подумки — а поруч вони одразу показують, наскільки один формат ширший або вищий за інший. Корисно, коли треба вирішити, чи влізе існуючий макет 4:3 у новий слот 16:9 без обрізання.</p>
+      </HelpBox>
 
       <div className="cl-picker-top">
         <label style={{ fontSize: 12, color: 'var(--muted)' }}>Порівняти з
@@ -152,12 +162,61 @@ function CompareTab({ state, patch }) {
   )
 }
 
+function CustomTab({ state, patch, toastApi }) {
+  const { ratioW, ratioH } = state.calc
+  const list = state.custom.presets
+  const [name, setName] = useState('')
+
+  function addCurrent() {
+    const label = name.trim() || `${ratioW}:${ratioH}`
+    customIdCounter += 1
+    patch('custom', { presets: [...list, { id: customIdCounter, label, w: ratioW, h: ratioH }] })
+    setName('')
+    toastApi.show(`✓ Збережено «${label}»`)
+  }
+  function remove(id) {
+    patch('custom', { presets: list.filter((p) => p.id !== id) })
+  }
+
+  return (
+    <div>
+      <p className="cl-tab-desc">Зберігайте свої власні часто вживані співвідношення — не лише стандартні з вкладки Пресети.</p>
+      <HelpBox>
+        <p>Корисно для нетипових форматів, які постійно повторюються у вашій роботі — наприклад, фірмовий розмір банера клієнта чи формат, якого немає серед стандартних пресетів. Поточне співвідношення береться з вкладки Калькулятор.</p>
+      </HelpBox>
+
+      <div className="cl-picker-top">
+        <input type="text" className="cl-text-input" placeholder={`Назва (за замовчуванням ${ratioW}:${ratioH})`} value={name} onChange={(e) => setName(e.target.value)} />
+        <button className="harmony-btn" onClick={addCurrent}>+ Зберегти поточне ({ratioW}:{ratioH})</button>
+      </div>
+
+      {list.length === 0 ? (
+        <p className="cl-tab-desc" style={{ marginTop: 14 }}>Поки що порожньо — збережіть перше співвідношення кнопкою вище.</p>
+      ) : (
+        <div className="l3d-template-grid" style={{ marginTop: 14 }}>
+          {list.map((p) => (
+            <div key={p.id} className="l3d-template-card" style={{ position: 'relative', cursor: 'default' }}>
+              <button className="cl-mini-btn" style={{ position: 'absolute', top: 6, right: 6 }} onClick={() => remove(p.id)} title="Видалити">✕</button>
+              <button style={{ all: 'unset', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: '100%' }} onClick={() => { patch('calc', { ratioW: p.w, ratioH: p.h }); toastApi.show(`✓ Застосовано «${p.label}»`) }}>
+                <span className="l3d-template-icon">⭐</span>
+                <span className="l3d-template-label">{p.label}</span>
+                <span className="l3d-template-count">{p.w} : {p.h}</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     calc: { ratioW: 16, ratioH: 9, targetWidth: 1920 },
     convert: { actualWidth: 1920, actualHeight: 1080 },
     compareB: 'classic',
     compareC: 'story',
+    custom: { presets: [] },
   }
 }
 
@@ -237,6 +296,7 @@ export default function RatioLab() {
           {tab === 'calculator' && <CalculatorTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'presets' && <PresetsTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'compare' && <CompareTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'custom' && <CustomTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>

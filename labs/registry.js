@@ -37,7 +37,7 @@ export const LABS = [
   { id: 'responsive', route: '/labs/responsive', icon: '📱', title: 'Responsive Lab', desc: 'Порівняння дизайну на різних viewport одночасно.', category: 'uiux', tools: 3, status: 'soon' },
   { id: 'accessibility', route: '/labs/accessibility', icon: '🔓', title: 'Accessibility Lab', desc: 'Розмір цілей, ієрархія заголовків, alt-текст, підписи форм, безпека мигання, чекліст.', category: 'accessibility', tools: 6, status: 'available' },
   { id: 'composition', route: '/labs/composition', icon: '🧠', title: 'Composition Lab', desc: 'Правило третин, золотий перетин, симетрія, візуальний баланс.', category: 'layout', tools: 4, status: 'available' },
-  { id: 'ratio', route: '/labs/ratio', icon: '📏', title: 'Ratio Lab', desc: 'Розрахунок співвідношень сторін: 16:9, A4, золотий перетин тощо.', category: 'production', tools: 3, status: 'available' },
+  { id: 'ratio', route: '/labs/ratio', icon: '📏', title: 'Ratio Lab', desc: 'Розрахунок співвідношень сторін: 16:9, A4, золотий перетин, власні пресети.', category: 'production', tools: 4, status: 'available' },
   { id: '3d', route: '/labs/3d', icon: '🧊', title: '3D Lab', desc: 'Легкі 3D-обʼєкти в браузері: готові шаблони (будинок, людина, рослина, іграшка), позиція, обертання, матеріали.', category: 'motion3d', tools: 5, status: 'available' },
   { id: 'ui-preview', route: '/labs/ui-preview', icon: '🖥️', title: 'UI Preview Lab', desc: 'Побудова живого превʼю інтерфейсу з готових шаблонів.', category: 'uiux', tools: 5, status: 'soon' },
   { id: 'wireframe', route: '/labs/wireframe', icon: '🧭', title: 'Wireframe Lab', desc: 'Швидкі каркаси інтерфейсу: секції, форми, картки.', category: 'uiux', tools: 4, status: 'available' },
