@@ -175,3 +175,60 @@ export function cardCss(cfg) {
     `.card.disabled { opacity: 0.5; }`,
   ].join('\n')
 }
+
+export const CHECK_STATES = ['default', 'hover', 'focus', 'checked', 'disabled']
+
+export function checkboxStyle(cfg, state) {
+  const checked = state === 'checked'
+  const box = {
+    width: 20, height: 20, borderRadius: 5, border: '2px solid #C9C9D1', background: '#FFFFFF',
+    boxShadow: 'none', opacity: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  }
+  if (checked) { box.background = cfg.accent; box.border = `2px solid ${cfg.accent}` }
+  if (state === 'hover') box.border = `2px solid ${shade(cfg.accent, -0.1)}`
+  if (state === 'focus') box.boxShadow = `0 0 0 3px ${hexToRgba(cfg.accent, 0.3)}`
+  if (state === 'disabled') box.opacity = 0.45
+  return box
+}
+
+export function checkboxCss(cfg) {
+  return [
+    `.checkbox {`,
+    `  width: 20px; height: 20px; border-radius: 5px;`,
+    `  border: 2px solid #C9C9D1; background: #fff;`,
+    `}`,
+    `.checkbox:hover { border-color: ${shade(cfg.accent, -0.1)}; }`,
+    `.checkbox:focus-visible { box-shadow: 0 0 0 3px ${hexToRgba(cfg.accent, 0.3)}; }`,
+    `.checkbox.checked { background: ${cfg.accent}; border-color: ${cfg.accent}; }`,
+    `.checkbox:disabled { opacity: 0.45; }`,
+  ].join('\n')
+}
+
+export function radioStyle(cfg, state) {
+  const checked = state === 'checked'
+  const ring = {
+    width: 20, height: 20, borderRadius: '50%', border: '2px solid #C9C9D1', background: '#FFFFFF',
+    boxShadow: 'none', opacity: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  }
+  const dot = { width: 8, height: 8, borderRadius: '50%', background: checked ? cfg.accent : 'transparent' }
+  if (checked) ring.border = `2px solid ${cfg.accent}`
+  if (state === 'hover') ring.border = `2px solid ${shade(cfg.accent, -0.1)}`
+  if (state === 'focus') ring.boxShadow = `0 0 0 3px ${hexToRgba(cfg.accent, 0.3)}`
+  if (state === 'disabled') ring.opacity = 0.45
+  return { ring, dot }
+}
+
+export function radioCss(cfg) {
+  return [
+    `.radio {`,
+    `  width: 20px; height: 20px; border-radius: 50%;`,
+    `  border: 2px solid #C9C9D1; background: #fff;`,
+    `  display: inline-flex; align-items: center; justify-content: center;`,
+    `}`,
+    `.radio:hover { border-color: ${shade(cfg.accent, -0.1)}; }`,
+    `.radio:focus-visible { box-shadow: 0 0 0 3px ${hexToRgba(cfg.accent, 0.3)}; }`,
+    `.radio.checked { border-color: ${cfg.accent}; }`,
+    `.radio.checked::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: ${cfg.accent}; }`,
+    `.radio:disabled { opacity: 0.45; }`,
+  ].join('\n')
+}

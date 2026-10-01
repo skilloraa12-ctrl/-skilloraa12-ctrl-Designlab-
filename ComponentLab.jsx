@@ -12,6 +12,7 @@ import {
   TOGGLE_STATES, toggleStyle, toggleCss,
   BADGE_VARIANTS, badgeStyle, badgeCss,
   CARD_STATES, cardStyle, cardCss,
+  CHECK_STATES, checkboxStyle, checkboxCss, radioStyle, radioCss,
 } from './labs/componentBuilder.js'
 
 const TABS = [
@@ -20,11 +21,12 @@ const TABS = [
   { key: 'toggle', icon: '🎚️', label: 'Перемикач' },
   { key: 'badge', icon: '🏷️', label: 'Бейдж' },
   { key: 'card', icon: '🗂️', label: 'Картка' },
+  { key: 'check', icon: '☑️', label: 'Чекбокс/Радіо' },
 ]
 
 const STATE_LABELS = {
   default: 'Звичайний', hover: 'Наведення', focus: 'Фокус', active: 'Натиснутий',
-  disabled: 'Вимкнений', filled: 'Заповнений', off: 'Вимкнено', on: 'Увімкнено',
+  disabled: 'Вимкнений', filled: 'Заповнений', off: 'Вимкнено', on: 'Увімкнено', checked: 'Вибрано',
 }
 
 function copy(text) {
@@ -66,6 +68,7 @@ function ButtonTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Кнопка в усіх станах одразу — звичайний вигляд, наведення, фокус (клавіатурна навігація), натискання й вимкнений стан.</p>
       <HelpBox>
         <p>Кожен стан — окремий CSS-селектор (<code>:hover</code>, <code>:focus-visible</code>, <code>:active</code>, <code>:disabled</code>), який браузер застосовує автоматично. Тут вони показані поруч, щоб відразу бачити всі варіанти.</p>
+        <p>Важливо: <code>:focus-visible</code>, а не просто <code>:focus</code> — перший показує кільце фокусу лише при навігації клавіатурою (Tab), а не при звичайному кліку мишею. Це усуває стару скаргу дизайнерів "чому рамка зʼявляється при кліку" й водночас зберігає доступність для клавіатурних користувачів.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -103,6 +106,7 @@ function InputTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Текстове поле: звичайний стан, наведення, фокус (з кільцем акцентного кольору), заповнене значенням і вимкнене.</p>
       <HelpBox>
         <p>Focus ring — акцентна рамка навколо поля при фокусі — критично важлива для доступності: вона показує, який елемент активний при навігації клавіатурою (Tab).</p>
+        <p>Стан "Заповнений" (filled) навмисно показаний окремо від "Звичайного": порожнє поле з плейсхолдером і поле з реальним значенням мають виглядати по-різному (тут — темніша рамка), інакше користувач не завжди зрозуміє, чи він вже щось ввів, особливо при швидкому скролі довгої форми.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -142,6 +146,7 @@ function ToggleTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Перемикач (switch) — альтернатива чекбоксу для миттєвих on/off-налаштувань.</p>
       <HelpBox>
         <p>Позиція кружечка (knob) кодує стан: зліва — вимкнено, справа — увімкнено. Колір доріжки змінюється разом з позицією, тому стан зрозумілий навіть без підпису.</p>
+        <p>Перемикач проти чекбоксу: toggle підходить для налаштувань, які діють негайно (режим "темна тема", "сповіщення увімкнено") — дія застосовується в момент кліку. Чекбокс краще для форм, де вибір підтверджується окремою кнопкою "Зберегти" — toggle у формі зі збереженням уводить в оману, бо виглядає як миттєва дія.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -175,6 +180,7 @@ function BadgeTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Бейджі (теги/лейбли) для статусів: нейтральний, успіх, попередження, помилка.</p>
       <HelpBox>
         <p>Семантичний колір бейджа — це теж свого роду «стан», тільки не інтерактивний: він одразу повідомляє значення (успішно / потребує уваги / помилка) без додаткового тексту.</p>
+        <p>Не покладайтесь лише на колір: приблизно 8% чоловіків мають якусь форму дальтонізму й можуть не розрізнити success (зелений) і error (червоний) при слабкому контрасті. Додайте іконку (✓ / ⚠ / ✕) або текстовий лейбл поруч із кольором — колір підсилює значення, а не єдиний носій інформації.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Радіус<input type="range" min={0} max={20} value={cfg.radius} onChange={(e) => patch('badge', { radius: parseInt(e.target.value, 10) })} disabled={cfg.pill} /><span>{cfg.pill ? 'pill' : `${cfg.radius}px`}</span></label></div>
@@ -204,6 +210,7 @@ function CardTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Картка — базовий контейнер для списків і сіток контенту, зі станами наведення, фокуса й вимкненим.</p>
       <HelpBox>
         <p>Підняття картки (box-shadow + зсув вгору) при наведенні — звичний сигнал «цей елемент клікабельний».</p>
+        <p>Якщо картка НЕ клікабельна (просто контейнер для вмісту), не додавайте їй hover-ефект — це створює хибне очікування кліку й дратує, коли нічого не відбувається. Залиште підняття тільки для карток, обгорнутих у посилання чи кнопку, адже hover-стан — це обіцянка інтерактивності, яку потрібно виконати.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -230,6 +237,50 @@ function CardTab({ state, patch, toastApi }) {
   )
 }
 
+function CheckTab({ state, patch, toastApi }) {
+  const cfg = state.check
+  const cbCss = checkboxCss(cfg)
+  const rCss = radioCss(cfg)
+  return (
+    <div>
+      <p className="cl-tab-desc">Чекбокс (множинний вибір) і радіо-кнопка (вибір одного варіанта з кількох) — у всіх станах поруч.</p>
+      <HelpBox>
+        <p>Форма — головна підказка значення: квадрат = «можна вибрати кілька» (чекбокс), коло = «лише один варіант із групи» (радіо). Міняти ці форми місцями — класична помилка, яка плутає користувача ще до того, як він прочитає підписи.</p>
+        <p>Для обох компонентів справжній HTML-елемент (<code>&lt;input type="checkbox"&gt;</code>/<code>radio</code>) зазвичай ховають візуально (не <code>display: none</code>, а через clip/opacity), а стилізований квадрат чи коло — це сусідній елемент, синхронізований через CSS-селектор <code>:checked + .box</code>. Це зберігає нативну доступність (клавіатура, скрінрідери) при повністю кастомному вигляді.</p>
+      </HelpBox>
+
+      <div className="cl-picker-top">
+        <span style={{ fontSize: 12, color: 'var(--muted)', width: 70, flex: 'none' }}>Акцент</span>
+        <input type="color" className="cl-swatch-input" value={cfg.accent} onChange={(e) => patch('check', { accent: e.target.value })} />
+        <input className="cl-hex-input" value={cfg.accent} onChange={(e) => patch('check', { accent: e.target.value })} />
+      </div>
+
+      <div className="cl-section-title">Чекбокс — усі стани</div>
+      <div className="cp-state-grid">
+        {CHECK_STATES.map((s) => (
+          <StateCell key={s} label={STATE_LABELS[s]}>
+            <div style={checkboxStyle(cfg, s)}>{s === 'checked' && <span style={{ color: '#fff', fontSize: 13, lineHeight: 1 }}>✓</span>}</div>
+          </StateCell>
+        ))}
+      </div>
+      <CssOut css={cbCss} toastApi={toastApi} />
+
+      <div className="cl-section-title">Радіо-кнопка — усі стани</div>
+      <div className="cp-state-grid">
+        {CHECK_STATES.map((s) => {
+          const st = radioStyle(cfg, s)
+          return (
+            <StateCell key={s} label={STATE_LABELS[s]}>
+              <div style={st.ring}><div style={st.dot} /></div>
+            </StateCell>
+          )
+        })}
+      </div>
+      <CssOut css={rCss} toastApi={toastApi} />
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     button: { bg: '#3E37E0', color: '#FFFFFF', radius: 10, size: 'md' },
@@ -237,6 +288,7 @@ function defaultState() {
     toggle: { accent: '#3E37E0' },
     badge: { radius: 6, pill: false },
     card: { accent: '#3E37E0', radius: 14 },
+    check: { accent: '#3E37E0' },
   }
 }
 
@@ -287,7 +339,7 @@ export default function ComponentLab() {
   return (
     <LabShell
       title="Component Lab"
-      subtitle="UI-компоненти в усіх станах: default, hover, focus, disabled — поруч, для швидкого порівняння."
+      subtitle="UI-компоненти в усіх станах: default, hover, focus, disabled, checked — поруч, для швидкого порівняння."
       icon="🧩"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -316,6 +368,7 @@ export default function ComponentLab() {
           {tab === 'toggle' && <ToggleTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'badge' && <BadgeTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'card' && <CardTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'check' && <CheckTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>
