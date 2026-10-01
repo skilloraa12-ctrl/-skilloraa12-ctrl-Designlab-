@@ -869,6 +869,20 @@ button.tool-badge--action:hover { border-color: var(--green); }
   color: var(--ink); padding: 5px 7px; font-size: 12px;
 }
 
+/* ---------- Component Lab ---------- */
+.cp-state-grid { display: flex; flex-wrap: wrap; gap: 24px 20px; padding: 14px 0 20px; }
+.cp-state-cell { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.cp-state-stage {
+  display: flex; align-items: center; justify-content: center; min-width: 110px; min-height: 64px;
+  padding: 10px; border-radius: var(--radius); background: #EDEDF0;
+}
+.cp-state-label { font-size: 11px; color: var(--muted); font-weight: 600; text-align: center; }
+.cp-input-el { width: 150px; box-sizing: border-box; font-family: inherit; }
+.cp-input-el::placeholder { color: #9D9DA8; }
+.cp-card-demo { width: 160px; box-sizing: border-box; }
+.cp-card-demo-title { font-size: 13px; font-weight: 700; color: #17171A; margin-bottom: 4px; }
+.cp-card-demo-text { font-size: 12px; color: #5B5B66; }
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }

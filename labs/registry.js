@@ -33,7 +33,7 @@ export const LABS = [
   { id: 'gradient', route: '/labs/gradient', icon: '🌈', title: 'Gradient Lab', desc: 'Лінійні, радіальні й конічні градієнти з кількома точками.', category: 'visual', tools: 3, status: 'available' },
   { id: 'contrast', route: '/labs/contrast', icon: '◐', title: 'Contrast & Accessibility Lab', desc: 'Перевірка контрасту WCAG для тексту, іконок, станів і фокусу.', category: 'accessibility', tools: 4, status: 'available' },
   { id: 'motion', route: '/labs/motion', icon: '🎞️', title: 'Motion Lab', desc: 'CSS-анімації: fade, slide, spring, keyframes з живим превʼю.', category: 'motion3d', tools: 4, status: 'soon' },
-  { id: 'components', route: '/labs/components', icon: '🧩', title: 'Component Lab', desc: 'UI-компоненти в усіх станах: default, hover, focus, disabled.', category: 'uiux', tools: 5, status: 'soon' },
+  { id: 'components', route: '/labs/components', icon: '🧩', title: 'Component Lab', desc: 'UI-компоненти в усіх станах: default, hover, focus, disabled.', category: 'uiux', tools: 5, status: 'available' },
   { id: 'responsive', route: '/labs/responsive', icon: '📱', title: 'Responsive Lab', desc: 'Порівняння дизайну на різних viewport одночасно.', category: 'uiux', tools: 3, status: 'soon' },
   { id: 'accessibility', route: '/labs/accessibility', icon: '🔓', title: 'Accessibility Lab', desc: 'Перевірка інтерфейсу: контраст, фокус, розмір цілей, ієрархія заголовків.', category: 'accessibility', tools: 6, status: 'soon' },
   { id: 'composition', route: '/labs/composition', icon: '🧠', title: 'Composition Lab', desc: 'Правило третин, золотий перетин, симетрія, візуальний баланс.', category: 'layout', tools: 4, status: 'soon' },
