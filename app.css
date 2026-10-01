@@ -816,6 +816,17 @@ button.tool-badge--action:hover { border-color: var(--green); }
 /* ---------- Gradient Lab ---------- */
 .gr-preview { width: 100%; height: 160px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 18px; }
 
+/* ---------- Contrast & Accessibility Lab ---------- */
+.ac-preview {
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px;
+  margin-top: 10px; font-size: 15px;
+}
+.ac-preview-ui { display: flex; align-items: center; gap: 18px; }
+.ac-preview-field { width: 90px; height: 32px; border: 2px solid; border-radius: var(--radius-sm); background: transparent; }
+.ac-state-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.ac-state-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; background: var(--surface); }
+.ac-state-preview { border-radius: var(--radius-sm); padding: 14px; text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }
