@@ -29,7 +29,7 @@ export const LABS = [
   { id: 'image', route: '/labs/image', icon: '🖼️', title: 'Image Lab', desc: 'Кадрування, корекція кольору, ефекти та експорт зображень.', category: 'visual', tools: 5, status: 'soon' },
   { id: 'texture', route: '/labs/texture', icon: '🧱', title: 'Texture Lab', desc: 'Генерація й редагування текстур: папір, шум, тканина, метал.', category: 'visual', tools: 4, status: 'soon' },
   { id: 'pattern', route: '/labs/pattern', icon: '🔳', title: 'Pattern Lab', desc: 'Патерни: крапки, лінії, хвилі, геометрія — з експортом у SVG/CSS.', category: 'visual', tools: 4, status: 'soon' },
-  { id: 'light', route: '/labs/light', icon: '🌑', title: 'Shadow & Light Lab', desc: 'Тіні, світло, готові CSS-пресети (material, floating, layered).', category: 'visual', tools: 4, status: 'soon' },
+  { id: 'light', route: '/labs/light', icon: '🌑', title: 'Shadow & Light Lab', desc: 'Тіні, світло, готові CSS-пресети (material, floating, layered).', category: 'visual', tools: 4, status: 'available' },
   { id: 'gradient', route: '/labs/gradient', icon: '🌈', title: 'Gradient Lab', desc: 'Лінійні, радіальні й конічні градієнти з кількома точками.', category: 'visual', tools: 3, status: 'available' },
   { id: 'contrast', route: '/labs/contrast', icon: '◐', title: 'Contrast & Accessibility Lab', desc: 'Перевірка контрасту WCAG для тексту, іконок, станів і фокусу.', category: 'accessibility', tools: 4, status: 'available' },
   { id: 'motion', route: '/labs/motion', icon: '🎞️', title: 'Motion Lab', desc: 'CSS-анімації: fade, slide, spring, keyframes з живим превʼю.', category: 'motion3d', tools: 4, status: 'soon' },

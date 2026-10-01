@@ -827,6 +827,22 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .ac-state-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; background: var(--surface); }
 .ac-state-preview { border-radius: var(--radius-sm); padding: 14px; text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
 
+/* ---------- Shadow & Light Lab ---------- */
+/* Fixed light surfaces (not theme vars): a dark shadow on a dark-theme
+   dark surface is nearly invisible, and shadows are conventionally
+   demoed on a light surface regardless of the app's own theme. */
+.sl-preview-stage {
+  display: flex; align-items: center; justify-content: center; height: 220px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: #EDEDF0;
+  margin-bottom: 20px;
+}
+.sl-preview-card { width: 140px; height: 100px; border-radius: var(--radius); background: #FFFFFF; }
+.sl-layer-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; background: var(--surface); }
+.sl-layer-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .03em; }
+.sl-preset-card { background: #EDEDF0 !important; }
+.sl-preset-card .l3d-template-label { color: #17171A; }
+.sl-preset-swatch { width: 100%; height: 48px; border-radius: var(--radius-sm); background: #FFFFFF; margin-bottom: 10px; }
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }
