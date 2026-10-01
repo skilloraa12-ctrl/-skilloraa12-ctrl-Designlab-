@@ -31,7 +31,7 @@ export const LABS = [
   { id: 'pattern', route: '/labs/pattern', icon: '🔳', title: 'Pattern Lab', desc: 'Патерни: крапки, лінії, хвилі, геометрія, шахівниця — з експортом у SVG/CSS.', category: 'visual', tools: 5, status: 'available' },
   { id: 'light', route: '/labs/light', icon: '🌑', title: 'Shadow & Light Lab', desc: 'Тіні, світло, тінь тексту, готові CSS-пресети (material, floating, layered).', category: 'visual', tools: 5, status: 'available' },
   { id: 'gradient', route: '/labs/gradient', icon: '🌈', title: 'Gradient Lab', desc: 'Лінійні, радіальні й конічні градієнти з кількома точками та готовими пресетами.', category: 'visual', tools: 4, status: 'available' },
-  { id: 'contrast', route: '/labs/contrast', icon: '◐', title: 'Contrast & Accessibility Lab', desc: 'Перевірка контрасту WCAG для тексту, іконок, станів і фокусу.', category: 'accessibility', tools: 4, status: 'available' },
+  { id: 'contrast', route: '/labs/contrast', icon: '◐', title: 'Contrast & Accessibility Lab', desc: 'Перевірка контрасту WCAG для тексту, іконок, станів, фокусу й цілої палітри.', category: 'accessibility', tools: 5, status: 'available' },
   { id: 'motion', route: '/labs/motion', icon: '🎞️', title: 'Motion Lab', desc: 'CSS-анімації: fade, slide, spring, keyframes з живим превʼю.', category: 'motion3d', tools: 4, status: 'available' },
   { id: 'components', route: '/labs/components', icon: '🧩', title: 'Component Lab', desc: 'UI-компоненти в усіх станах: default, hover, focus, disabled.', category: 'uiux', tools: 5, status: 'available' },
   { id: 'responsive', route: '/labs/responsive', icon: '📱', title: 'Responsive Lab', desc: 'Порівняння дизайну на різних viewport одночасно.', category: 'uiux', tools: 3, status: 'soon' },
