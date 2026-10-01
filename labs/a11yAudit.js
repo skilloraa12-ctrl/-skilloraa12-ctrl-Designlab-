@@ -56,6 +56,32 @@ export function checkFlashSafety(hz) {
   }
 }
 
+// Simulates the browser's actual Tab order: elements with a positive
+// tabindex are visited first, in ascending order (ties broken by DOM
+// order), then elements with tabindex 0 (or none) in plain DOM order.
+// tabindex="-1" removes an element from the Tab sequence entirely
+// (it's still focusable via JS, just not via keyboard Tab).
+export function computeTabOrder(items) {
+  const focusable = items.filter((it) => it.tabindex !== -1)
+  const positive = focusable
+    .filter((it) => it.tabindex > 0)
+    .sort((a, b) => a.tabindex - b.tabindex || items.indexOf(a) - items.indexOf(b))
+  const zero = focusable.filter((it) => !(it.tabindex > 0))
+  return [...positive, ...zero]
+}
+
+export function tabOrderIssues(items) {
+  const issues = []
+  if (items.some((it) => it.tabindex > 0)) {
+    issues.push('Позитивний tabindex знайдено — Tab-порядок більше не відповідає порядку елементів у DOM/на екрані.')
+  }
+  const negativeCount = items.filter((it) => it.tabindex === -1).length
+  if (negativeCount === items.length) {
+    issues.push('Усі елементи виключені з Tab-порядку (tabindex="-1") — клавіатурою до них не дістатись.')
+  }
+  return issues
+}
+
 export const CHECKLIST_ITEMS = [
   { id: 'lang', group: 'Структура', label: 'У <html> вказано атрибут lang' },
   { id: 'landmarks', group: 'Структура', label: 'Є landmark-теги: header, nav, main, footer' },

@@ -9,6 +9,7 @@ import { useLabRecent } from './labs/useLabRecent.js'
 import {
   TARGET_MIN_AA, TARGET_MIN_AAA, checkTargetSize,
   validateHeadings, validateAlt, checkFlashSafety, CHECKLIST_ITEMS,
+  computeTabOrder, tabOrderIssues,
 } from './labs/a11yAudit.js'
 
 const TABS = [
@@ -17,6 +18,7 @@ const TABS = [
   { key: 'alt', icon: '🖼️', label: 'Alt-текст' },
   { key: 'labels', icon: '🏷️', label: 'Підписи форм' },
   { key: 'motion', icon: '⚡', label: 'Мигання' },
+  { key: 'taborder', icon: '⇥', label: 'Tab-порядок' },
   { key: 'checklist', icon: '✅', label: 'Чекліст' },
 ]
 
@@ -49,6 +51,7 @@ function TargetTab({ state, patch }) {
       <p className="cl-tab-desc">Інтерактивні елементи (кнопки, іконки, посилання) мають бути досить великими, щоб у них можна було влучити пальцем на тачскріні.</p>
       <HelpBox>
         <p>WCAG 2.5.8 (AA) вимагає мінімум 24×24px, WCAG 2.5.5 (AAA) рекомендує 44×44px. Виняток — коли елемент вбудований у текст або має еквівалент більшого розміру поруч.</p>
+        <p>44px не випадкове число: це приблизний середній розмір подушечки вказівного пальця дорослої людини на екрані телефону. Типова помилка — іконки "✕" закриття модалки чи "⋮" меню роблять 16-20px заради "охайного" вигляду, і саме вони найчастіше викликають промахи при натисканні на малих екранах.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Ширина<input type="range" min={8} max={64} value={width} onChange={(e) => patch('target', { width: parseInt(e.target.value, 10) })} /><span>{width}px</span></label></div>
@@ -87,6 +90,7 @@ function HeadingsTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Побудуйте план заголовків сторінки — лаба перевірить, чи немає пропущених рівнів і чи є рівно один H1.</p>
       <HelpBox>
         <p>Заголовки формують структуру, якою скрінрідери дають користувачам "перестрибувати" по сторінці. Якщо після H2 одразу йде H4, людина, що навігує по заголовках, не зрозуміє, що пропущено H3.</p>
+        <p>Не плутайте рівень заголовка з розміром шрифту — це різні речі. H1 не зобовʼязаний бути найбільшим текстом на сторінці (можна зменшити його CSS-ом), а великий текст не стає заголовком лише через великий <code>font-size</code>. Скрінрідер орієнтується на тег (<code>h1</code>–<code>h6</code>), а не на те, як текст виглядає візуально.</p>
       </HelpBox>
 
       <div className="a11y-heading-list">
@@ -126,6 +130,7 @@ function AltTab({ state, patch }) {
       <p className="cl-tab-desc">Для кожного зображення вкажіть тип і alt-текст — лаба підкаже, чи він коректний.</p>
       <HelpBox>
         <p>Декоративні зображення (орнаменти, іконки-прикраси) повинні мати <code>alt=""</code>, щоб скрінрідер їх пропускав. Інформативні — повинні мати опис того, що на зображенні, а не його назву файлу чи слово "картинка".</p>
+        <p>Третій, менш очевидний випадок — функціональні зображення: іконка в кнопці без тексту (наприклад, іконка кошика на кнопці "Додати в кошик" без підпису). Тут alt описує не зображення, а дію кнопки — "Додати в кошик", а не "іконка кошика". Запитайте себе: "що скрінрідер має сказати, щоб людина зрозуміла функцію елемента?"</p>
       </HelpBox>
 
       <div className="a11y-heading-list">
@@ -163,6 +168,7 @@ function LabelsTab({ state, patch }) {
       <p className="cl-tab-desc">Поле вводу без справжнього <code>&lt;label&gt;</code> виглядає нормально, доки в ньому немає тексту, — а для скрінрідера воно залишається безіменним назавжди.</p>
       <HelpBox>
         <p>Placeholder — не заміна label: він зникає під час вводу і не завжди озвучується скрінрідерами так само надійно. Кожне поле повинно мати <code>&lt;label for="..."&gt;</code> або <code>aria-label</code>.</p>
+        <p>Бонус справжнього <code>&lt;label&gt;</code>, про який часто забувають: клік по тексту підпису фокусує саме поле (якщо <code>for</code> збігається з <code>id</code> інпута). Це збільшує клікабельну область — особливо помітно для чекбоксів і радіокнопок, де сам квадратик/кружечок маленький, а підпис поруч — великий і зручний для кліку.</p>
       </HelpBox>
 
       <div className="a11y-heading-list">
@@ -210,6 +216,7 @@ function MotionTab({ state, patch }) {
       <p className="cl-tab-desc">Елементи, що швидко мигають, можуть провокувати напади в людей з фотосенситивною епілепсією.</p>
       <HelpBox>
         <p>WCAG 2.3.1 забороняє контент, що мигає частіше за 3 рази за секунду (загальний поріг спалаху). Демо нижче навмисно обмежене 5 Гц і приглушеними кольорами — для безпеки.</p>
+        <p>Це стосується не лише "дизайнерських" ефектів: автоматичні каруселі з різким фейдом, GIF-банери реклами й навіть надто швидка loading-анімація спінера можуть випадково перетнути цей поріг. Завжди поважайте <code>prefers-reduced-motion</code> — медіа-запит, який система вмикає для людей, що явно попросили менше руху на екрані (не тільки через епілепсію, а й через вестибулярні розлади чи укачування).</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Частота<input type="range" min={1} max={5} step={0.5} value={hz} onChange={(e) => patch('motion', { hz: parseFloat(e.target.value) })} /><span>{hz} Гц</span></label></div>
@@ -231,6 +238,53 @@ function MotionTab({ state, patch }) {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+function TabOrderTab({ state, patch }) {
+  const items = state.taborder.items
+  const order = computeTabOrder(items)
+  const issues = tabOrderIssues(items)
+  function setTabindex(id, tabindex) {
+    patch('taborder', { items: items.map((it) => (it.id === id ? { ...it, tabindex } : it)) })
+  }
+  return (
+    <div>
+      <p className="cl-tab-desc">Задайте <code>tabindex</code> для кількох елементів інтерфейсу й подивіться, у якому порядку їх реально відвідає клавіша Tab.</p>
+      <HelpBox>
+        <p>За замовчуванням (<code>tabindex="0"</code> або без атрибута) Tab рухається в порядку елементів у DOM — зазвичай він же й візуальний порядок зверху вниз, зліва направо. Позитивний <code>tabindex</code> (1, 2, 3…) примусово висуває елемент наперед черги — незалежно від того, де він у DOM і на екрані.</p>
+        <p>Це класична пастка: розробник бачить "елемент має бути третім у Tab" і ставить <code>tabindex="3"</code>, не усвідомлюючи, що це глобальне правило для всієї сторінки, а не лише для цього блоку. Додавання нового блоку з власною нумерацією потім ламає все — тому офіційна рекомендація WCAG: використовуйте лише <code>tabindex="0"</code> (додати в природний порядок) і <code>tabindex="-1"</code> (прибрати з Tab, лишити фокусованим програмно), а порядок керуйте порядком елементів у DOM.</p>
+        <p><code>tabindex="-1"</code> корисний не як "заборона", а для програмного фокусу — наприклад, модалку при відкритті фокусують через JS (<code>el.focus()</code>), хоча сама вона не повинна зʼявлятись у звичайному Tab-обході сторінки позаду себе.</p>
+      </HelpBox>
+
+      <div className="a11y-heading-list">
+        {items.map((it, i) => (
+          <div key={it.id} className="a11y-field-row">
+            <span className="a11y-heading-sample">{i + 1}. {it.name}</span>
+            <div className="cl-btn-row">
+              {[-1, 0, 1, 2, 3].map((tv) => (
+                <button key={tv} className={'harmony-btn' + (it.tabindex === tv ? ' active' : '')} onClick={() => setTabindex(it.id, tv)}>
+                  {tv}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="cl-section-title">Фактичний Tab-порядок</div>
+      <ol className="a11y-taborder-result">
+        {order.map((it) => (
+          <li key={it.id}>{it.name} <span style={{ color: 'var(--muted)' }}>(tabindex={it.tabindex})</span></li>
+        ))}
+      </ol>
+      {items.some((it) => it.tabindex === -1) && (
+        <p className="cl-tab-desc">Елементи з tabindex="-1" не потрапляють у список вище — вони недоступні через Tab.</p>
+      )}
+
+      <div className="cl-section-title">Результат перевірки</div>
+      <IssueList issues={issues} okMessage="Tab-порядок відповідає природному DOM-порядку" />
     </div>
   )
 }
@@ -274,6 +328,13 @@ function defaultState() {
     alt: { images: [{ id: nextId(), type: 'informative', alt: '' }, { id: nextId(), type: 'decorative', alt: '' }] },
     labels: { fields: [{ id: nextId(), name: 'Email', hasLabel: true }, { id: nextId(), name: 'Пароль', hasLabel: false }] },
     motion: { hz: 2 },
+    taborder: { items: [
+      { id: nextId(), name: 'Логотип (посилання на головну)', tabindex: 0 },
+      { id: nextId(), name: 'Поле пошуку', tabindex: 3 },
+      { id: nextId(), name: 'Пункт меню "Каталог"', tabindex: 0 },
+      { id: nextId(), name: 'Кнопка "Кошик"', tabindex: 1 },
+      { id: nextId(), name: 'Кнопка "Профіль"', tabindex: 0 },
+    ] },
     checklist: { checked: {} },
   }
 }
@@ -325,7 +386,7 @@ export default function AccessibilityLab() {
   return (
     <LabShell
       title="Accessibility Lab"
-      subtitle="Перевірка інтерфейсу: розмір цілей, ієрархія заголовків, alt-текст, підписи форм, безпека мигання й загальний чекліст."
+      subtitle="Перевірка інтерфейсу: розмір цілей, ієрархія заголовків, alt-текст, підписи форм, безпека мигання, Tab-порядок і загальний чекліст."
       icon="🔓"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -354,6 +415,7 @@ export default function AccessibilityLab() {
           {tab === 'alt' && <AltTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'labels' && <LabelsTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'motion' && <MotionTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'taborder' && <TabOrderTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'checklist' && <ChecklistTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>

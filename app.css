@@ -929,6 +929,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .a11y-progress-fill { height: 100%; background: var(--accent); border-radius: 999px; }
 .a11y-checklist-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 .a11y-checklist-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); cursor: pointer; }
+.a11y-taborder-result { margin: 8px 0 16px; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ink); }
 
 /* ---------- Composition Lab ---------- */
 .cm-photo-stage {
