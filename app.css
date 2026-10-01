@@ -813,6 +813,9 @@ button.tool-badge--action:hover { border-color: var(--green); }
 }
 .gl-iso-preview svg { max-width: 100%; height: auto; }
 
+/* ---------- Gradient Lab ---------- */
+.gr-preview { width: 100%; height: 160px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 18px; }
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }
