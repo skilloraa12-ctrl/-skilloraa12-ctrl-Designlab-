@@ -37,3 +37,20 @@ export function buildJourneyPlot(stages, W, H, moodMin = -2, moodMax = 2) {
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
   return { path, points }
 }
+
+// Conversion funnel: each step has a continueRate (0..1) — the share of
+// the PREVIOUS step's audience that proceeds. Returns cumulative % of the
+// original 100 remaining at each step, plus which step lost the most
+// people (the step with the lowest continueRate).
+export function computeFunnel(steps) {
+  let remaining = 100
+  let worstIndex = -1
+  let worstRate = 1
+  const rows = steps.map((s, i) => {
+    const before = remaining
+    remaining = remaining * s.continueRate
+    if (i > 0 && s.continueRate < worstRate) { worstRate = s.continueRate; worstIndex = i }
+    return { ...s, before, after: remaining, lostPct: before - remaining }
+  })
+  return { rows, finalPct: remaining, worstIndex }
+}

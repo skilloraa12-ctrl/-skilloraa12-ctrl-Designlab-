@@ -41,7 +41,7 @@ export const LABS = [
   { id: '3d', route: '/labs/3d', icon: '🧊', title: '3D Lab', desc: 'Легкі 3D-обʼєкти в браузері: готові шаблони (будинок, людина, рослина, іграшка), позиція, обертання, матеріали, освітлення.', category: 'motion3d', tools: 6, status: 'available' },
   { id: 'ui-preview', route: '/labs/ui-preview', icon: '🖥️', title: 'UI Preview Lab', desc: 'Побудова живого превʼю інтерфейсу з готових шаблонів.', category: 'uiux', tools: 5, status: 'soon' },
   { id: 'wireframe', route: '/labs/wireframe', icon: '🧭', title: 'Wireframe Lab', desc: 'Швидкі каркаси інтерфейсу: секції, форми, картки, шаблони й анотації для розробника.', category: 'uiux', tools: 5, status: 'available' },
-  { id: 'user-flow', route: '/labs/user-flow', icon: '🔀', title: 'User Flow Lab', desc: 'Схеми користувацьких сценаріїв: екрани, дії, рішення.', category: 'uiux', tools: 4, status: 'available' },
+  { id: 'user-flow', route: '/labs/user-flow', icon: '🔀', title: 'User Flow Lab', desc: 'Схеми користувацьких сценаріїв: екрани, дії, рішення, емоційна крива й воронка конверсії.', category: 'uiux', tools: 5, status: 'available' },
   { id: 'information-architecture', route: '/labs/information-architecture', icon: '🗺️', title: 'Information Architecture Lab', desc: 'Sitemap, ієрархія сторінок і категорій.', category: 'uiux', tools: 3, status: 'soon' },
   { id: 'ux-writing', route: '/labs/ux-writing', icon: '✍️', title: 'UX Writing Lab', desc: 'Текст інтерфейсу: кнопки, підказки, помилки, порожні стани.', category: 'uiux', tools: 4, status: 'soon' },
   { id: 'ux-audit', route: '/labs/ux-audit', icon: '🧠', title: 'UX Audit Lab', desc: 'Перевірка інтерфейсу за конкретними критеріями UX.', category: 'uiux', tools: 5, status: 'soon' },

@@ -6,12 +6,13 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { NODE_TYPES, FLOW_TEMPLATES, moveItem, buildJourneyPlot } from './labs/userFlowBuilder.js'
+import { NODE_TYPES, FLOW_TEMPLATES, moveItem, buildJourneyPlot, computeFunnel } from './labs/userFlowBuilder.js'
 
 const TABS = [
   { key: 'linear', icon: '🔀', label: 'Сценарій' },
   { key: 'decision', icon: '🔶', label: 'Рішення' },
   { key: 'journey', icon: '📈', label: 'Емоційна крива' },
+  { key: 'funnel', icon: '⏳', label: 'Воронка' },
   { key: 'templates', icon: '📋', label: 'Шаблони' },
 ]
 
@@ -40,6 +41,7 @@ function LinearTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Складіть лінійний сценарій користувача з екранів і дій — від старту до кінця.</p>
       <HelpBox>
         <p>User flow показує шлях користувача крок за кроком — зручно, щоб побачити, чи немає зайвих кроків перед тим, як малювати повноцінні екрани.</p>
+        <p>Хороше практичне правило: якщо між "Старт" і "Кінець" у критичному сценарії (реєстрація, оплата) виходить більше 5-6 кроків, варто запитати для кожного — "а що буде, якщо цей крок прибрати?". Кожен зайвий екран чи дія — ще одна точка, де користувач може кинути сценарій на півдорозі.</p>
       </HelpBox>
 
       <div className="cl-section-title">Палітра</div>
@@ -99,6 +101,7 @@ function DecisionTab({ state, patch }) {
       <p className="cl-tab-desc">Одна точка рішення з двома гілками — покаже, куди веде кожен варіант відповіді користувача.</p>
       <HelpBox>
         <p>Ромб — стандартне позначення рішення у блок-схемах. Кожна гілка ("Так" / "Ні") — окремий незалежний підсценарій.</p>
+        <p>Не кожне "рішення" в дизайні потребує запитання до користувача — найчастіше воно приховане: "чи авторизований" чи "чи є товари в кошику" система перевіряє сама, без екрану з питанням. Малюючи таку розвилку, позначайте явно, хто і коли ухвалює рішення: сам користувач (клік на вибір) чи система (перевірка умови у фоні).</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -167,6 +170,7 @@ function JourneyTab({ state, patch }) {
       <p className="cl-tab-desc">Карта емоцій користувача на кожному етапі сценарію — допомагає побачити, де досвід "провисає".</p>
       <HelpBox>
         <p>Класичний інструмент customer journey mapping: по осі X — етапи сценарію в хронологічному порядку, по осі Y — настрій користувача від −2 (фрустрація) до +2 (захват).</p>
+        <p>Найцінніша інформація тут — не середній рівень, а різкі падіння: етап, де крива різко йде вниз, — кандидат номер один на редизайн, навіть якщо сусідні етапи виглядають чудово. Один провальний крок (наприклад "Оплата" з купою полів і незрозумілими помилками) може перекреслити враження від усього іншого бездоганного сценарію.</p>
       </HelpBox>
 
       <div className="l3d-object-list">
@@ -203,6 +207,9 @@ function TemplatesTab({ patch, setTab, toastApi }) {
   return (
     <div>
       <p className="cl-tab-desc">Готові типові сценарії — застосуйте й доопрацюйте на вкладці "Сценарій".</p>
+      <HelpBox>
+        <p>Ці шаблони — не універсальний рецепт, а відправна точка з типовою кількістю й послідовністю кроків для поширених задач. Реальний продукт майже завжди вимагає коригування: додайте крок верифікації email в онбординг чи крок вибору способу доставки в чекаут, якщо це є у вашому продукті.</p>
+      </HelpBox>
       <div className="l3d-template-grid">
         {FLOW_TEMPLATES.map((t) => (
           <button
@@ -224,6 +231,67 @@ function TemplatesTab({ patch, setTab, toastApi }) {
   )
 }
 
+function FunnelTab({ state, patch }) {
+  const steps = state.funnel.steps
+  const { rows, finalPct, worstIndex } = computeFunnel(steps)
+  function update(id, partial) {
+    patch('funnel', { steps: steps.map((s) => (s.id === id ? { ...s, ...partial } : s)) })
+  }
+  function remove(id) {
+    if (steps.length <= 2) return
+    patch('funnel', { steps: steps.filter((s) => s.id !== id) })
+  }
+  function add() {
+    if (steps.length >= 7) return
+    patch('funnel', { steps: [...steps, { id: nextId(), label: 'Крок', continueRate: 0.8 }] })
+  }
+  return (
+    <div>
+      <p className="cl-tab-desc">Скільки користувачів доходить до кінця сценарію — і на якому кроці втрачається найбільше.</p>
+      <HelpBox>
+        <p>Воронка (funnel) — стандартний продуктовий інструмент: кожен крок утримує лише частину аудиторії попереднього. "Continue rate" — відсоток тих, хто дійшов до попереднього кроку й пішов далі (не кинув). На відміну від емоційної кривої, тут вимірюється не настрій, а фактична поведінка — скільки людей реально виконали дію.</p>
+        <p>Крок з найгіршим continue rate позначений — це той, де найбільше людей "відвалюється". Але контекст важливий: втрата 90% на кроці "Побачив рекламу → Зайшов на сайт" зазвичай нормальна (так працює реклама), а втрата 50% на кроці "Кошик → Оплата" — тривожний сигнал, бо людина вже виявила намір купити.</p>
+      </HelpBox>
+
+      <div className="l3d-object-list">
+        {steps.map((s, i) => (
+          <div key={s.id} className="l3d-object-row" style={{ flexWrap: 'wrap' }}>
+            <input className="cl-text-input" style={{ flex: 1, minWidth: 100 }} value={s.label} onChange={(e) => update(s.id, { label: e.target.value })} />
+            {i > 0 && (
+              <>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>продовжують</span>
+                <input type="range" min={0.05} max={1} step={0.05} value={s.continueRate} onChange={(e) => update(s.id, { continueRate: parseFloat(e.target.value) })} style={{ width: 90 }} />
+                <span style={{ fontSize: 12, width: 36 }}>{Math.round(s.continueRate * 100)}%</span>
+              </>
+            )}
+            <button className="cl-mini-btn" onClick={() => remove(s.id)} title="Видалити">✕</button>
+          </div>
+        ))}
+      </div>
+      <div className="cl-picker-top" style={{ marginTop: 10 }}>
+        <button className="harmony-btn" onClick={add}>+ Додати крок</button>
+      </div>
+
+      <div className="cl-section-title">Воронка</div>
+      <div className="uf-funnel">
+        {rows.map((r, i) => (
+          <div key={r.id} className="uf-funnel-row">
+            <span className="uf-funnel-label">{r.label}</span>
+            <div className="uf-funnel-bar-wrap">
+              <div className={'uf-funnel-bar' + (i === worstIndex ? ' worst' : '')} style={{ width: `${r.after}%` }} />
+            </div>
+            <span className="uf-funnel-pct">{r.after.toFixed(0)}%</span>
+          </div>
+        ))}
+      </div>
+      <div className="cl-tags" style={{ marginTop: 10 }}>
+        <span className="cl-badge">{finalPct.toFixed(0)}% дійшли до кінця</span>
+        {worstIndex >= 0 && <span className="cl-badge fail">Найбільша втрата: «{rows[worstIndex].label}»</span>}
+      </div>
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     linear: { items: [{ id: nextId(), type: 'start' }, { id: nextId(), type: 'screen' }, { id: nextId(), type: 'action' }, { id: nextId(), type: 'end' }] },
@@ -238,6 +306,14 @@ function defaultState() {
         { id: nextId(), label: 'Пошук', mood: 1 },
         { id: nextId(), label: 'Оплата', mood: -1 },
         { id: nextId(), label: 'Готово', mood: 2 },
+      ],
+    },
+    funnel: {
+      steps: [
+        { id: nextId(), label: 'Зайшли на сайт', continueRate: 1 },
+        { id: nextId(), label: 'Додали в кошик', continueRate: 0.4 },
+        { id: nextId(), label: 'Почали оплату', continueRate: 0.6 },
+        { id: nextId(), label: 'Завершили оплату', continueRate: 0.75 },
       ],
     },
   }
@@ -290,7 +366,7 @@ export default function UserFlowLab() {
   return (
     <LabShell
       title="User Flow Lab"
-      subtitle="Схеми користувацьких сценаріїв: лінійні шляхи, точки рішень і карта емоцій."
+      subtitle="Схеми користувацьких сценаріїв: лінійні шляхи, точки рішень, карта емоцій і воронка конверсії."
       icon="🔀"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -317,6 +393,7 @@ export default function UserFlowLab() {
           {tab === 'linear' && <LinearTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'decision' && <DecisionTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'journey' && <JourneyTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'funnel' && <FunnelTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'templates' && <TemplatesTab state={state} patch={patch} setTab={setTab} toastApi={toastApi} />}
         </div>
       </div>
