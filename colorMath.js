@@ -478,6 +478,35 @@ export function gradientCss(type, angle, stops) {
   return `conic-gradient(from ${angle}deg, ${stopStr})`
 }
 
+// ---------- Mixing ----------
+
+// Naive linear interpolation in RGB space — what most "average two colors"
+// tools (and CSS color-mix() in srgb mode) do. Mixing red and green this
+// way produces a dull, slightly brown/grey yellow, not a vivid one.
+export function mixRgb(hexA, hexB, t) {
+  const a = hexToRgb(hexA)
+  const b = hexToRgb(hexB)
+  return rgbToHex(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t)
+}
+
+// Interpolating in OKLAB instead keeps perceptual lightness and chroma
+// roughly linear, so the midpoint looks like a real color the eye expects
+// rather than a muddy average — the same reason CSS color-mix() defaults
+// recommend oklab for nicer results than srgb.
+export function mixOklab(hexA, hexB, t) {
+  const a = hexToRgb(hexA)
+  const b = hexToRgb(hexB)
+  const la = rgbToOklab(a.r, a.g, a.b)
+  const lb = rgbToOklab(b.r, b.g, b.b)
+  const mixed = {
+    l: la.l + (lb.l - la.l) * t,
+    a: la.a + (lb.a - la.a) * t,
+    b: la.b + (lb.b - la.b) * t,
+  }
+  const { r, g, b: bl } = oklabToRgb(mixed.l, mixed.a, mixed.b)
+  return rgbToHex(r, g, bl)
+}
+
 export function gradientSvg(type, angle, stops, width = 400, height = 160) {
   const id = 'g1'
   const stopDefs = stops.map((s) => `<stop offset="${s.pos}%" stop-color="${s.color}" stop-opacity="${s.opacity / 100}" />`).join('')

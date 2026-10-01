@@ -19,7 +19,7 @@ export const LAB_CATEGORIES = [
 ]
 
 export const LABS = [
-  { id: 'color', route: '/labs/color', icon: '🎨', title: 'Color Lab', desc: 'Кольори, палітри, гармонії, градієнти, контраст і превʼю в реальних макетах.', category: 'visual', tools: 14, status: 'available' },
+  { id: 'color', route: '/labs/color', icon: '🎨', title: 'Color Lab', desc: 'Кольори, палітри, гармонії, градієнти, змішування, контраст і превʼю в реальних макетах.', category: 'visual', tools: 15, status: 'available' },
   { id: 'shape', route: '/labs/shape', icon: '🔷', title: 'Shape & Vector Lab', desc: 'Фігури, трансформації, булеві операції, редагування шляхів, SVG.', category: 'visual', tools: 5, status: 'soon' },
   { id: 'brush', route: '/labs/brush', icon: '🖌️', title: 'Brush Lab', desc: 'Кистьовий рушій: олівець, чорнило, акварель, аерограф, власні пресети кистей.', category: 'visual', tools: 4, status: 'soon' },
   { id: 'drawing', route: '/labs/drawing', icon: '✏️', title: 'Drawing Lab', desc: 'Малювання з шарами, історією дій та експортом.', category: 'visual', tools: 5, status: 'soon' },
