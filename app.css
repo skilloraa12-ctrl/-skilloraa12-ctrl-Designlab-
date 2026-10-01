@@ -908,6 +908,25 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .a11y-checklist-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 .a11y-checklist-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); cursor: pointer; }
 
+/* ---------- Composition Lab ---------- */
+.cm-photo-stage {
+  position: relative; width: 100%; height: 260px; border-radius: var(--radius); overflow: hidden; margin: 10px 0 4px;
+  background: linear-gradient(135deg, #D9D4FF 0%, #B9C8FF 50%, #FFE3C2 100%); cursor: crosshair;
+}
+.cm-grid-line { position: absolute; background: rgba(255,255,255,0.75); }
+.cm-grid-line-v { top: 0; bottom: 0; width: 1px; }
+.cm-grid-line-h { left: 0; right: 0; height: 1px; }
+.cm-power-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: rgba(23,23,26,0.35); transform: translate(-50%, -50%); }
+.cm-marker { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #E0373E; border: 2px solid #fff; transform: translate(-50%, -50%); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+.cm-spiral-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cm-symmetry-grid { display: grid; gap: 4px; margin: 10px 0; }
+.cm-symmetry-cell { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); cursor: pointer; padding: 0; }
+.cm-symmetry-cell.filled { background: var(--accent); border-color: var(--accent); }
+.cm-balance-stage { display: flex; flex-direction: column; align-items: center; padding: 50px 10px 0; background: #EDEDF0; border-radius: var(--radius); margin: 10px 0; }
+.cm-balance-beam { position: relative; width: 90%; height: 6px; background: #9D9DA8; border-radius: 3px; transform-origin: center center; overflow: visible; }
+.cm-balance-item { position: absolute; top: 50%; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+.cm-balance-fulcrum { width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-bottom: 28px solid #5B5B66; margin-top: -3px; }
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }
