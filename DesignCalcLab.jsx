@@ -28,7 +28,7 @@ function copy(text) {
 
 function HelpBox({ children }) {
   return (
-    <details className="cl-help">
+    <details className="cl-help" open>
       <summary>❓ Як це працює (пояснення простими словами)</summary>
       <div className="cl-help-body">{children}</div>
     </details>
