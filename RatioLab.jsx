@@ -6,12 +6,13 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { simplifyRatio, ratioDecimal, heightFromWidth, widthFromHeight, fitRect, PRESETS } from './labs/ratioBuilder.js'
+import { simplifyRatio, ratioDecimal, heightFromWidth, widthFromHeight, fitRect, PRESETS, coverCrop } from './labs/ratioBuilder.js'
 
 const TABS = [
   { key: 'calculator', icon: '🧮', label: 'Калькулятор' },
   { key: 'presets', icon: '📐', label: 'Пресети' },
   { key: 'compare', icon: '⚖️', label: 'Порівняння' },
+  { key: 'crop', icon: '✂️', label: 'Обрізка (cover)' },
   { key: 'custom', icon: '⭐', label: 'Мої пресети' },
 ]
 
@@ -61,6 +62,7 @@ function CalculatorTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Співвідношення сторін (aspect ratio) — це пропорція ширини до висоти. Якщо вона фіксована, то знаючи одну сторону, завжди можна порахувати другу: height = width × (ratioH / ratioW).</p>
         <p>Приклад: банер шириною 1200px у співвідношенні 16:9 має висоту 1200 × (9/16) = 675px. У CSS те саме можна задати однією властивістю замість ручного рахунку: <code>aspect-ratio: 16 / 9;</code> на елементі з фіксованою шириною — браузер сам порахує висоту.</p>
+        <p>До <code>aspect-ratio</code> (з 2021 року) ту саму задачу розвʼязували "padding-top hack": обгортку з <code>padding-top: 56.25%</code> (= 9/16 у відсотках) і абсолютно позиціонованим вмістом усередині — працювало, бо <code>padding</code> у відсотках завжди рахується від ширини батьківського елемента, навіть вертикальний. Цей трюк усе ще трапляється у старому коді, тому варто впізнавати його, навіть користуючись сучасним <code>aspect-ratio</code>.</p>
       </HelpBox>
 
       <div className="cl-section-title">Співвідношення</div>
@@ -106,6 +108,7 @@ function PresetsTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Готові співвідношення для екранів, соцмереж і друку. Клік застосовує пресет у калькулятор.</p>
       <HelpBox>
         <p>Ці значення — не випадкові: 16:9 став стандартом відео й моніторів, бо близький до того, як працює периферійний зір людини; A4 заснований на пропорції √2:1, завдяки якій аркуш, складений навпіл, дає той самий пропорційний формат меншого розміру; золотий перетин (1.618:1) століттями використовують в архітектурі й друку як «природно приємну» пропорцію.</p>
+        <p>Соцмережеві формати змінюються разом із платформами й варто перевіряти актуальні вимоги перед публікацією: Instagram свого часу змінював максимальну висоту поста кілька разів, а YouTube вимагає обкладинку рівно 16:9, але з мінімальною шириною 1280px — просто правильна пропорція без мінімального розміру дасть розмите чи обрізане прев'ю.</p>
       </HelpBox>
       {groups.map((g) => (
         <div key={g}>
@@ -137,6 +140,7 @@ function CompareTab({ state, patch }) {
       <p className="cl-tab-desc">Візуальне порівняння поточного співвідношення (з калькулятора) з двома іншими пресетами в одному масштабі.</p>
       <HelpBox>
         <p>Числа на кшталт «1.33» проти «1.78» важко уявити подумки — а поруч вони одразу показують, наскільки один формат ширший або вищий за інший. Корисно, коли треба вирішити, чи влізе існуючий макет 4:3 у новий слот 16:9 без обрізання.</p>
+        <p>На практиці це питання постає щоразу, коли той самий контент (банер, фото, відео) потрібно адаптувати під кілька каналів одночасно — наприклад, одна рекламна кампанія для десктопного сайту (16:9), Instagram Stories (9:16) і квадратного поста (1:1). Порівняння одразу показує, наскільки різні ці формати (вертикальний 9:16 — майже дзеркальне відображення горизонтального 16:9), і що дизайн доведеться не просто масштабувати, а перекомпоновувати під кожен формат окремо.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -162,6 +166,69 @@ function CompareTab({ state, patch }) {
   )
 }
 
+function CropTab({ state, patch, toastApi }) {
+  const { srcW, srcH, targetKey } = state.crop
+  const preset = PRESETS.find((p) => p.key === targetKey) || PRESETS[0]
+  const result = coverCrop(srcW, srcH, preset.w, preset.h)
+  const css = `object-fit: cover;\nobject-position: center;\n/* обрізає ${result.axis === 'width' ? 'боки' : 'верх і низ'}, видимо ${(100 - result.croppedPct).toFixed(1)}% зображення */`
+
+  const boxMax = 220
+  const srcFit = fitRect(srcW, srcH, boxMax, boxMax)
+  const cropFit = {
+    width: srcFit.width * (result.cropW / srcW),
+    height: srcFit.height * (result.cropH / srcH),
+    left: srcFit.width * (result.offsetX / srcW),
+    top: srcFit.height * (result.offsetY / srcH),
+  }
+
+  return (
+    <div>
+      <p className="cl-tab-desc">Скільки саме зображення «з'їдає» <code>object-fit: cover</code>, коли довільне фото треба втиснути в цільове співвідношення.</p>
+      <HelpBox>
+        <p><code>object-fit: cover</code> — найпоширеніший спосіб показати фото в контейнері фіксованої форми (аватарки, картки товарів, обкладинки): зображення масштабується так, щоб повністю заповнити рамку, а все, що не влізло, обрізається по краях, по центру.</p>
+        <p>Проблема в тому, що «обрізається по центру» — не завжди те, що треба. Портретне фото людини, яке вписують у широкий банер 21:9, втратить майже все, крім вузької смуги навколо обличчя — часто саме ту частину кадру, що найважливіша, автоматична центрована обрізка знищує першою (наприклад, верх голови чи текст на плакаті в руках).</p>
+        <ol>
+          <li>Вкажіть реальний розмір вихідного зображення (ширина × висота в px).</li>
+          <li>Оберіть цільове співвідношення зі списку пресетів.</li>
+          <li>Сіра область на превʼю — те, що буде обрізано; кольорова рамка всередині — видима частина.</li>
+          <li>Відсоток показує, скільки площі оригіналу буде втрачено — якщо забагато, краще заздалегідь кадрувати фото вручну, а не покладатись на авто-cover.</li>
+        </ol>
+      </HelpBox>
+
+      <div className="cl-picker-top">
+        <span style={{ fontSize: 12, color: 'var(--muted)', width: 110, flex: 'none' }}>Розмір фото</span>
+        <input type="number" min={1} style={numInputStyle} value={srcW} onChange={(e) => patch('crop', { srcW: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
+        <span style={{ color: 'var(--muted)' }}>×</span>
+        <input type="number" min={1} style={numInputStyle} value={srcH} onChange={(e) => patch('crop', { srcH: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
+      </div>
+      <div className="cl-picker-top">
+        <label style={{ fontSize: 12, color: 'var(--muted)' }}>Цільове співвідношення
+          <select className="rt-select" value={targetKey} onChange={(e) => patch('crop', { targetKey: e.target.value })}>
+            {PRESETS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div className="cl-section-title">Превʼю обрізки</div>
+      <div className="rt-rect-box" style={{ width: boxMax, height: boxMax, position: 'relative', background: '#EDEDF0' }}>
+        <div style={{ position: 'absolute', width: srcFit.width, height: srcFit.height, left: (boxMax - srcFit.width) / 2, top: (boxMax - srcFit.height) / 2, border: '1.5px dashed #9D9DA8' }}>
+          <div style={{ position: 'absolute', width: cropFit.width, height: cropFit.height, left: cropFit.left, top: cropFit.top, background: 'rgba(62,55,224,0.25)', border: '2px solid var(--accent)' }} />
+        </div>
+      </div>
+
+      <div className="cl-tags" style={{ marginTop: 10 }}>
+        <span className={'cl-badge ' + (result.croppedPct < 15 ? 'pass' : result.croppedPct < 40 ? '' : 'fail')}>Обрізано {result.croppedPct.toFixed(1)}% площі</span>
+        <span className="cl-tag">Видима ділянка: {Math.round(result.cropW)} × {Math.round(result.cropH)}px</span>
+      </div>
+
+      <div className="cl-picker-top" style={{ marginTop: 10 }}>
+        <button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button>
+      </div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
 function CustomTab({ state, patch, toastApi }) {
   const { ratioW, ratioH } = state.calc
   const list = state.custom.presets
@@ -183,6 +250,7 @@ function CustomTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Зберігайте свої власні часто вживані співвідношення — не лише стандартні з вкладки Пресети.</p>
       <HelpBox>
         <p>Корисно для нетипових форматів, які постійно повторюються у вашій роботі — наприклад, фірмовий розмір банера клієнта чи формат, якого немає серед стандартних пресетів. Поточне співвідношення береться з вкладки Калькулятор.</p>
+        <p>На відміну від стандартних пресетів (однакові для всіх користувачів лабу), збережене тут — лише ваше: якщо агентство регулярно робить банери клієнта розміром 1140×400px, набагато швидше тримати це як власний пресет "Клієнт X — банер", ніж щоразу вручну вводити ratioW/ratioH чи памʼятати точні цифри.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -216,6 +284,7 @@ function defaultState() {
     convert: { actualWidth: 1920, actualHeight: 1080 },
     compareB: 'classic',
     compareC: 'story',
+    crop: { srcW: 4000, srcH: 2250, targetKey: 'square' },
     custom: { presets: [] },
   }
 }
@@ -269,7 +338,7 @@ export default function RatioLab() {
   return (
     <LabShell
       title="Ratio Lab"
-      subtitle="Розрахунок співвідношень сторін: 16:9, A4, золотий перетин та інші — з калькулятором і візуальним порівнянням."
+      subtitle="Розрахунок співвідношень сторін: 16:9, A4, золотий перетин та інші — з калькулятором, порівнянням і калькулятором обрізки (object-fit: cover)."
       icon="📏"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -296,6 +365,7 @@ export default function RatioLab() {
           {tab === 'calculator' && <CalculatorTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'presets' && <PresetsTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'compare' && <CompareTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'crop' && <CropTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'custom' && <CustomTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>

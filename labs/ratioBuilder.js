@@ -40,6 +40,36 @@ export function fitRect(ratioW, ratioH, maxW, maxH) {
   }
 }
 
+// How much of a source image gets cropped away when it's placed into a
+// target aspect ratio with object-fit: cover (fills the box completely,
+// crops the overflow, centered) — the single most common real-world crop
+// operation (thumbnails, avatars, hero banners from an arbitrary photo).
+export function coverCrop(srcW, srcH, targetRatioW, targetRatioH) {
+  if (srcW <= 0 || srcH <= 0 || targetRatioW <= 0 || targetRatioH <= 0) {
+    return { cropW: 0, cropH: 0, offsetX: 0, offsetY: 0, axis: 'none', croppedPct: 0 }
+  }
+  const srcRatio = srcW / srcH
+  const targetRatio = targetRatioW / targetRatioH
+  let cropW, cropH, axis
+  if (srcRatio > targetRatio) {
+    // source is relatively wider than target -> crop off the sides
+    cropH = srcH
+    cropW = srcH * targetRatio
+    axis = 'width'
+  } else {
+    // source is relatively taller than target -> crop off top/bottom
+    cropW = srcW
+    cropH = srcW / targetRatio
+    axis = 'height'
+  }
+  const offsetX = (srcW - cropW) / 2
+  const offsetY = (srcH - cropH) / 2
+  const srcArea = srcW * srcH
+  const cropArea = cropW * cropH
+  const croppedPct = srcArea === 0 ? 0 : (1 - cropArea / srcArea) * 100
+  return { cropW, cropH, offsetX, offsetY, axis, croppedPct }
+}
+
 export const PRESETS = [
   { key: 'square', icon: '⬛', label: '1:1 Квадрат', w: 1, h: 1, group: 'Екран' },
   { key: 'hd', icon: '🖥️', label: '16:9 Widescreen', w: 16, h: 9, group: 'Екран' },
