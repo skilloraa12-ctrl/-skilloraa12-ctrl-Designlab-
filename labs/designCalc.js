@@ -66,3 +66,14 @@ export function generateSpacingScale(base, ratio, steps, mode) {
   }
   return out
 }
+
+// --- Column grid math ---
+// Classic print/web layout formula: split a container into N equal
+// columns separated by a fixed gutter, inset by a side margin on each
+// edge. Distinct from Grid Lab (which previews a grid visually over a
+// mockup) — this is the raw arithmetic for a design brief or dev handoff.
+export function calcColumnWidth({ containerWidth, columns, gutter, margin }) {
+  const usable = containerWidth - margin * 2 - gutter * (columns - 1)
+  const columnWidth = columns > 0 ? usable / columns : 0
+  return { columnWidth, usable }
+}

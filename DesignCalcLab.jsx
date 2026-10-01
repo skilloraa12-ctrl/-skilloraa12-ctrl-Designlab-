@@ -9,7 +9,7 @@ import { useLabRecent } from './labs/useLabRecent.js'
 import {
   pxToRem, remToPx, calcDpi, calcMaxPrintInches, CM_PER_INCH,
   buildClamp, formatBytes, downloadSeconds, msToFrames, framesToMs,
-  generateSpacingScale,
+  generateSpacingScale, calcColumnWidth,
 } from './labs/designCalc.js'
 
 const TABS = [
@@ -19,6 +19,7 @@ const TABS = [
   { key: 'filesize', icon: '💾', label: 'Розмір файлу' },
   { key: 'duration', icon: '🎞️', label: 'мс ↔ кадри' },
   { key: 'spacing', icon: '📏', label: 'Шкала відступів' },
+  { key: 'grid', icon: '▦', label: 'Колонкова сітка' },
 ]
 
 function copy(text) {
@@ -56,6 +57,7 @@ function PxRemTab({ state, patch }) {
       <p className="cl-tab-desc">Переведення пікселів у rem/em і назад — залежно від розміру шрифту кореневого елемента (зазвичай 16px).</p>
       <HelpBox>
         <p><code>rem</code> завжди відносний до <code>&lt;html&gt;</code>, <code>em</code> — до батьківського елемента; математика однакова, лише точка відліку різна.</p>
+        <p>16px — дефолтний розмір шрифту браузера "з коробки", тому більшість проєктів лишають його кореневим без змін. Головна причина використовувати rem замість px у реальних проєктах — доступність: коли користувач збільшує базовий розмір шрифту в налаштуваннях браузера, rem-значення масштабуються разом з ним, а px — ні.</p>
       </HelpBox>
 
       <NumField label="Кореневий розмір" value={cfg.rootPx} onChange={(v) => patch('pxrem', { rootPx: v })} suffix="px" min={1} />
@@ -94,6 +96,7 @@ function DpiTab({ state, patch }) {
       <p className="cl-tab-desc">DPI/PPI показує щільність пікселів — критично для друку (веб завжди 72/96 DPI незалежно від щільності файлу).</p>
       <HelpBox>
         <p>300 DPI — стандарт якісного друку (візитки, фото). 150 DPI прийнятний для великих банерів, які розглядають здалека. Менше 150 — помітна пікселізація зблизька.</p>
+        <p>Білборди й банери на фасадах будівель навмисно друкують у 20-40 DPI — здалека (з вулиці) око не розрізняє окремі пікселі, а високий DPI на такій площі означав би нереалістично величезний файл. DPI завжди оцінюйте разом з відстанню перегляду, а не як абсолютне правило "більше — краще".</p>
       </HelpBox>
 
       <NumField label="Ширина" value={cfg.widthPx} onChange={(v) => patch('dpi', { widthPx: v })} suffix="px" min={1} />
@@ -120,6 +123,7 @@ function FluidTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Fluid typography (<code>clamp()</code>) плавно масштабує розмір шрифту між мінімальним і максимальним значенням залежно від ширини вікна — без медіа-запитів.</p>
       <HelpBox>
         <p>Формула лінійно інтерполює значення між двома точками (minVw→minPx і maxVw→maxPx), обгорнуте в <code>clamp()</code>, щоб розмір не виходив за межі поза цим діапазоном.</p>
+        <p><code>clamp(MIN, PREFERRED, MAX)</code> — браузер рахує PREFERRED (з <code>vw</code>) і бере з трьох значень середнє: якщо PREFERRED менше MIN, застосовується MIN; якщо більше MAX — застосовується MAX. Це замінює кілька медіа-запитів з фіксованими розмірами одним рядком, що плавно стежить за шириною вікна без "стрибків" на кожному брейкпоінті.</p>
       </HelpBox>
 
       <NumField label="Мін. розмір" value={cfg.minPx} onChange={(v) => patch('fluid', { minPx: v })} suffix="px" min={1} />
@@ -150,6 +154,7 @@ function FileSizeTab({ state, patch }) {
       <p className="cl-tab-desc">Скільки важить файл у різних одиницях і скільки часу він завантажуватиметься на заданій швидкості зʼєднання.</p>
       <HelpBox>
         <p>1 КБ = 1024 Б (бінарний рахунок, як показують файлові менеджери). Швидкість інтернету вимірюється в мегабітах (Мбіт/с), а розмір файлу — в байтах, тому перед діленням байти переводяться в біти (× 8).</p>
+        <p>Плутанина "Мбіт vs МБ" — одна з найчастіших помилок у технічних специфікаціях: провайдер рекламує "100 Мбіт/с", але це лише 12.5 МБ/с реальної швидкості завантаження файлу (ділимо на 8). Завжди перевіряйте, яка саме одиниця вказана в документації, перш ніж обіцяти клієнту час завантаження.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -181,6 +186,7 @@ function DurationTab({ state, patch }) {
       <p className="cl-tab-desc">Переведення тривалості анімації між мілісекундами й кадрами при заданому FPS — зручно, коли дизайн анімації прийшов з After Effects/Lottie.</p>
       <HelpBox>
         <p>Кадри = (мс / 1000) × FPS. Наприклад, 500мс при 60fps — це 30 кадрів.</p>
+        <p>Анімація, виготовлена в After Effects/Lottie дизайнером при 30fps, програється на вебсторінці з <code>requestAnimationFrame</code>, тобто фактично "в кадрах" браузера, а не в тих, що в оригінальному файлі. Тому розробнику потрібні саме мс (універсальна одиниця для CSS <code>animation-duration</code>/<code>transition-duration</code>), і конвертація кадри→мс — найчастіший запит на передачі анімації в розробку.</p>
       </HelpBox>
 
       <div className="cl-section-title">FPS</div>
@@ -210,6 +216,7 @@ function SpacingTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Шкала відступів (spacing scale) — набір узгоджених значень для margin/padding/gap, замість довільних чисел по всьому проєкту.</p>
       <HelpBox>
         <p>Лінійний режим додає однаковий крок щоразу (як 8pt-сітка: 8,16,24,32…). Геометричний — множить на коефіцієнт щокроку (росте швидше для великих відступів).</p>
+        <p>8pt-сітка (крок 8px) — негласний стандарт більшості дизайн-систем (Material Design, Apple HIG): 8 ділиться без залишку на більшість поширених розмірів екранів і легко розраховується в голові. Геометричний режим природніше відповідає тому, як око сприймає різницю: між 4px і 8px різниця відчутна, а між 60px і 64px — ні, тому для великих відступів потрібен більший абсолютний крок.</p>
       </HelpBox>
 
       <div className="cl-btn-row">
@@ -236,6 +243,47 @@ function SpacingTab({ state, patch, toastApi }) {
   )
 }
 
+function GridTab({ state, patch, toastApi }) {
+  const cfg = state.grid
+  const { columnWidth } = calcColumnWidth(cfg)
+  const css = `grid-template-columns: repeat(${cfg.columns}, 1fr);\ncolumn-gap: ${cfg.gutter}px;\npadding-inline: ${cfg.margin}px;\n/* кожна колонка ≈ ${columnWidth.toFixed(1)}px при ширині контейнера ${cfg.containerWidth}px */`
+  const negative = columnWidth < 0
+  return (
+    <div>
+      <p className="cl-tab-desc">Скільки пікселів припадає на одну колонку при заданій ширині контейнера, кількості колонок, відступі між ними (gutter) і боковому полі (margin).</p>
+      <HelpBox>
+        <p>Формула: (ширина контейнера − 2×margin − gutter×(колонок−1)) / колонок. Margin віднімається двічі (з обох боків), а gutter — на один менше за кількість колонок, бо проміжок потрібен лише МІЖ колонками, а не навколо кожної.</p>
+        <p>Це той самий розрахунок, який робить браузер під капотом для CSS Grid (<code>grid-template-columns: repeat(N, 1fr)</code>) чи Flexbox-сітки — тут він явний, тому можна швидко перевірити, чи влізе елемент фіксованої ширини (наприклад, банер 300px) рівно в 2 чи 3 колонки без дробових пікселів.</p>
+      </HelpBox>
+
+      <NumField label="Ширина контейнера" value={cfg.containerWidth} onChange={(v) => patch('grid', { containerWidth: v })} suffix="px" min={1} />
+      <NumField label="Колонок" value={cfg.columns} onChange={(v) => patch('grid', { columns: Math.max(1, Math.min(24, Math.round(v))) })} min={1} />
+      <NumField label="Gutter" value={cfg.gutter} onChange={(v) => patch('grid', { gutter: v })} suffix="px" min={0} />
+      <NumField label="Margin" value={cfg.margin} onChange={(v) => patch('grid', { margin: v })} suffix="px" min={0} />
+
+      <div className="cl-tags" style={{ marginTop: 10 }}>
+        <span className={'cl-badge ' + (negative ? 'fail' : 'pass')}>
+          {negative ? '✕ Відʼємна ширина — забагато колонок/gutter для цього контейнера' : `1 колонка ≈ ${columnWidth.toFixed(1)}px`}
+        </span>
+      </div>
+
+      {!negative && (
+        <>
+          <div className="cl-section-title">Превʼю</div>
+          <div className="dc-grid-preview" style={{ paddingInline: Math.min(cfg.margin, 40) }}>
+            {Array.from({ length: cfg.columns }).map((_, i) => (
+              <div key={i} className="dc-grid-col" style={{ marginRight: i < cfg.columns - 1 ? Math.min(cfg.gutter, 24) : 0 }} />
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="cl-picker-top"><button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button></div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     pxrem: { px: 16, rem: 1, rootPx: 16 },
@@ -244,6 +292,7 @@ function defaultState() {
     filesize: { value: 4.5, unitIndex: 2, mbps: 20 },
     duration: { ms: 500, frames: 30, fps: 60 },
     spacing: { base: 8, ratio: 1, steps: 8, mode: 'linear' },
+    grid: { containerWidth: 1200, columns: 12, gutter: 24, margin: 40 },
   }
 }
 
@@ -294,7 +343,7 @@ export default function DesignCalcLab() {
   return (
     <LabShell
       title="Design Calculator Lab"
-      subtitle="px↔rem, DPI/PPI, fluid typography, розмір файлу, мс↔кадри, шкала відступів."
+      subtitle="px↔rem, DPI/PPI, fluid typography, розмір файлу, мс↔кадри, шкала відступів, колонкова сітка."
       icon="🧮"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -324,6 +373,7 @@ export default function DesignCalcLab() {
           {tab === 'filesize' && <FileSizeTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'duration' && <DurationTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'spacing' && <SpacingTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'grid' && <GridTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>
