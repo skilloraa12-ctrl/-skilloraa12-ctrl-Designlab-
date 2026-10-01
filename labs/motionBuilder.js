@@ -79,3 +79,24 @@ export function buildKeyframesCss(steps, name = 'customAnim') {
 export function staggerDelays(count, baseDelayMs) {
   return Array.from({ length: count }, (_, i) => i * baseDelayMs)
 }
+
+// Real-world scroll-triggered reveal: unlike the other tabs (triggered by a
+// button click), this one needs a tiny bit of JS, because CSS alone has no
+// "element entered the viewport" event. IntersectionObserver is the
+// standard, low-cost way to do it without a scroll-event listener.
+export function buildScrollRevealSnippet({ type, direction, durationMs, threshold, repeat }) {
+  const css = buildTransitionCss({ type, direction, durationMs, delayMs: 0, easing: 'ease-out' })
+  const js = [
+    `const io = new IntersectionObserver((entries) => {`,
+    `  entries.forEach((entry) => {`,
+    `    entry.target.classList.toggle('is-visible', entry.isIntersecting);`,
+    repeat
+      ? `    // repeat = true: класс знімається, коли елемент виходить з екрана`
+      : `    if (entry.isIntersecting) io.unobserve(entry.target); // показали один раз — досить`,
+    `  });`,
+    `}, { threshold: ${threshold} });`,
+    ``,
+    `document.querySelectorAll('.anim-el').forEach((el) => io.observe(el));`,
+  ].join('\n')
+  return `${css}\n\n/* JS: */\n${js}`
+}

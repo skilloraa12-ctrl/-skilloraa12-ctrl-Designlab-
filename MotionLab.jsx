@@ -10,7 +10,7 @@ import {
   TRANSITION_TYPES, transitionStyle, buildTransitionCss,
   EASING_PRESETS, sampleCubicBezier,
   defaultKeyframeSteps, buildKeyframesCss,
-  staggerDelays,
+  staggerDelays, buildScrollRevealSnippet,
 } from './labs/motionBuilder.js'
 
 const TABS = [
@@ -18,6 +18,7 @@ const TABS = [
   { key: 'keyframes', icon: '🗝️', label: 'Keyframes' },
   { key: 'easing', icon: '📈', label: 'Easing' },
   { key: 'stagger', icon: '☰', label: 'Stagger' },
+  { key: 'scroll', icon: '🖱️', label: 'Scroll Reveal' },
 ]
 
 function copy(text) {
@@ -58,6 +59,7 @@ function TransitionsTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Базові CSS-переходи: елемент анімується зі стану "приховано" у "видимо" при зміні властивості.</p>
       <HelpBox>
         <p><code>transition</code> анімує зміну CSS-властивості між двома станами — тут це перехід від прихованого до видимого при натисканні Play.</p>
+        <p>Анімуйте лише <code>opacity</code> і <code>transform</code> — браузер рахує їх на GPU без перерахунку layout, тож анімація лишається плавною навіть на слабких пристроях. Анімація <code>width</code>, <code>top</code> чи <code>margin</code> змушує браузер перераховувати позиції всіх сусідніх елементів на кожному кадрі — звідси "рваний" рух.</p>
       </HelpBox>
 
       <div className="cl-section-title">Тип</div>
@@ -119,6 +121,7 @@ function KeyframesTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Власна багатокрокова анімація через <code>@keyframes</code> — задайте кілька точок по шкалі 0–100%.</p>
       <HelpBox>
         <p>Кожна точка — стан елемента (прозорість, зсув, масштаб, обертання) на певному відсотку тривалості. Браузер плавно інтерполює між сусідніми точками.</p>
+        <p>Keyframes зручні там, де <code>transition</code> не вистачає — наприклад, "підстрибування" кнопки після кліку: точка на 0% (норма) → точка на 40% (збільшена) → точка на 70% (трохи менша) → точка на 100% (норма). Такий рух із "перельотом" у двох напрямках просто неможливо описати одним <code>transition</code> між двома станами.</p>
       </HelpBox>
 
       <div className="l3d-object-list">
@@ -170,6 +173,7 @@ function EasingTab({ state, patch }) {
       <p className="cl-tab-desc">Крива легкості (easing) визначає швидкість анімації в часі — лінійна, із прискоренням, із "пружним" перельотом.</p>
       <HelpBox>
         <p>Графік показує прогрес анімації (вісь Y) залежно від часу (вісь X). "Spring" і "Bounce" виходять за межі 0–1 — елемент на мить "перелітає" ціль, що й дає відчуття пружності.</p>
+        <p>Правило вибору: "Ease Out" — для елементів, що зʼявляються (вони мають різко стартувати й плавно зупинитись, як природний рух); "Ease In" — для тих, що зникають; "Spring"/"Bounce" — для акцентних UI-реакцій (модалки, тултіпи, лайк-кнопки), де трохи "живого" перельоту підсилює відчуття відгуку. "Linear" майже ніколи не виглядає природно для руху — залиште його для прогрес-барів і обертання лоадерів.</p>
       </HelpBox>
 
       <div className="cl-section-title">Пресет</div>
@@ -203,6 +207,7 @@ function StaggerTab({ state, patch }) {
       <p className="cl-tab-desc">Stagger — елементи списку з'являються по черзі, а не всі одразу, що читається природніше для ока.</p>
       <HelpBox>
         <p>Кожен наступний елемент отримує <code>transition-delay</code> на крок більший за попередній — весь список "каскадом" входить в кадр.</p>
+        <p>Крок затримки 50–100мс читається як "природна черга" і не сповільнює сприйняття; при 200мс+ список починає здаватись "повільним", особливо якщо елементів багато (10 елементів × 200мс = 2 секунди лише на останній). Для довгих списків (картки товарів, стрічка) обмежте stagger першими 5–6 елементами, а решту показуйте без затримки.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Кількість<input type="range" min={3} max={10} value={count} onChange={(e) => patch('stagger', { count: parseInt(e.target.value, 10) })} /><span>{count}</span></label></div>
@@ -231,12 +236,90 @@ function StaggerTab({ state, patch }) {
   )
 }
 
+function ScrollRevealItem({ transitionCss, hiddenTransform, threshold, repeat, children }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (repeat) setVisible(entry.isIntersecting)
+        else if (entry.isIntersecting) { setVisible(true); io.unobserve(el) }
+      },
+      { root: el.closest('.mo-scroll-stage'), threshold }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [threshold, repeat])
+  return (
+    <div ref={ref} className="mo-scroll-item" style={{ transition: transitionCss, opacity: visible ? 1 : 0, transform: visible ? 'none' : hiddenTransform }}>
+      {children}
+    </div>
+  )
+}
+
+function ScrollRevealTab({ state, patch, toastApi }) {
+  const cfg = state.scroll
+  const snippet = buildScrollRevealSnippet(cfg)
+  const hiddenTransform = transitionStyle(cfg.type, cfg.direction, false).transform || 'none'
+  const items = Array.from({ length: 6 }, (_, i) => i)
+  return (
+    <div>
+      <p className="cl-tab-desc">Елементи з'являються, коли користувач доскролив до них — класичний ефект "reveal on scroll" на лендингах.</p>
+      <HelpBox>
+        <p>На відміну від інших вкладок, тут анімацію запускає не клік, а сам факт, що елемент заїхав у видиму область екрана. Для цього потрібен <code>IntersectionObserver</code> — браузерний API, який повідомляє, коли елемент перетинає межі контейнера (або viewport), без постійного опитування позиції скролу (що було б повільно і "сіпалось" би).</p>
+        <p>Поріг (threshold) — яка частка елемента має бути видно, щоб спрацювала поява: 0 — досить одного пікселя, 1 — елемент має бути видимий повністю. Для карток контенту зазвичай достатньо 0.2–0.4, щоб анімація стартувала трохи заздалегідь і виглядала плавно, а не "вистрибувала" в останній момент.</p>
+        <p>Прапорець "Повторювати" вирішує типову дилему дизайну: показати ефект лише один раз (елемент назавжди лишається видимим після першої появи — менше відволікає при скролі вгору-вниз) чи ховати елемент знову щоразу, як він виходить з екрана (більш "живо", але може набриднути при частому скролі).</p>
+      </HelpBox>
+
+      <div className="cl-section-title">Тип і напрямок</div>
+      <div className="cl-btn-row">
+        {TRANSITION_TYPES.map((t) => <button key={t.key} className={'harmony-btn' + (cfg.type === t.key ? ' active' : '')} onClick={() => patch('scroll', { type: t.key })}>{t.label}</button>)}
+      </div>
+      {(cfg.type === 'slide' || cfg.type === 'slideFade') && (
+        <div className="cl-btn-row">
+          {[['up', '↑'], ['down', '↓'], ['left', '←'], ['right', '→']].map(([d, arrow]) => (
+            <button key={d} className={'harmony-btn' + (cfg.direction === d ? ' active' : '')} onClick={() => patch('scroll', { direction: d })}>{arrow}</button>
+          ))}
+        </div>
+      )}
+
+      <div className="cl-editrow"><label>Поріг (threshold)<input type="range" min={0} max={1} step={0.1} value={cfg.threshold} onChange={(e) => patch('scroll', { threshold: parseFloat(e.target.value) })} /><span>{cfg.threshold}</span></label></div>
+      <div className="cl-editrow"><label>Тривалість<input type="range" min={200} max={1200} step={50} value={cfg.durationMs} onChange={(e) => patch('scroll', { durationMs: parseInt(e.target.value, 10) })} /><span>{cfg.durationMs}мс</span></label></div>
+      <div className="cl-picker-top">
+        <button className={'harmony-btn' + (cfg.repeat ? ' active' : '')} onClick={() => patch('scroll', { repeat: !cfg.repeat })}>🔁 Повторювати</button>
+      </div>
+
+      <div className="cl-section-title">Превʼю — скрольте вниз у рамці</div>
+      <div className="mo-scroll-stage">
+        {items.map((i) => (
+          <ScrollRevealItem
+            key={i}
+            transitionCss={`opacity ${cfg.durationMs}ms ease-out, transform ${cfg.durationMs}ms ease-out`}
+            hiddenTransform={hiddenTransform}
+            threshold={cfg.threshold}
+            repeat={cfg.repeat}
+          >
+            Блок {i + 1}
+          </ScrollRevealItem>
+        ))}
+      </div>
+      <div className="cl-picker-top">
+        <button className="harmony-btn" onClick={() => { copy(snippet); toastApi.show('✓ CSS + JS скопійовано') }}>Copy CSS + JS</button>
+      </div>
+      <pre className="cl-code-block">{snippet}</pre>
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     transitions: { type: 'fade', direction: 'up', durationMs: 500, delayMs: 0, easingKey: 'ease' },
     keyframes: { steps: defaultKeyframeSteps(), durationMs: 900, loop: false },
     easing: { key: 'spring' },
     stagger: { count: 6, baseDelayMs: 70, durationMs: 350 },
+    scroll: { type: 'slideFade', direction: 'up', durationMs: 500, threshold: 0.4, repeat: false },
   }
 }
 
@@ -287,7 +370,7 @@ export default function MotionLab() {
   return (
     <LabShell
       title="Motion Lab"
-      subtitle="CSS-переходи, keyframe-анімації, криві легкості (easing) й stagger-ефекти з живим превʼю."
+      subtitle="CSS-переходи, keyframe-анімації, криві легкості (easing), stagger-ефекти й scroll-reveal з живим превʼю."
       icon="🎞️"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -315,6 +398,7 @@ export default function MotionLab() {
           {tab === 'keyframes' && <KeyframesTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'easing' && <EasingTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'stagger' && <StaggerTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'scroll' && <ScrollRevealTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>

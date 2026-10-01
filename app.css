@@ -981,6 +981,8 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .mo-easing-ball { position: absolute; top: 4px; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); }
 .mo-stagger-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .mo-stagger-item { width: 48px; height: 48px; border-radius: 10px; background: var(--accent); flex: none; }
+.mo-scroll-stage { height: 240px; overflow-y: auto; background: #EDEDF0; border-radius: var(--radius); margin: 10px 0 16px; padding: 16px; display: flex; flex-direction: column; gap: 220px; }
+.mo-scroll-item { height: 60px; border-radius: 10px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; flex: none; }
 
 /* ---------- User Flow Lab ---------- */
 .uf-flow { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: #F5F5F7; margin: 10px 0 16px; }
