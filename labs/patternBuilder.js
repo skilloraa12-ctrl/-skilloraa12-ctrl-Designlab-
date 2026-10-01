@@ -47,6 +47,22 @@ export function buildWaveSvg({ wavelength, amplitude, strokeWidth, color, bg, co
   ].filter(Boolean).join('\n')
 }
 
+// Classic checkerboard CSS trick: two diagonal 45°/-45° gradient pairs,
+// offset so the "on" triangles of each pair combine into full squares.
+export function buildCheckerboardCss({ size, color, bg }) {
+  const half = size / 2
+  return [
+    `background-color: ${bg};`,
+    `background-image:`,
+    `  linear-gradient(45deg, ${color} 25%, transparent 25%),`,
+    `  linear-gradient(-45deg, ${color} 25%, transparent 25%),`,
+    `  linear-gradient(45deg, transparent 75%, ${color} 75%),`,
+    `  linear-gradient(-45deg, transparent 75%, ${color} 75%);`,
+    `background-size: ${size}px ${size}px;`,
+    `background-position: 0 0, 0 ${half}px, ${half}px -${half}px, -${half}px 0;`,
+  ].join('\n')
+}
+
 export function buildTrianglesSvg({ cellSize, cols, rows, colorA, colorB, bg }) {
   const w = cellSize * cols
   const h = cellSize * rows

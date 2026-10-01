@@ -6,13 +6,14 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { buildDotsCss, buildStripesCss, buildWaveSvg, buildTrianglesSvg } from './labs/patternBuilder.js'
+import { buildDotsCss, buildStripesCss, buildWaveSvg, buildTrianglesSvg, buildCheckerboardCss } from './labs/patternBuilder.js'
 
 const TABS = [
   { key: 'dots', icon: '⚫', label: 'Крапки' },
   { key: 'lines', icon: '📏', label: 'Лінії' },
   { key: 'waves', icon: '🌊', label: 'Хвилі' },
   { key: 'geometric', icon: '🔷', label: 'Геометрія' },
+  { key: 'checkerboard', icon: '🏁', label: 'Шахівниця' },
 ]
 
 function copy(text) {
@@ -44,6 +45,7 @@ function DotsTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Патерн із крапок — поширений фоновий візерунок, зроблений чистим CSS без жодної картинки.</p>
       <HelpBox>
         <p>Трюк — <code>radial-gradient</code>, що малює одне коло, і <code>background-size</code>, менший за саму картинку, через що браузер повторює (тайлить) цей квадрат по всій площі.</p>
+        <p>Важливо, що «Відстань» має бути більшою за «Розмір крапки» × 2 — інакше сусідні крапки почнуть перекриватись і зіллються у суцільні смуги замість окремих крапок. Такий патерн добре працює і як фон <code>&lt;body&gt;</code>, і як текстура всередині SVG-маски.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Розмір крапки<input type="range" min={1} max={20} value={state.dots.size} onChange={(e) => patch('dots', { size: parseInt(e.target.value, 10) })} /><span>{state.dots.size}px</span></label></div>
@@ -76,6 +78,7 @@ function LinesTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Смугастий патерн — ще один CSS-only трюк, цього разу на <code>repeating-linear-gradient</code>.</p>
       <HelpBox>
         <p>Градієнт повторюється кожні (ширина смуги + проміжок) пікселів. Кут 0° — вертикальні смуги, 90° — горизонтальні, 45° — по діагоналі.</p>
+        <p>На відміну від крапок, тут не потрібен окремий <code>background-size</code> — повторення вбудоване прямо в <code>repeating-linear-gradient</code>. Це найлегший (за розміром коду) з усіх CSS-патернів і часто використовується для прогрес-смуг (striped progress bar) чи попереджувальних "construction tape" візерунків.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Кут<input type="range" min={0} max={180} value={state.lines.angle} onChange={(e) => patch('lines', { angle: parseInt(e.target.value, 10) })} /><span>{state.lines.angle}°</span></label></div>
@@ -108,6 +111,7 @@ function WavesTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Хвилястий патерн — реальний тайлований SVG (<code>&lt;pattern&gt;</code>), а не наближення через CSS-градієнт.</p>
       <HelpBox>
         <p>Wavelength — довжина однієї хвилі. Amplitude — висота хвилі (наскільки сильно вигинається). SVG <code>&lt;pattern&gt;</code> сам повторює один сегмент хвилі по всій площі.</p>
+        <p>Чому SVG, а не CSS-градієнт? Справжню плавну криву (не прямі лінії) CSS-градієнтами відтворити неможливо — вони вміють лише прямі переходи між кольорами. SVG <code>&lt;path&gt;</code> з кривою Безьє малює реальну хвилю, а <code>&lt;pattern&gt;</code> її тайлить так само, як <code>background-size</code> тайлить CSS-фон.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Wavelength<input type="range" min={20} max={120} value={state.waves.wavelength} onChange={(e) => patch('waves', { wavelength: parseInt(e.target.value, 10) })} /><span>{state.waves.wavelength}px</span></label></div>
@@ -143,6 +147,7 @@ function GeometricTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Мозаїка з трикутників — кожна клітинка сітки поділена по діагоналі на два трикутники почергових кольорів.</p>
       <HelpBox>
         <p>Класичний «геометричний» фон для брендингу й обкладинок — два кольори в шаховому порядку створюють відчуття об'єму без жодної тіні чи градієнта.</p>
+        <p>Кожна квадратна клітинка ділиться діагоналлю навпіл на 2 трикутники, і колір чергується не лінійно, а по формулі "парність (ряд + колонка)" — тому сусідні клітинки по горизонталі й вертикалі завжди відрізняються, як у шаховій дошці.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Розмір клітинки<input type="range" min={16} max={80} value={state.geometric.cellSize} onChange={(e) => patch('geometric', { cellSize: parseInt(e.target.value, 10) })} /><span>{state.geometric.cellSize}px</span></label></div>
@@ -169,12 +174,59 @@ function GeometricTab({ state, patch, toastApi }) {
   )
 }
 
+function CheckerboardTab({ state, patch, toastApi }) {
+  const css = buildCheckerboardCss(state.checkerboard)
+  const half = state.checkerboard.size / 2
+  const bgImage = [
+    `linear-gradient(45deg, ${state.checkerboard.color} 25%, transparent 25%)`,
+    `linear-gradient(-45deg, ${state.checkerboard.color} 25%, transparent 25%)`,
+    `linear-gradient(45deg, transparent 75%, ${state.checkerboard.color} 75%)`,
+    `linear-gradient(-45deg, transparent 75%, ${state.checkerboard.color} 75%)`,
+  ].join(', ')
+  return (
+    <div>
+      <p className="cl-tab-desc">Шахова дошка — найстаріший CSS-only патерн, відомий ще з ранніх 2000-х, і досі зустрічається як фон для прозорості (alpha checkerboard) у графічних редакторах.</p>
+      <HelpBox>
+        <p>Трюк складніший за дотс/лінії: чотири діагональні градієнти накладаються один на одного зі зсувом, так що в сумі кожна клітинка сітки виявляється або повністю зафарбованою, або повністю прозорою — без жодного SVG чи картинки.</p>
+        <p>Той самий патерн (зазвичай сірий у відтінках #FFF/#CCC) використовують Photoshop, Figma й браузерні інспектори, щоб показати прозорий фон (alpha channel) у PNG — тепер ти знаєш, з чого саме він зроблений.</p>
+      </HelpBox>
+
+      <div className="cl-editrow"><label>Розмір клітинки<input type="range" min={10} max={80} value={state.checkerboard.size} onChange={(e) => patch('checkerboard', { size: parseInt(e.target.value, 10) })} /><span>{state.checkerboard.size}px</span></label></div>
+      <div className="cl-picker-top">
+        <span style={{ fontSize: 12, color: 'var(--muted)', width: 70, flex: 'none' }}>Клітинка</span>
+        <input type="color" className="cl-swatch-input" value={state.checkerboard.color} onChange={(e) => patch('checkerboard', { color: e.target.value })} />
+        <input className="cl-hex-input" value={state.checkerboard.color} onChange={(e) => patch('checkerboard', { color: e.target.value })} />
+      </div>
+      <div className="cl-picker-top">
+        <span style={{ fontSize: 12, color: 'var(--muted)', width: 70, flex: 'none' }}>Фон</span>
+        <input type="color" className="cl-swatch-input" value={state.checkerboard.bg} onChange={(e) => patch('checkerboard', { bg: e.target.value })} />
+        <input className="cl-hex-input" value={state.checkerboard.bg} onChange={(e) => patch('checkerboard', { bg: e.target.value })} />
+      </div>
+
+      <div className="cl-section-title">Превʼю</div>
+      <div
+        className="pt-preview"
+        style={{
+          backgroundColor: state.checkerboard.bg,
+          backgroundImage: bgImage,
+          backgroundSize: `${state.checkerboard.size}px ${state.checkerboard.size}px`,
+          backgroundPosition: `0 0, 0 ${half}px, ${half}px -${half}px, -${half}px 0`,
+        }}
+      />
+
+      <div className="cl-picker-top"><button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button></div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     dots: { size: 3, spacing: 24, color: '#3E37E0', bg: '#FFFFFF' },
     lines: { angle: 45, width: 6, gap: 10, color: '#3E37E0', bg: '#FFFFFF' },
     waves: { wavelength: 60, amplitude: 14, strokeWidth: 3, color: '#3E37E0', bg: '#FFFFFF' },
     geometric: { cellSize: 36, colorA: '#3E37E0', colorB: '#6B62FF' },
+    checkerboard: { size: 40, color: '#D5D5DB', bg: '#FFFFFF' },
   }
 }
 
@@ -253,6 +305,7 @@ export default function PatternLab() {
           {tab === 'lines' && <LinesTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'waves' && <WavesTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'geometric' && <GeometricTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'checkerboard' && <CheckerboardTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>
