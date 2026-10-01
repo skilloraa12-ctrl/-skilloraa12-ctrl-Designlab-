@@ -11,6 +11,7 @@ import {
   GOLDEN_LINES, buildGoldenSpiralPoints, spiralToSvgPath,
   SYMMETRY_AXES, mirrorCells,
   calcBalance,
+  negativeSpaceRatio, NEGATIVE_SPACE_LABELS,
 } from './labs/compositionBuilder.js'
 
 const TABS = [
@@ -18,6 +19,7 @@ const TABS = [
   { key: 'golden', icon: '🌀', label: 'Золотий перетин' },
   { key: 'symmetry', icon: '🪞', label: 'Симетрія' },
   { key: 'balance', icon: '⚖️', label: 'Баланс' },
+  { key: 'negspace', icon: '◻️', label: 'Негативний простір' },
 ]
 
 let idCounter = 1
@@ -46,6 +48,7 @@ function ThirdsTab({ state, patch }) {
       <p className="cl-tab-desc">Правило третин: поділіть кадр на 3×3 — головний обʼєкт, розміщений на перетині ліній ("точці сили"), виглядає природніше, ніж по центру.</p>
       <HelpBox>
         <p>Клікніть у прямокутник нижче, щоб поставити мітку обʼєкта — лаба підкаже, наскільки близько вона до найближчої точки сили.</p>
+        <p>Чому не по центру: погляд, що входить по центральній осі, "зупиняється" одразу — йому нема куди рухатись далі. Зсув до точки сили лишає трохи простору з одного боку, і погляд природно "дослідує" кадр, перш ніж зупинитись на обʼєкті. Саме тому портретна фотографія й кадрування відео майже завжди уникають строго центрованого обличчя.</p>
       </HelpBox>
 
       <div className="cl-section-title">Клікніть, щоб розмістити обʼєкт</div>
@@ -76,6 +79,7 @@ function GoldenTab({ state, patch }) {
       <p className="cl-tab-desc">Золотий перетин ділить кадр не навпіл і не на третини, а у пропорції 1.618:1 — лінії зсунуті ближче до центру, ніж у правилі третин.</p>
       <HelpBox>
         <p>Золота спіраль — та сама пропорція, розгорнута в криву: кожна чверть оберту вона збільшується в 1.618 раза. Погляд глядача природно "тече" по ній до фокальної точки у центрі.</p>
+        <p>На практиці різниця між золотим перетином і правилом третин (0.618 проти 0.667) на око майже непомітна — більшість людей не відрізнить кадр, побудований за одним від іншого. Користь радше методологічна: обидві сітки дають структуровану альтернативу "по центру", а яку саме обрати — питання звички, а не точності.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -119,6 +123,7 @@ function SymmetryTab({ state, patch }) {
       <p className="cl-tab-desc">Симетрична композиція дає відчуття стабільності й порядку. Клікайте клітинки — дзеркальні заповняться самі.</p>
       <HelpBox>
         <p>Вертикальна вісь дзеркалить ліво↔право, горизонтальна — верх↔низ, "обидві" дають 4-кратну (радіальну по квадрантах) симетрію.</p>
+        <p>Симетрія читається як "формальна", "спокійна", іноді навіть "офіційна" — тому вона природний вибір для логотипів, сертифікатів, титульних екранів. Але та ж передбачуваність може зробити макет статичним і нудним у тривалому використанні: сторінки з великою кількістю контенту (стрічки, каталоги) зазвичай навмисно порушують симетрію, щоб додати динаміки й напрямку руху ока.</p>
       </HelpBox>
 
       <div className="cl-section-title">Вісь симетрії</div>
@@ -162,6 +167,7 @@ function BalanceTab({ state, patch }) {
       <p className="cl-tab-desc">Візуальна вага — не фізична маса, а "привертання уваги": розмір, колір, контраст. Велике й маленьке можна зрівноважити, розставивши по різні боки від центру.</p>
       <HelpBox>
         <p>Крутний момент (torque) = позиція × вага, як важіль. Якщо сума моментів зліва й справа від центру майже рівна — композиція відчувається збалансованою.</p>
+        <p>"Вага" в дизайні — не розмір сам по собі: яскраво-червона маленька кнопка може переважити велику бліду сіру форму, бо контраст і насиченість кольору теж притягують увагу. Асиметричний баланс (маленький яскравий елемент справа врівноважує великий тьмяний зліва) часто виглядає цікавіше за симетричний — тому досвідчені дизайнери свідомо грають вагою, а не лише розміром.</p>
       </HelpBox>
 
       <div className="cl-tags">
@@ -207,12 +213,41 @@ function BalanceTab({ state, patch }) {
   )
 }
 
+function NegativeSpaceTab({ state, patch }) {
+  const { padding } = state.negspace
+  const { spaceRatio, rating } = negativeSpaceRatio(padding)
+  const info = NEGATIVE_SPACE_LABELS[rating]
+  return (
+    <div>
+      <p className="cl-tab-desc">Негативний простір — порожнеча навколо й між елементами. Це не "невикористаний" простір, а повноцінний інструмент композиції.</p>
+      <HelpBox>
+        <p>Недосвідчені макети часто страждають від протилежної крайності — страху порожнечі: кожен вільний піксель заповнюють ще одним елементом "про всяк випадок". Але саме порожній простір навколо заголовка чи кнопки робить їх помітнішими — це той самий принцип контрасту, тільки контраст не кольору, а щільності.</p>
+        <p>Negative space буває макро (велике поле навколо всього блоку — як у цьому демо) і мікро (відстань між рядками тексту, між іконкою й підписом). Обидва рівні впливають на відчуття "охайності" інтерфейсу однаково сильно — часто саме мікро-простір найлегше випадково зламати, стиснувши елементи занадто щільно.</p>
+      </HelpBox>
+
+      <div className="cl-editrow"><label>Padding<input type="range" min={0} max={45} value={padding} onChange={(e) => patch('negspace', { padding: parseInt(e.target.value, 10) })} /><span>{padding}%</span></label></div>
+
+      <div className="cl-tags" style={{ marginTop: 10 }}>
+        <span className="cl-badge">{(spaceRatio * 100).toFixed(0)}% негативного простору</span>
+        <span className={'cl-badge ' + (rating === 'balanced' ? 'pass' : '')}>{info.label}</span>
+      </div>
+      <p className="cl-tab-desc">{info.hint}</p>
+
+      <div className="cl-section-title">Превʼю</div>
+      <div className="cm-negspace-stage">
+        <div className="cm-negspace-content" style={{ inset: `${padding}%` }} />
+      </div>
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     thirds: { marker: null },
     golden: { showGrid: true, showSpiral: true, turns: 2.5, flipX: false, flipY: false },
     symmetry: { axis: 'vertical', filled: {} },
     balance: { items: [{ id: nextId(), x: -0.6, weight: 0.5 }, { id: nextId(), x: 0.4, weight: 0.8 }] },
+    negspace: { padding: 10 },
   }
 }
 
@@ -263,7 +298,7 @@ export default function CompositionLab() {
   return (
     <LabShell
       title="Composition Lab"
-      subtitle="Правило третин, золотий перетин, симетрія й візуальний баланс — інтерактивно."
+      subtitle="Правило третин, золотий перетин, симетрія, візуальний баланс і негативний простір — інтерактивно."
       icon="🧠"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -291,6 +326,7 @@ export default function CompositionLab() {
           {tab === 'golden' && <GoldenTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'symmetry' && <SymmetryTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'balance' && <BalanceTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'negspace' && <NegativeSpaceTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>

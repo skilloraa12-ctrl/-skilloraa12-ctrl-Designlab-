@@ -68,6 +68,29 @@ export function mirrorCells(row, col, rows, cols, axis) {
   return out
 }
 
+// --- Negative space ---
+// A single uniform padding (%) around a square content block approximates
+// how much of the frame is "breathing room" vs. content. Not a precise
+// design metric — a rough, teachable proxy for a very real intuition.
+export function negativeSpaceRatio(paddingPct) {
+  const contentFrac = Math.max(0, (100 - 2 * paddingPct) / 100)
+  const contentArea = contentFrac * contentFrac
+  const spaceRatio = 1 - contentArea
+  let rating
+  if (spaceRatio < 0.15) rating = 'cramped'
+  else if (spaceRatio < 0.55) rating = 'balanced'
+  else if (spaceRatio < 0.8) rating = 'airy'
+  else rating = 'empty'
+  return { spaceRatio, rating }
+}
+
+export const NEGATIVE_SPACE_LABELS = {
+  cramped: { label: 'Занадто щільно', hint: 'Контент впирається в краї — немає місця "видихнути". Додайте padding.' },
+  balanced: { label: 'Збалансовано', hint: 'Типове співвідношення для карток і секцій контенту.' },
+  airy: { label: 'Просторо (airy)', hint: 'Багато повітря навколо — підходить для преміальних брендів, hero-секцій.' },
+  empty: { label: 'Порожньо', hint: 'Контенту замало відносно простору — переконайтесь, що це навмисний мінімалізм, а не випадковість.' },
+}
+
 // --- Visual balance ---
 // Each item: { x: signed distance from center (-1..1), weight: 0..1 }.
 // Torque = x * weight, summed; net torque near 0 means balanced.
