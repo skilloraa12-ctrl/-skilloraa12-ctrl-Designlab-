@@ -18,6 +18,7 @@ import GridLab from './GridLab.jsx'
 import GradientLab from './GradientLab.jsx'
 import ContrastLab from './ContrastLab.jsx'
 import LightLab from './LightLab.jsx'
+import PatternLab from './PatternLab.jsx'
 import Portfolio from './Portfolio.jsx'
 import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/labs/gradient" element={<RequireAuth><GradientLab /></RequireAuth>} />
           <Route path="/labs/contrast" element={<RequireAuth><ContrastLab /></RequireAuth>} />
           <Route path="/labs/light" element={<RequireAuth><LightLab /></RequireAuth>} />
+          <Route path="/labs/pattern" element={<RequireAuth><PatternLab /></RequireAuth>} />
           <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />
