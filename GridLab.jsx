@@ -13,6 +13,7 @@ const TABS = [
   { key: 'modular', icon: '🔲', label: 'Модульна' },
   { key: 'baseline', icon: '📏', label: 'Базова лінія' },
   { key: 'isometric', icon: '🔺', label: 'Ізометрична' },
+  { key: 'overlay', icon: '🧭', label: 'Накладання' },
 ]
 
 function copy(text) {
@@ -45,6 +46,7 @@ function ColumnTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Колонкова сітка — основа будь-якого сайту: контент вирівнюється по вертикальних колонках однакової ширини з відступами (gutter) між ними.</p>
       <HelpBox>
         <p>Columns — скільки колонок у сітці (12 — найпоширеніший вибір, ділиться на 2/3/4/6). Gutter — відступ між колонками. Margin — відступ від краю екрана до першої/останньої колонки.</p>
+        <p>Чому саме 12? Воно ділиться без остачі на 2, 3, 4 і 6 — тому блок може займати «половину» (6 колонок), «третину» (4 колонки) чи «чверть» (3 колонки) сітки без дробових значень. Bootstrap, Material Design і більшість CSS-фреймворків використовують саме 12-колонкову сітку з цієї причини. Подивись на вкладці «Накладання», як ця сітка лягає поверх справжнього макета.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -94,6 +96,7 @@ function ModularTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Модульна сітка — однакові за пропорціями «модулі» (картки, плитки, прев'ю), розставлені рядками й колонками. Класика для галерей і каталогів.</p>
       <HelpBox>
         <p>Aspect ratio модуля визначає форму кожної плитки незалежно від того, скільки їх у рядку — зручно, коли контент (фото, відео, картки товару) має бути однакових пропорцій.</p>
+        <p>У CSS це найпростіше реалізувати через <code>display: grid; grid-template-columns: repeat(N, 1fr);</code> разом з <code>aspect-ratio</code> на кожній плитці — браузер сам підганяє висоту під ширину колонки, тому сітка лишається рівною навіть при зміні ширини екрана.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -145,6 +148,7 @@ function BaselineTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Базова лінія — крок вертикального ритму сторінки. Абзаци, заголовки й картинки вирівнюються так, щоб кожен рядок тексту сідав точно на лінію.</p>
       <HelpBox>
         <p>Baseline — крок сітки в px (4 або 8 — типові значення). Multiple — у скільки кроків вкладається line-height тексту: 8px × 3 = 24px line-height, наприклад.</p>
+        <p>Якщо заголовок має line-height 32px (4 кроки по 8px), а звичайний текст — 24px (3 кроки по 8px), обидва все одно «приземляються» на тих самих горизонтальних лініях — саме тому текст різних розмірів на сторінці виглядає впорядковано, а не хаотично зсунутим.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -187,6 +191,7 @@ function IsometricTab({ state, patch, toastApi }) {
       <p className="cl-tab-desc">Ізометрична сітка — лінії під 30°, які утворюють ромби. Використовується для вирівнювання ізометричних ілюстрацій, іконок і 2.5D-макетів.</p>
       <HelpBox>
         <p>Cell size — розмір однієї ромбовидної комірки. Columns/Rows — скільки комірок по горизонталі й вертикалі вміщається в експортований SVG.</p>
+        <p>Кут 30° — не випадковий: це стандартний кут ізометричної проєкції, яким малюють «гру-кубики» (think SimCity, Monument Valley). Експортований SVG можна відкрити в Figma/Illustrator як направляючі (guide layer) і малювати ілюстрацію поверх, щоб усі обʼєкти мали однаковий «нахил».</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -221,11 +226,50 @@ function IsometricTab({ state, patch, toastApi }) {
   )
 }
 
+function OverlayTab({ state, patch }) {
+  const cols = Array.from({ length: state.column.columns })
+  return (
+    <div>
+      <p className="cl-tab-desc">Та сама колонкова сітка (з вкладки "Колонкова"), накладена поверх макета сторінки — щоб перевірити, чи дійсно елементи до неї прив'язані.</p>
+      <HelpBox>
+        <p>Дизайнери й розробники часто сперечаються, чи «на око» картка дійсно вирівняна по сітці, чи просто здається такою. Накладання знімає це питання: якщо край блоку збігається з лінією колонки — все вирівняно правильно.</p>
+      </HelpBox>
+
+      <div className="cl-editrow">
+        <label>Прозорість сітки
+          <input type="range" min={10} max={70} step={5} value={state.overlay.opacity} onChange={(e) => patch('overlay', { opacity: parseInt(e.target.value, 10) })} />
+          <span>{state.overlay.opacity}%</span>
+        </label>
+      </div>
+      <div className="cl-picker-top">
+        <button className={'harmony-btn' + (state.overlay.show ? ' active' : '')} onClick={() => patch('overlay', { show: !state.overlay.show })}>
+          {state.overlay.show ? '👁 Сітка увімкнена' : '🚫 Сітка вимкнена'}
+        </button>
+      </div>
+
+      <div className="cl-section-title">Превʼю макета</div>
+      <div className="gl-overlay-stage" style={{ maxWidth: state.column.maxWidth, padding: `0 ${state.column.margin}px` }}>
+        <div className="gl-overlay-mock-header">Header</div>
+        <div className="gl-overlay-mock-hero">Hero-блок</div>
+        <div className="gl-overlay-mock-cards">
+          {[1, 2, 3].map((i) => <div key={i} className="gl-overlay-mock-card">Картка {i}</div>)}
+        </div>
+        {state.overlay.show && (
+          <div className="gl-overlay-grid" style={{ left: state.column.margin, right: state.column.margin, gap: state.column.gutter, opacity: state.overlay.opacity / 100 }}>
+            {cols.map((_, i) => <div key={i} className="gl-overlay-col" />)}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const DEFAULT_STATE = {
   column: { columns: 12, gutter: 24, margin: 24, maxWidth: 1200 },
   modular: { columns: 4, rows: 2, gap: 16, aspect: '4 / 3' },
   baseline: { baseline: 8, multiple: 3 },
   isometric: { cellSize: 48, cols: 8, rows: 6 },
+  overlay: { show: true, opacity: 30 },
 }
 
 export default function GridLab() {
@@ -302,6 +346,7 @@ export default function GridLab() {
           {tab === 'modular' && <ModularTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'baseline' && <BaselineTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'isometric' && <IsometricTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'overlay' && <OverlayTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>
