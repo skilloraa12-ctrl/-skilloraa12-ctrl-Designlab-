@@ -23,6 +23,7 @@ import RatioLab from './RatioLab.jsx'
 import ComponentLab from './ComponentLab.jsx'
 import AccessibilityLab from './AccessibilityLab.jsx'
 import CompositionLab from './CompositionLab.jsx'
+import DesignCalcLab from './DesignCalcLab.jsx'
 import Portfolio from './Portfolio.jsx'
 import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
@@ -82,6 +83,7 @@ export default function App() {
           <Route path="/labs/components" element={<RequireAuth><ComponentLab /></RequireAuth>} />
           <Route path="/labs/accessibility" element={<RequireAuth><AccessibilityLab /></RequireAuth>} />
           <Route path="/labs/composition" element={<RequireAuth><CompositionLab /></RequireAuth>} />
+          <Route path="/labs/calculator" element={<RequireAuth><DesignCalcLab /></RequireAuth>} />
           <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />
