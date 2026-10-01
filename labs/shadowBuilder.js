@@ -74,3 +74,16 @@ export const PRESETS = [
     ],
   },
 ]
+
+export function buildTextShadowCss({ x, y, blur, color, opacity }) {
+  return `${x}px ${y}px ${blur}px ${hexToRgba(color, opacity)}`
+}
+
+// A couple of well-known text-shadow "recipes" — crisp drop shadow,
+// 1980s-style neon glow (stacked same-color blurs), and an embossed look.
+export const TEXT_SHADOW_PRESETS = [
+  { id: 'crisp', label: 'Чіткий', x: 1, y: 1, blur: 1, color: '#000000', opacity: 0.4 },
+  { id: 'soft', label: 'Мʼякий', x: 0, y: 2, blur: 6, color: '#000000', opacity: 0.3 },
+  { id: 'glow', label: 'Неоновий glow', x: 0, y: 0, blur: 16, color: '#3E37E0', opacity: 0.9 },
+  { id: 'emboss', label: 'Рельєф', x: 0, y: -1, blur: 0, color: '#FFFFFF', opacity: 0.5 },
+]

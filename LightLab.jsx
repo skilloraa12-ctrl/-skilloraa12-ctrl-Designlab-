@@ -6,11 +6,12 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { buildBoxShadowCss, hexToRgba, makeLayer, PRESETS } from './labs/shadowBuilder.js'
+import { buildBoxShadowCss, hexToRgba, makeLayer, PRESETS, buildTextShadowCss, TEXT_SHADOW_PRESETS } from './labs/shadowBuilder.js'
 
 const TABS = [
   { key: 'shadow', icon: '🌑', label: 'Тінь' },
   { key: 'light', icon: '💡', label: 'Світло' },
+  { key: 'textShadow', icon: '🔤', label: 'Тінь тексту' },
   { key: 'presets', icon: '🎨', label: 'Пресети' },
   { key: 'export', icon: '📤', label: 'Експорт' },
 ]
@@ -61,6 +62,7 @@ function ShadowTab({ layers, setLayers, toastApi }) {
       <p className="cl-tab-desc">Власна тінь — зсув по X/Y, розмиття (blur), розширення (spread) і колір. Можна накласти кілька шарів одна на одну для реалістичнішої, м'якшої тіні.</p>
       <HelpBox>
         <p>X/Y — куди падає тінь. Blur — наскільки розмиті її краї (0 = чіткий силует). Spread — наскільки тінь більша/менша за сам елемент. Inset — тінь всередині елемента (заглиблення) замість зовні.</p>
+        <p>Реальні тіні рідко бувають одним шаром: подивись на будь-який об'єкт під лампою — є чітка темна тінь під самим предметом (малий blur, невелика opacity) і м'якша розмита тінь навколо (великий blur, ще менша opacity). Material Design саме так і будує свої тіні — два шари: "ключова" тінь + "фонова" (дивись пресети).</p>
       </HelpBox>
 
       <div className="cl-section-title">Превʼю</div>
@@ -118,6 +120,7 @@ function LightTab({ light, patch, toastApi }) {
       <p className="cl-tab-desc">Думай про це не як про X/Y напряму, а як про положення джерела світла — кут і відстань самі перетворюються на зсув і розмиття тіні.</p>
       <HelpBox>
         <p>Angle — звідки «світить» (0° — праворуч, 90° — знизу, 180° — ліворуч, 270° — згори). Distance — наскільки далеко об'єкт від поверхні (більше — тінь зсунута далі). Softness — розмір джерела світла: маленьке й різке — чіткі краї тіні, велике й розсіяне — м'які.</p>
+        <p>Це той самий box-shadow, що й на вкладці «Тінь», просто X/Y тут обчислюються за формулою кола (<code>x = cos(angle) × distance</code>, <code>y = sin(angle) × distance</code>) — зручніше думати «світло зверху-зліва під 45°», ніж підбирати X і Y навмання.</p>
       </HelpBox>
 
       <div className="cl-editrow">
@@ -140,6 +143,52 @@ function LightTab({ light, patch, toastApi }) {
       <div className="cl-section-title">Превʼю</div>
       <div className="sl-preview-stage">
         <div className="sl-preview-card" style={{ boxShadow: `${x}px ${y}px ${light.softness}px 0px ${hexToRgba(light.color, light.opacity)}` }} />
+      </div>
+
+      <div className="cl-picker-top">
+        <button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button>
+      </div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
+function TextShadowTab({ ts, patch, toastApi }) {
+  const css = `text-shadow: ${buildTextShadowCss(ts)};`
+  return (
+    <div>
+      <p className="cl-tab-desc"><code>text-shadow</code> — окрема від box-shadow властивість: малює тінь по контуру самих букв, а не прямокутника навколо.</p>
+      <HelpBox>
+        <p>Синтаксис схожий на box-shadow, але без spread та inset — лише зсув X/Y, розмиття й колір. Якщо поставити X=0, Y=0 і великий blur — вийде не тінь, а «світіння» (glow) навколо букв, як неонова вивіска.</p>
+      </HelpBox>
+
+      <div className="cl-editrow">
+        <label>X<input type="range" min={-20} max={20} value={ts.x} onChange={(e) => patch({ x: parseInt(e.target.value, 10) })} /><span>{ts.x}px</span></label>
+      </div>
+      <div className="cl-editrow">
+        <label>Y<input type="range" min={-20} max={20} value={ts.y} onChange={(e) => patch({ y: parseInt(e.target.value, 10) })} /><span>{ts.y}px</span></label>
+      </div>
+      <div className="cl-editrow">
+        <label>Blur<input type="range" min={0} max={30} value={ts.blur} onChange={(e) => patch({ blur: parseInt(e.target.value, 10) })} /><span>{ts.blur}px</span></label>
+      </div>
+      <div className="cl-editrow">
+        <label>Opacity<input type="range" min={0} max={1} step={0.01} value={ts.opacity} onChange={(e) => patch({ opacity: parseFloat(e.target.value) })} /><span>{ts.opacity.toFixed(2)}</span></label>
+      </div>
+      <div className="cl-picker-top">
+        <input type="color" className="cl-swatch-input" value={ts.color} onChange={(e) => patch({ color: e.target.value })} />
+        <input className="cl-hex-input" value={ts.color} onChange={(e) => patch({ color: e.target.value })} />
+      </div>
+
+      <div className="cl-section-title">Превʼю</div>
+      <div className="sl-text-preview-stage">
+        <span className="sl-text-preview" style={{ textShadow: buildTextShadowCss(ts) }}>Aa Шрифт</span>
+      </div>
+
+      <div className="cl-section-title">Швидкі пресети</div>
+      <div className="cl-btn-row">
+        {TEXT_SHADOW_PRESETS.map((p) => (
+          <button key={p.id} className="harmony-btn" onClick={() => patch({ x: p.x, y: p.y, blur: p.blur, color: p.color, opacity: p.opacity })}>{p.label}</button>
+        ))}
       </div>
 
       <div className="cl-picker-top">
@@ -191,6 +240,7 @@ function defaultState() {
   return {
     layers: [makeLayer()],
     light: { angle: 135, distance: 14, softness: 20, opacity: 0.25, color: '#000000' },
+    textShadow: { x: 2, y: 2, blur: 4, color: '#000000', opacity: 0.4 },
   }
 }
 
@@ -216,6 +266,9 @@ export default function LightLab() {
   }
   function patchLight(partial) {
     applyState({ ...stateRef.current, light: { ...stateRef.current.light, ...partial } })
+  }
+  function patchTextShadow(partial) {
+    applyState({ ...stateRef.current, textShadow: { ...stateRef.current.textShadow, ...partial } })
   }
   function handleUndo() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -278,6 +331,7 @@ export default function LightLab() {
         <div className="cl-panel">
           {tab === 'shadow' && <ShadowTab layers={state.layers} setLayers={setLayers} toastApi={toastApi} />}
           {tab === 'light' && <LightTab light={state.light} patch={patchLight} toastApi={toastApi} />}
+          {tab === 'textShadow' && <TextShadowTab ts={state.textShadow} patch={patchTextShadow} toastApi={toastApi} />}
           {tab === 'presets' && <PresetsTab onApply={applyPreset} />}
           {tab === 'export' && <ExportTab layers={state.layers} />}
         </div>
