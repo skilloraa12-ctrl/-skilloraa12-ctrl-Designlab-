@@ -1,0 +1,322 @@
+import { useEffect, useRef, useState } from 'react'
+import LabShell from './labs/LabShell.jsx'
+import LabInfoTip from './labs/LabInfoTip.jsx'
+import { useLabHistory } from './labs/useLabHistory.js'
+import { useLabMode } from './labs/useLabMode.js'
+import { useLabToast } from './labs/useLabToast.js'
+import { useLabShortcuts } from './labs/useLabShortcuts.js'
+import { useLabRecent } from './labs/useLabRecent.js'
+import {
+  TRANSITION_TYPES, transitionStyle, buildTransitionCss,
+  EASING_PRESETS, sampleCubicBezier,
+  defaultKeyframeSteps, buildKeyframesCss,
+  staggerDelays,
+} from './labs/motionBuilder.js'
+
+const TABS = [
+  { key: 'transitions', icon: '🎬', label: 'Переходи' },
+  { key: 'keyframes', icon: '🗝️', label: 'Keyframes' },
+  { key: 'easing', icon: '📈', label: 'Easing' },
+  { key: 'stagger', icon: '☰', label: 'Stagger' },
+]
+
+function copy(text) {
+  if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {})
+}
+
+function HelpBox({ children }) {
+  return (
+    <details className="cl-help">
+      <summary>❓ Як це працює (пояснення простими словами)</summary>
+      <div className="cl-help-body">{children}</div>
+    </details>
+  )
+}
+
+function useReplay() {
+  const [phase, setPhase] = useState('hidden')
+  const [runKey, setRunKey] = useState(0)
+  function play() {
+    setPhase('hidden')
+    setRunKey((k) => k + 1)
+    requestAnimationFrame(() => requestAnimationFrame(() => setPhase('visible')))
+  }
+  return { phase, runKey, play }
+}
+
+function TransitionsTab({ state, patch, toastApi }) {
+  const cfg = state.transitions
+  const easing = EASING_PRESETS.find((e) => e.key === cfg.easingKey)
+  const { phase, runKey, play } = useReplay()
+  const fromStyle = transitionStyle(cfg.type, cfg.direction, false)
+  const toStyle = transitionStyle(cfg.type, cfg.direction, true)
+  const transitionProp = Object.keys(toStyle).map((p) => (p === 'opacity' ? 'opacity' : 'transform')).join(', ')
+  const css = buildTransitionCss({ type: cfg.type, direction: cfg.direction, durationMs: cfg.durationMs, delayMs: cfg.delayMs, easing: easing.css })
+
+  return (
+    <div>
+      <p className="cl-tab-desc">Базові CSS-переходи: елемент анімується зі стану "приховано" у "видимо" при зміні властивості.</p>
+      <HelpBox>
+        <p><code>transition</code> анімує зміну CSS-властивості між двома станами — тут це перехід від прихованого до видимого при натисканні Play.</p>
+      </HelpBox>
+
+      <div className="cl-section-title">Тип</div>
+      <div className="cl-btn-row">
+        {TRANSITION_TYPES.map((t) => <button key={t.key} className={'harmony-btn' + (cfg.type === t.key ? ' active' : '')} onClick={() => patch('transitions', { type: t.key })}>{t.label}</button>)}
+      </div>
+
+      {(cfg.type === 'slide' || cfg.type === 'slideFade') && (
+        <>
+          <div className="cl-section-title">Напрямок</div>
+          <div className="cl-btn-row">
+            {[['up', '↑'], ['down', '↓'], ['left', '←'], ['right', '→']].map(([d, arrow]) => (
+              <button key={d} className={'harmony-btn' + (cfg.direction === d ? ' active' : '')} onClick={() => patch('transitions', { direction: d })}>{arrow}</button>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="cl-editrow"><label>Тривалість<input type="range" min={100} max={1500} step={50} value={cfg.durationMs} onChange={(e) => patch('transitions', { durationMs: parseInt(e.target.value, 10) })} /><span>{cfg.durationMs}мс</span></label></div>
+      <div className="cl-editrow"><label>Затримка<input type="range" min={0} max={800} step={50} value={cfg.delayMs} onChange={(e) => patch('transitions', { delayMs: parseInt(e.target.value, 10) })} /><span>{cfg.delayMs}мс</span></label></div>
+
+      <div className="cl-section-title">Easing</div>
+      <div className="cl-btn-row">
+        {EASING_PRESETS.slice(0, 5).map((e) => <button key={e.key} className={'harmony-btn' + (cfg.easingKey === e.key ? ' active' : '')} onClick={() => patch('transitions', { easingKey: e.key })}>{e.label}</button>)}
+      </div>
+
+      <div className="cl-section-title">Превʼю</div>
+      <div className="mo-stage">
+        <div key={runKey} className="mo-box" style={{ ...(phase === 'visible' ? toStyle : fromStyle), transition: `${transitionProp} ${cfg.durationMs}ms ${easing.css} ${cfg.delayMs}ms` }} />
+      </div>
+      <div className="cl-picker-top">
+        <button className="harmony-btn" onClick={play}>▶ Play</button>
+        <button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button>
+      </div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
+function KeyframesTab({ state, patch, toastApi }) {
+  const steps = state.keyframes.steps
+  const { durationMs, loop } = state.keyframes
+  const [playKey, setPlayKey] = useState(0)
+  const css = buildKeyframesCss(steps)
+  function update(id, partial) {
+    patch('keyframes', { steps: steps.map((s) => (s.id === id ? { ...s, ...partial } : s)) })
+  }
+  function remove(id) {
+    if (steps.length <= 2) { toastApi.show('Потрібно щонайменше 2 точки'); return }
+    patch('keyframes', { steps: steps.filter((s) => s.id !== id) })
+  }
+  function add() {
+    if (steps.length >= 6) { toastApi.show('Максимум 6 точок'); return }
+    const maxId = Math.max(...steps.map((s) => s.id))
+    patch('keyframes', { steps: [...steps, { id: maxId + 1, pct: 50, opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }] })
+  }
+  return (
+    <div>
+      <p className="cl-tab-desc">Власна багатокрокова анімація через <code>@keyframes</code> — задайте кілька точок по шкалі 0–100%.</p>
+      <HelpBox>
+        <p>Кожна точка — стан елемента (прозорість, зсув, масштаб, обертання) на певному відсотку тривалості. Браузер плавно інтерполює між сусідніми точками.</p>
+      </HelpBox>
+
+      <div className="l3d-object-list">
+        {[...steps].sort((a, b) => a.pct - b.pct).map((s) => (
+          <div key={s.id} className="l3d-object-row" style={{ flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: 'var(--muted)', width: 36 }}>{s.pct}%</span>
+            <input type="range" min={0} max={100} value={s.pct} onChange={(e) => update(s.id, { pct: parseInt(e.target.value, 10) })} style={{ width: 70 }} />
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>opacity</span>
+            <input type="range" min={0} max={1} step={0.1} value={s.opacity} onChange={(e) => update(s.id, { opacity: parseFloat(e.target.value) })} style={{ width: 60 }} />
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>y</span>
+            <input type="range" min={-40} max={40} value={s.y} onChange={(e) => update(s.id, { y: parseInt(e.target.value, 10) })} style={{ width: 60 }} />
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>scale</span>
+            <input type="range" min={0.5} max={1.5} step={0.05} value={s.scale} onChange={(e) => update(s.id, { scale: parseFloat(e.target.value) })} style={{ width: 60 }} />
+            <button className="cl-mini-btn" onClick={() => remove(s.id)} title="Видалити">✕</button>
+          </div>
+        ))}
+      </div>
+      <div className="cl-picker-top" style={{ marginTop: 10 }}>
+        <button className="harmony-btn" onClick={add}>+ Додати точку</button>
+      </div>
+
+      <div className="cl-editrow"><label>Тривалість<input type="range" min={300} max={3000} step={100} value={durationMs} onChange={(e) => patch('keyframes', { durationMs: parseInt(e.target.value, 10) })} /><span>{durationMs}мс</span></label></div>
+      <div className="cl-picker-top">
+        <button className={'harmony-btn' + (loop ? ' active' : '')} onClick={() => patch('keyframes', { loop: !loop })}>🔁 Loop</button>
+      </div>
+
+      <style>{css}</style>
+      <div className="cl-section-title">Превʼю</div>
+      <div className="mo-stage">
+        <div key={playKey} className="mo-box" style={{ animation: `customAnim ${durationMs}ms ease ${loop ? 'infinite' : '1'} both` }} />
+      </div>
+      <div className="cl-picker-top">
+        <button className="harmony-btn" onClick={() => setPlayKey((k) => k + 1)}>▶ Play</button>
+        <button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button>
+      </div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
+function EasingTab({ state, patch }) {
+  const easing = EASING_PRESETS.find((e) => e.key === state.easing.key)
+  const points = sampleCubicBezier(easing.p, 50)
+  const W = 220, H = 160
+  const path = points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${(x * W).toFixed(1)},${(H - y * H).toFixed(1)}`).join(' ')
+  const { phase, runKey, play } = useReplay()
+  return (
+    <div>
+      <p className="cl-tab-desc">Крива легкості (easing) визначає швидкість анімації в часі — лінійна, із прискоренням, із "пружним" перельотом.</p>
+      <HelpBox>
+        <p>Графік показує прогрес анімації (вісь Y) залежно від часу (вісь X). "Spring" і "Bounce" виходять за межі 0–1 — елемент на мить "перелітає" ціль, що й дає відчуття пружності.</p>
+      </HelpBox>
+
+      <div className="cl-section-title">Пресет</div>
+      <div className="cl-btn-row">
+        {EASING_PRESETS.map((e) => <button key={e.key} className={'harmony-btn' + (state.easing.key === e.key ? ' active' : '')} onClick={() => patch('easing', { key: e.key })}>{e.label}</button>)}
+      </div>
+
+      <div className="cl-section-title">Графік прогресу</div>
+      <svg className="mo-curve-box" width={W} height={H} viewBox={`-10 -10 ${W + 20} ${H + 20}`}>
+        <line x1={0} y1={H} x2={W} y2={H} stroke="var(--line)" strokeWidth={1} />
+        <line x1={0} y1={0} x2={0} y2={H} stroke="var(--line)" strokeWidth={1} />
+        <path d={path} fill="none" stroke="#3E37E0" strokeWidth={2.5} />
+      </svg>
+
+      <div className="cl-section-title">Превʼю руху</div>
+      <div className="mo-easing-track">
+        <div key={runKey} className="mo-easing-ball" style={{ left: phase === 'visible' ? 'calc(100% - 36px)' : 4, transition: `left 1200ms ${easing.css}` }} />
+      </div>
+      <div className="cl-picker-top"><button className="harmony-btn" onClick={play}>▶ Play</button></div>
+      <pre className="cl-code-block">transition-timing-function: {easing.css};</pre>
+    </div>
+  )
+}
+
+function StaggerTab({ state, patch }) {
+  const { count, baseDelayMs, durationMs } = state.stagger
+  const delays = staggerDelays(count, baseDelayMs)
+  const { phase, runKey, play } = useReplay()
+  return (
+    <div>
+      <p className="cl-tab-desc">Stagger — елементи списку з'являються по черзі, а не всі одразу, що читається природніше для ока.</p>
+      <HelpBox>
+        <p>Кожен наступний елемент отримує <code>transition-delay</code> на крок більший за попередній — весь список "каскадом" входить в кадр.</p>
+      </HelpBox>
+
+      <div className="cl-editrow"><label>Кількість<input type="range" min={3} max={10} value={count} onChange={(e) => patch('stagger', { count: parseInt(e.target.value, 10) })} /><span>{count}</span></label></div>
+      <div className="cl-editrow"><label>Крок затримки<input type="range" min={20} max={200} step={10} value={baseDelayMs} onChange={(e) => patch('stagger', { baseDelayMs: parseInt(e.target.value, 10) })} /><span>{baseDelayMs}мс</span></label></div>
+      <div className="cl-editrow"><label>Тривалість<input type="range" min={150} max={800} step={50} value={durationMs} onChange={(e) => patch('stagger', { durationMs: parseInt(e.target.value, 10) })} /><span>{durationMs}мс</span></label></div>
+
+      <div className="cl-section-title">Превʼю</div>
+      <div className="mo-stage">
+        <div key={runKey} className="mo-stagger-row">
+          {delays.map((d, i) => (
+            <div
+              key={i}
+              className="mo-stagger-item"
+              style={{
+                opacity: phase === 'visible' ? 1 : 0,
+                transform: phase === 'visible' ? 'translateY(0)' : 'translateY(16px)',
+                transition: `opacity ${durationMs}ms ease ${d}ms, transform ${durationMs}ms ease ${d}ms`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="cl-picker-top"><button className="harmony-btn" onClick={play}>▶ Play</button></div>
+      <pre className="cl-code-block">{`.item:nth-child(n) { transition-delay: calc((n - 1) * ${baseDelayMs}ms); }`}</pre>
+    </div>
+  )
+}
+
+function defaultState() {
+  return {
+    transitions: { type: 'fade', direction: 'up', durationMs: 500, delayMs: 0, easingKey: 'ease' },
+    keyframes: { steps: defaultKeyframeSteps(), durationMs: 900, loop: false },
+    easing: { key: 'spring' },
+    stagger: { count: 6, baseDelayMs: 70, durationMs: 350 },
+  }
+}
+
+export default function MotionLab() {
+  const initial = useRef(defaultState()).current
+  const [state, setStateLive] = useState(initial)
+  const [tab, setTab] = useState('transitions')
+  const stateRef = useRef(state)
+  const debounceRef = useRef(null)
+  const hist = useLabHistory(initial)
+
+  function scheduleCommit() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => hist.set(stateRef.current), 400)
+  }
+  function patch(section, partial) {
+    const next = { ...stateRef.current, [section]: { ...stateRef.current[section], ...partial } }
+    stateRef.current = next
+    setStateLive(next)
+    scheduleCommit()
+  }
+  function handleUndo() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    hist.undo()
+  }
+  function handleRedo() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    hist.redo()
+  }
+  useEffect(() => {
+    stateRef.current = hist.value
+    setStateLive(hist.value)
+  }, [hist.value])
+
+  const labMode = useLabMode()
+  const toastApi = useLabToast()
+  const { push: pushRecentLab } = useLabRecent('lab')
+  useEffect(() => {
+    pushRecentLab('motion')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useLabShortcuts({
+    onUndo: hist.canUndo ? handleUndo : undefined,
+    onRedo: hist.canRedo ? handleRedo : undefined,
+  })
+
+  return (
+    <LabShell
+      title="Motion Lab"
+      subtitle="CSS-переходи, keyframe-анімації, криві легкості (easing) й stagger-ефекти з живим превʼю."
+      icon="🎞️"
+      mode={labMode.mode}
+      onToggleMode={labMode.toggle}
+      canUndo={hist.canUndo}
+      canRedo={hist.canRedo}
+      onUndo={handleUndo}
+      onRedo={handleRedo}
+      toast={toastApi.toast}
+      extra={
+        <LabInfoTip title="Гарячі клавіші">
+          Ctrl/Cmd+Z — Undo · Ctrl/Cmd+Shift+Z — Redo.
+        </LabInfoTip>
+      }
+    >
+      <div className="cl">
+        <div className="cl-tabs">
+          {TABS.map((t) => (
+            <button key={t.key} className={'cl-tab' + (tab === t.key ? ' active' : '')} onClick={() => setTab(t.key)}>
+              <span className="cl-tab-icon">{t.icon}</span>{t.label}
+            </button>
+          ))}
+        </div>
+        <div className="cl-panel">
+          {tab === 'transitions' && <TransitionsTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'keyframes' && <KeyframesTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'easing' && <EasingTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'stagger' && <StaggerTab state={state} patch={patch} toastApi={toastApi} />}
+        </div>
+      </div>
+    </LabShell>
+  )
+}

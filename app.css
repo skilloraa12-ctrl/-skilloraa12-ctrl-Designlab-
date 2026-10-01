@@ -951,6 +951,15 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .wf-card-line.short { width: 60%; }
 .wf-card-button { height: 26px; background: #E4E4EA; border-radius: 4px; width: 70px; }
 
+/* ---------- Motion Lab ---------- */
+.mo-stage { height: 160px; display: flex; align-items: center; justify-content: center; background: #EDEDF0; border-radius: var(--radius); margin: 10px 0 16px; overflow: hidden; }
+.mo-box { width: 70px; height: 70px; border-radius: 12px; background: var(--accent); flex: none; }
+.mo-curve-box { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); margin: 10px 0 16px; display: block; }
+.mo-easing-track { position: relative; height: 40px; background: #EDEDF0; border-radius: 20px; margin: 10px 0 16px; }
+.mo-easing-ball { position: absolute; top: 4px; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); }
+.mo-stagger-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.mo-stagger-item { width: 48px; height: 48px; border-radius: 10px; background: var(--accent); flex: none; }
+
 /* ---------- Dictionary (Словник) ---------- */
 
 .dict-search { max-width: 480px; margin-bottom: 16px; }
