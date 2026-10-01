@@ -6,7 +6,7 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { createThreeScene, PRIMITIVES } from './labs/threeScene.js'
+import { createThreeScene, PRIMITIVES, LIGHT_PRESETS } from './labs/threeScene.js'
 import { TEMPLATES } from './labs/threeTemplates.js'
 
 const TABS = [
@@ -14,6 +14,7 @@ const TABS = [
   { key: 'templates', icon: '🏠', label: 'Шаблони' },
   { key: 'transform', icon: '🔄', label: 'Трансформація' },
   { key: 'material', icon: '🎨', label: 'Матеріал' },
+  { key: 'lighting', icon: '💡', label: 'Освітлення' },
   { key: 'export', icon: '📤', label: 'Експорт' },
 ]
 
@@ -109,6 +110,7 @@ function ObjectsTab({ objects, selectedId, onSelect, onAdd, onDelete, onDuplicat
         <p>3D-сцена складається з окремих обʼєктів (мешів). Кожен має свою геометрію (форма), позицію в просторі (X — вправо/вліво, Y — вгору/вниз, Z — вперед/назад) і матеріал (як він виглядає — колір, блиск).</p>
         <p>Клікни лівою кнопкою миші по фігурі в 3D-вʼюпорті, щоб вибрати її — обраний обʼєкт підсвічується жовтим контуром. Перетягуй правою кнопкою / колесо миші, щоб обертати й наближати камеру.</p>
         <p>Складніші форми (будинок, людина) — це просто кілька простих фігур, поставлених поруч і пофарбованих по-різному. Кнопка ⧉ дублює обрану фігуру, щоб швидше зібрати схожі частини (наприклад другу ногу чи ще один пелюсток).</p>
+        <p>Це той самий принцип, яким працюють справжні 3D-рушії (Blender, Unity, Unreal): складна модель — майже завжди "ієрархія" з десятків чи сотень простих мешів, а не одна суцільна форма. Освоївши тут позицію/обертання/масштаб для одного кубика, ви вже розумієте половину інтерфейсу будь-якого професійного 3D-редактора.</p>
       </HelpBox>
 
       <div className="cl-section-title">Додати фігуру</div>
@@ -166,6 +168,7 @@ function TemplatesTab({ onAddTemplate, onClearScene }) {
       <HelpBox>
         <p>Кожен шаблон додає одразу кілька обʼєктів (наприклад «стіни», «дах», «двері») з уже підібраними кольорами й позиціями. Далі кожну частину можна редагувати окремо — вибери її в списку на вкладці «Обʼєкти» й покрути, пересунь або перефарбуй.</p>
         <p>Шаблон додається поверх того, що вже є в сцені — необов'язково починати спочатку. Хочеш чисту сцену — натисни «Очистити сцену» нижче.</p>
+        <p>Хороша вправа — додати шаблон, а потім спробувати "зламати" й перезібрати одну з частин по-своєму: трохи повернути дах, зробити вікна більшими, зсунути стовбур дерева. Так швидше зрозумієш, як саме кожна частина збирається, ніж просто розглядаючи готовий результат.</p>
       </HelpBox>
 
       <div className="l3d-template-grid">
@@ -193,6 +196,7 @@ function TransformTab({ selected, setRotation, setScale, onResetTransform, isPro
       <HelpBox>
         <p><b>Rotation</b> (обертання) повертає фігуру навколо її власного центру по осі X, Y або Z — спробуй покрутити Y, щоб побачити різницю між осями.</p>
         <p><b>Scale</b> (масштаб) розтягує чи стискає фігуру по кожній осі окремо: однакові X/Y/Z — рівномірне збільшення, різні — фігура «сплющується» чи витягується.</p>
+        <p>Порядок важливий інтуїтивно, навіть якщо тут це не видно напряму: у "справжніх" 3D-рушіях трансформації застосовуються послідовно (спочатку масштаб, потім обертання, потім позиція) — тому обертання не по центру фігури, а навколо іншої точки (наприклад кінчика стрілки годинника) потребує додаткового "опорного" обʼєкта-батька. Тут усе простіше: кожен обʼєкт завжди обертається навколо власного геометричного центру.</p>
       </HelpBox>
 
       <div className="cl-section-title">Rotation (°)</div>
@@ -221,6 +225,7 @@ function MaterialTab({ selected, setMaterial }) {
           <li><b>Wireframe</b> — показує тільки каркас з ребер, без заливки поверхні — зручно, щоб побачити геометрію під формою.</li>
           <li><b>Opacity</b> — прозорість: 1 — непрозоро, менше — просвічує наскрізь.</li>
         </ul>
+        <p>Це называється PBR (physically based rendering) — модель матеріалу, побудована на тому, як світло реально поводиться на поверхнях, а не на "намальованому" вигляді. Саме тому зміна Metalness/Roughness виглядає правдоподібно під будь-яким освітленням (спробуйте перейти на вкладку «Освітлення» й порівняти той самий матеріал удень і вночі).</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -260,6 +265,29 @@ function MaterialTab({ selected, setMaterial }) {
   )
 }
 
+function LightingTab({ lighting, setLighting }) {
+  return (
+    <div>
+      <p className="cl-tab-desc">Освітлення сцени — пресети, що одразу міняють настрій: яскраву студію, денне світло, захід сонця або ніч.</p>
+      <HelpBox>
+        <p>Сцена складається з трьох джерел світла: <b>Ambient</b> (ambient light) — рівномірно освітлює все без напрямку й тіней, не дає сцені провалитись у чорноту там, куди не падає пряме світло; <b>Key</b> (основне) — найяскравіше, задає напрямок головних тіней і відблисків; <b>Fill</b> (заповнювальне) — слабше світло з протилежного боку, пом'якшує тіні від Key, щоб вони не були суцільно чорними.</p>
+        <p>Це класична трьохточкова схема освітлення (three-point lighting) із фото- та кіностудій, спрощена до мінімуму. Колір Key/Fill теж має значення: теплий (жовтогарячий) Key проти холодного (синього) Fill — як природне сонячне світло проти розсіяного блакитного неба — робить матеріали живішими, ніж два однаково білих джерела.</p>
+      </HelpBox>
+
+      <div className="cl-section-title">Пресет</div>
+      <div className="l3d-template-grid">
+        {LIGHT_PRESETS.map((p) => (
+          <button key={p.key} className={'l3d-template-card' + (lighting === p.key ? ' active' : '')} onClick={() => setLighting(p.key)}>
+            <span className="l3d-template-icon">{p.icon}</span>
+            <span className="l3d-template-label">{p.label}</span>
+          </button>
+        ))}
+      </div>
+      <p className="cl-tab-desc">Поверніться на вкладку «Матеріал» і порівняйте, як Metalness/Roughness виглядають під різним освітленням — той самий матеріал реагує по-різному.</p>
+    </div>
+  )
+}
+
 function sceneToThreeSnippet(objects) {
   const lines = objects.map((o, i) => {
     const geomArgs = { box: '1, 1, 1', sphere: '0.65, 32, 20', cone: '0.65, 1.3, 32', cylinder: '0.6, 0.6, 1.2, 32', torus: '0.55, 0.22, 20, 48', plane: '1.3, 1.3' }[o.type] || '1, 1, 1'
@@ -278,6 +306,7 @@ function ExportTab({ objects, getScreenshot }) {
       <p className="cl-tab-desc">Забери сцену з собою: скріншот для показу, JSON з точними значеннями, або готовий фрагмент коду Three.js.</p>
       <HelpBox>
         <p>Скріншот — картинка поточного виду камери (той самий кут, під яким дивишся зараз). JSON — усі обʼєкти з їхніми позиціями/обертаннями/матеріалами як дані. Three.js-фрагмент — робочий код, який відтворює цю сцену в реальному проєкті на Three.js.</p>
+        <p>JSON корисний не лише для бекапу: якщо захочете повернутись до цієї сцени пізніше або поділитись точними координатами з кимось іншим, цей формат зберігає все до останнього десяткового знаку — на відміну від скріншоту, який фіксує лише те, як сцена виглядала з поточного кута камери.</p>
       </HelpBox>
       <div className="cl-section-title">Файли</div>
       <div className="cl-picker-top">
@@ -297,6 +326,7 @@ function ExportTab({ objects, getScreenshot }) {
 export default function Lab3D() {
   const [objects, setObjectsState] = useState(() => [makeObject('box')])
   const [selectedId, setSelectedIdState] = useState(() => objects[0]?.id ?? null)
+  const [lighting, setLighting] = useState('studio')
   const [tab, setTab] = useState('objects')
 
   const containerRef = useRef(null)
@@ -372,6 +402,10 @@ export default function Lab3D() {
     sceneApiRef.current?.sync(objects, selectedId)
   }, [objects, selectedId])
 
+  useEffect(() => {
+    sceneApiRef.current?.setLighting(lighting)
+  }, [lighting])
+
   const selected = useMemo(() => objects.find((o) => o.id === selectedId) || null, [objects, selectedId])
 
   function addObject(type) {
@@ -446,7 +480,7 @@ export default function Lab3D() {
   return (
     <LabShell
       title="3D Lab"
-      subtitle="Легкі 3D-обʼєкти прямо в браузері: готові шаблони (будинок, людина, рослина, іграшка) або окремі фігури — керуй позицією, обертанням і матеріалом, експортуй сцену."
+      subtitle="Легкі 3D-обʼєкти прямо в браузері: готові шаблони (будинок, людина, рослина, іграшка) або окремі фігури — керуй позицією, обертанням, матеріалом і освітленням, експортуй сцену."
       icon="🧊"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -490,6 +524,7 @@ export default function Lab3D() {
             <TransformTab selected={selected} setRotation={setRotation} setScale={setScale} onResetTransform={resetTransform} isPro={labMode.isPro} />
           )}
           {tab === 'material' && <MaterialTab selected={selected} setMaterial={setMaterial} />}
+          {tab === 'lighting' && <LightingTab lighting={lighting} setLighting={setLighting} />}
           {tab === 'export' && <ExportTab objects={objects} getScreenshot={() => sceneApiRef.current?.screenshot()} />}
         </div>
       </div>

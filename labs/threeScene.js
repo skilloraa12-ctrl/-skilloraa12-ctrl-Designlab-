@@ -23,6 +23,17 @@ export const PRIMITIVES = [
   { type: 'plane', label: 'Площина', icon: '▭' },
 ]
 
+// Lighting presets: ambient (fills shadows evenly), key (main directional
+// light, casts the strongest highlights/shadows), fill (softer, opposite
+// side — keeps shadows from going pure black). "studio" matches the
+// scene's original hardcoded defaults, so picking it is a no-op visually.
+export const LIGHT_PRESETS = [
+  { key: 'studio', icon: '💡', label: 'Студія', ambient: 0.55, keyIntensity: 1.1, keyColor: '#ffffff', fillIntensity: 0.35, fillColor: '#8fa3ff', bg: '#16161d' },
+  { key: 'day', icon: '☀️', label: 'День', ambient: 0.75, keyIntensity: 1.4, keyColor: '#fff6e0', fillIntensity: 0.5, fillColor: '#bcd4ff', bg: '#1c2b3d' },
+  { key: 'sunset', icon: '🌇', label: 'Захід', ambient: 0.4, keyIntensity: 1.0, keyColor: '#ff8a3d', fillIntensity: 0.3, fillColor: '#5a3df0', bg: '#241a2e' },
+  { key: 'night', icon: '🌙', label: 'Ніч', ambient: 0.18, keyIntensity: 0.5, keyColor: '#6a7cff', fillIntensity: 0.25, fillColor: '#2e2e55', bg: '#0b0b12' },
+]
+
 export function createThreeScene(container) {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0x16161d)
@@ -40,7 +51,8 @@ export function createThreeScene(container) {
   controls.minDistance = 1.6
   controls.maxDistance = 16
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55))
+  const ambient = new THREE.AmbientLight(0xffffff, 0.55)
+  scene.add(ambient)
   const key = new THREE.DirectionalLight(0xffffff, 1.1)
   key.position.set(4, 6, 5)
   scene.add(key)
@@ -146,5 +158,15 @@ export function createThreeScene(container) {
     return renderer.domElement.toDataURL('image/png')
   }
 
-  return { sync, dispose, pickAt, screenshot }
+  function setLighting(presetKey) {
+    const p = LIGHT_PRESETS.find((l) => l.key === presetKey) || LIGHT_PRESETS[0]
+    ambient.intensity = p.ambient
+    key.intensity = p.keyIntensity
+    key.color.set(p.keyColor)
+    fill.intensity = p.fillIntensity
+    fill.color.set(p.fillColor)
+    scene.background = new THREE.Color(p.bg)
+  }
+
+  return { sync, dispose, pickAt, screenshot, setLighting }
 }
