@@ -1,0 +1,39 @@
+// Pure data/helpers for User Flow Lab: node catalogs, ready-made flow
+// templates, array reordering, and journey-map point plotting.
+
+export const NODE_TYPES = [
+  { key: 'start', icon: '▶', label: 'Старт' },
+  { key: 'screen', icon: '▭', label: 'Екран' },
+  { key: 'action', icon: '⚡', label: 'Дія' },
+  { key: 'end', icon: '⏹', label: 'Кінець' },
+]
+
+export const FLOW_TEMPLATES = [
+  { key: 'onboarding', icon: '👋', label: 'Онбординг', steps: ['start', 'screen', 'screen', 'action', 'end'] },
+  { key: 'checkout', icon: '🛒', label: 'Чекаут', steps: ['start', 'screen', 'action', 'screen', 'action', 'end'] },
+  { key: 'login', icon: '🔐', label: 'Логін', steps: ['start', 'screen', 'action', 'end'] },
+  { key: 'reset', icon: '🔁', label: 'Скидання пароля', steps: ['start', 'screen', 'action', 'screen', 'end'] },
+]
+
+export function moveItem(arr, index, dir) {
+  const next = [...arr]
+  const target = index + dir
+  if (target < 0 || target >= next.length) return arr
+  ;[next[index], next[target]] = [next[target], next[index]]
+  return next
+}
+
+// Scales stage mood values (moodMin..moodMax) into an SVG-ready polyline
+// across a W x H box. Returns points with pixel coords plus an SVG path.
+export function buildJourneyPlot(stages, W, H, moodMin = -2, moodMax = 2) {
+  const n = stages.length
+  const stepX = n > 1 ? W / (n - 1) : 0
+  const points = stages.map((s, i) => {
+    const x = n > 1 ? i * stepX : W / 2
+    const t = (s.mood - moodMin) / (moodMax - moodMin)
+    const y = H - t * H
+    return { x, y, mood: s.mood, label: s.label }
+  })
+  const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+  return { path, points }
+}

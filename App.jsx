@@ -26,6 +26,7 @@ import CompositionLab from './CompositionLab.jsx'
 import DesignCalcLab from './DesignCalcLab.jsx'
 import WireframeLab from './WireframeLab.jsx'
 import MotionLab from './MotionLab.jsx'
+import UserFlowLab from './UserFlowLab.jsx'
 import Portfolio from './Portfolio.jsx'
 import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
@@ -88,6 +89,7 @@ export default function App() {
           <Route path="/labs/calculator" element={<RequireAuth><DesignCalcLab /></RequireAuth>} />
           <Route path="/labs/wireframe" element={<RequireAuth><WireframeLab /></RequireAuth>} />
           <Route path="/labs/motion" element={<RequireAuth><MotionLab /></RequireAuth>} />
+          <Route path="/labs/user-flow" element={<RequireAuth><UserFlowLab /></RequireAuth>} />
           <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />
