@@ -8,6 +8,7 @@ import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
 import { wcagLevel } from './colorMath.js'
 import { contrastRatio, nonTextLevel, adjustLightness, STATE_DEFS } from './labs/a11yChecks.js'
+import { simulateColorBlindness, CVD_TYPES, CVD_DESCRIPTIONS } from './labs/colorBlindness.js'
 
 const TABS = [
   { key: 'text', icon: '📝', label: 'Текст' },
@@ -15,7 +16,10 @@ const TABS = [
   { key: 'states', icon: '🎛', label: 'Стани' },
   { key: 'focus', icon: '🎯', label: 'Фокус' },
   { key: 'matrix', icon: '🔢', label: 'Матриця' },
+  { key: 'colorblind', icon: '👁', label: 'Дальтонізм' },
 ]
+
+const CVD_KEYS = ['protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia']
 
 let matrixIdCounter = 1
 
@@ -61,6 +65,7 @@ function TextTab({ state, patch }) {
       <HelpBox>
         <p>AA — мінімальна вимога WCAG (обов'язкова для більшості сайтів): 4.5:1 для звичайного тексту, 3:1 для великого (≥18pt або ≥14pt жирний). AAA — підвищена вимога: 7:1 і 4.5:1 відповідно.</p>
         <p>Коефіцієнт контрасту рахується з яскравості (luminance) обох кольорів за формулою WCAG: <code>(L1 + 0.05) / (L2 + 0.05)</code>, де L1 — яскравіший колір. Максимум — 21:1 (чорне на білому), мінімум — 1:1 (однакові кольори). Більшість дизайн-систем цілять у 4.5:1+ навіть для «не обовʼязкового» AAA, бо це просто зручніше читається.</p>
+        <p>Наприклад, сірий текст #777777 на білому фоні дає приблизно 4.5:1 — це рівно межа AA, тобто найсвітліший сірий, який ще «проходить» перевірку для звичайного тексту. Трохи світліший #999999 падає нижче 3:1 і вже не проходить навіть поріг для великого тексту — ось чому «ледь сірий» текст на білому фоні так часто виявляється провальним на аудиті доступності.</p>
       </HelpBox>
 
       <ColorField label="Текст" value={state.text.fg} onChange={(v) => patch('text', { fg: v })} />
@@ -91,6 +96,7 @@ function UiTab({ state, patch }) {
       <HelpBox>
         <p>Поріг для іконок і UI-елементів — 3:1 проти фону (AAA-рівня для цього критерію не існує). Застосовується до будь-якої графіки, що несе інформацію (іконка кнопки, рамка активного поля), — не до суто декоративних елементів.</p>
         <p>Приклад декоративного винятку: фонова текстура або орнамент, який нічого не «повідомляє», не підпадає під цю вимогу. А ось рамка текстового поля, яка показує, що воно активне — підпадає, бо несе функціональну інформацію (стан елемента).</p>
+        <p>Поширена помилка — брендовий «фірмовий» синій (наприклад #A5B4FC, світлий відтінок) на білому фоні іконок: він виглядає приємно, але часто дає лише 1.5-2:1, набагато нижче за поріг 3:1. Якщо потрібно зберегти колір бренду, але підняти контраст, найпростіший вихід — затемнити той самий відтінок (знизити lightness в HSL), а не міняти hue.</p>
       </HelpBox>
 
       <ColorField label="Іконка/межа" value={state.ui.fg} onChange={(v) => patch('ui', { fg: v })} />
@@ -117,6 +123,7 @@ function StatesTab({ state, patch }) {
       <HelpBox>
         <p>Для кожного стану фон «освітлюється» чи «затемнюється» на вказаний відсоток відносно базового — так само, як це зазвичай роблять в CSS (<code>filter: brightness()</code> чи окремий колір на hover). Якщо контраст тексту падає нижче AA — стан позначається червоним.</p>
         <p>Найчастіша помилка новачків — перевірити контраст лише в звичайному стані кнопки й забути про hover/active. Якщо текст білий, а фон на hover стає світлішим (замість темнішим), контраст може «провалитись» саме в той момент, коли людина наводить курсор — а це якраз момент, коли читабельність найважливіша.</p>
+        <p>Стан Disabled — особливий випадок: WCAG офіційно не вимагає контрасту 4.5:1 для вимкнених елементів (вони non-interactive), тому дизайнери традиційно роблять їх навмисно блідими (+30% lightness тут), щоб сигналізувати «недоступно» — саме тому цей стан єдиний, де низький контраст — очікувана, а не помилкова поведінка.</p>
       </HelpBox>
 
       <ColorField label="Текст" value={state.states.fg} onChange={(v) => patch('states', { fg: v })} />
@@ -159,6 +166,7 @@ function FocusTab({ state, patch }) {
       <HelpBox>
         <p>WCAG 2.4.11 вимагає, щоб фокус-індикатор мав контраст ≥3:1 проти сусіднього фону (той самий поріг, що й для UI-елементів) і був не тоншим за 2px суцільної лінії навколо компонента.</p>
         <p>Багато сайтів прибирають <code>outline</code> у CSS заради «чистішого» вигляду (<code>outline: none</code>) і нічим його не замінюють — це робить сайт непридатним для керування клавіатурою: людина просто не бачить, на якому елементі вона зараз перебуває. Якщо прибираєш стандартний outline — обовʼязково постав власний через <code>:focus-visible</code>.</p>
+        <p>Параметр «Відступ (offset)» визначає, чи кільце фокусу торкається самого елемента, чи «плаває» на невеликій відстані від нього — додатний offset (2-4px) часто виглядає охайніше на кнопках зі скругленими кутами, бо кільце не зливається з border-radius елемента.</p>
       </HelpBox>
 
       <ColorField label="Колір контуру" value={state.focus.ring} onChange={(v) => patch('focus', { ring: v })} />
@@ -211,6 +219,7 @@ function MatrixTab({ state, patch }) {
       <p className="cl-tab-desc">Перевірте контраст одразу для всієї палітри — кожна пара кольорів із кожною, не по одній.</p>
       <HelpBox>
         <p>Коли в дизайн-системі 5-6 кольорів, вручну перевіряти кожну можливу пару (текст на фоні, фон на фоні) довго й легко щось пропустити. Матриця показує відразу всі комбінації: по діагоналі — порожньо (колір сам із собою завжди 1:1, безглуздо), а в кожній клітинці — реальне співвідношення контрасту цієї пари.</p>
+        <p>Матриця симетрична відносно діагоналі (контраст A проти B такий самий, як B проти A — формула не залежить від порядку, окрім того, який колір світліший), тому фактично достатньо дивитись лише на половину клітинок вище або нижче діагоналі. Поріг 4.5:1 тут жорстко зашитий (рівень AA для тексту) — якщо потрібен AAA (7:1) чи поріг для UI-елементів (3:1), використовуйте вкладки «Текст» чи «Іконки / UI» для конкретної пари.</p>
       </HelpBox>
 
       <div className="l3d-object-list">
@@ -258,6 +267,55 @@ function MatrixTab({ state, patch }) {
   )
 }
 
+function ColorblindTab({ state, patch }) {
+  const { fg, bg, type } = state.colorblind
+  const simFg = simulateColorBlindness(fg, type)
+  const simBg = simulateColorBlindness(bg, type)
+  const normalRatio = contrastRatio(fg, bg)
+  const simRatio = contrastRatio(simFg, simBg)
+  const normalLevel = wcagLevel(normalRatio, false)
+  const simLevel = wcagLevel(simRatio, false)
+  return (
+    <div>
+      <p className="cl-tab-desc">Контраст рахується за звичайним зором — але чи лишається пара текст/фон читабельною для людини з дальтонізмом?</p>
+      <HelpBox>
+        <p>Симуляція нижче перераховує обидва кольори за опублікованими матрицями Machado/Oliveira/Fernandes (2009) для кожного типу дальтонізму, а тоді рахує WCAG-контраст заново вже для «побачених» кольорів. Якщо коефіцієнт при симуляції падає нижче AA — пара, яка технічно проходить перевірку для звичайного зору, насправді погано читається для частини аудиторії.</p>
+        <p>Найризикованіша комбінація — червоний проти зеленого (чи навпаки): у людей з протанопією або дейтеранопією (разом ≈ 8% чоловіків) ці кольори можуть зливатись у схожий відтінок, навіть якщо їхня яскравість (і тому контраст за формулою WCAG) відрізняється достатньо. Ось чому не можна покладатись лише на колір, щоб передати стан (помилка/успіх) — завжди додавайте ще й іконку, підпис чи форму.</p>
+        <p>Ахроматопсія (повна відсутність кольорового зору, дуже рідкісна) — корисний «стрес-тест»: якщо дизайн лишається зрозумілим навіть у відтінках сірого, то й для решти типів дальтонізму він, з високою ймовірністю, буде ОК.</p>
+      </HelpBox>
+
+      <ColorField label="Текст" value={fg} onChange={(v) => patch('colorblind', { fg: v })} />
+      <ColorField label="Фон" value={bg} onChange={(v) => patch('colorblind', { bg: v })} />
+
+      <div className="cl-section-title">Тип дальтонізму</div>
+      <div className="cl-tags">
+        {CVD_KEYS.map((key) => (
+          <button
+            key={key}
+            className={'harmony-btn' + (type === key ? ' active' : '')}
+            onClick={() => patch('colorblind', { type: key })}
+          >
+            {CVD_TYPES[key]}
+          </button>
+        ))}
+      </div>
+      <p className="cl-tab-desc" style={{ marginTop: 8 }}>{CVD_DESCRIPTIONS[type]}</p>
+
+      <div className="cl-section-title">Порівняння</div>
+      <div className="l3d-template-grid">
+        <div className="l3d-template-card">
+          <div className="ac-preview" style={{ background: bg, color: fg }}>Звичайний зір</div>
+          <RatioBadges ratio={normalRatio} aa={normalLevel.aa} />
+        </div>
+        <div className="l3d-template-card">
+          <div className="ac-preview" style={{ background: simBg, color: simFg }}>{CVD_TYPES[type]}</div>
+          <RatioBadges ratio={simRatio} aa={simLevel.aa} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     text: { fg: '#17171A', bg: '#FFFFFF', largeText: false },
@@ -270,6 +328,7 @@ function defaultState() {
       { id: 3, hex: '#3E37E0', label: 'Primary' },
       { id: 4, hex: '#ECEAE3', label: 'Surface' },
     ] },
+    colorblind: { fg: '#D14343', bg: '#FFFFFF', type: 'protanopia' },
   }
 }
 
@@ -325,7 +384,7 @@ export default function ContrastLab() {
   return (
     <LabShell
       title="Contrast & Accessibility Lab"
-      subtitle="Перевірка контрасту WCAG для тексту, іконок, інтерактивних станів, фокус-індикатора й цілої палітри одночасно."
+      subtitle="Перевірка контрасту WCAG для тексту, іконок, інтерактивних станів, фокус-індикатора, цілої палітри й зору з дальтонізмом."
       icon="◐"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -354,6 +413,7 @@ export default function ContrastLab() {
           {tab === 'states' && <StatesTab state={state} patch={patch} />}
           {tab === 'focus' && <FocusTab state={state} patch={patch} />}
           {tab === 'matrix' && <MatrixTab state={state} patch={patch} />}
+          {tab === 'colorblind' && <ColorblindTab state={state} patch={patch} />}
         </div>
       </div>
     </LabShell>
