@@ -34,6 +34,16 @@ export const LIGHT_PRESETS = [
   { key: 'night', icon: '🌙', label: 'Ніч', ambient: 0.18, keyIntensity: 0.5, keyColor: '#6a7cff', fillIntensity: 0.25, fillColor: '#2e2e55', bg: '#0b0b12' },
 ]
 
+// Standard CAD/game-engine camera presets: orthogonal views (front/side/
+// top) for precise alignment plus the default 3/4 "isometric-ish" angle
+// used for a natural, readable overview.
+export const CAMERA_VIEWS = [
+  { key: 'iso', icon: '◆', label: 'Ізометрія', position: [3.2, 2.6, 4.4] },
+  { key: 'front', icon: '⬜', label: 'Спереду', position: [0, 1.2, 6] },
+  { key: 'side', icon: '◧', label: 'Збоку', position: [6, 1.2, 0] },
+  { key: 'top', icon: '⬛', label: 'Зверху', position: [0.001, 7, 0.001] },
+]
+
 export function createThreeScene(container) {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0x16161d)
@@ -168,5 +178,17 @@ export function createThreeScene(container) {
     scene.background = new THREE.Color(p.bg)
   }
 
-  return { sync, dispose, pickAt, screenshot, setLighting }
+  function setCameraView(viewKey) {
+    const v = CAMERA_VIEWS.find((c) => c.key === viewKey) || CAMERA_VIEWS[0]
+    camera.position.set(...v.position)
+    controls.target.set(0, 0.5, 0)
+    controls.update()
+  }
+
+  function setFov(deg) {
+    camera.fov = deg
+    camera.updateProjectionMatrix()
+  }
+
+  return { sync, dispose, pickAt, screenshot, setLighting, setCameraView, setFov }
 }
