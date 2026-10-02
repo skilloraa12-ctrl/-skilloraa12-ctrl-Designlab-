@@ -28,6 +28,20 @@ export const PAGE_TEMPLATES = [
   { key: 'login', icon: '🔐', label: 'Логін', sections: ['header', 'content', 'footer'] },
 ]
 
+// Mobile-first column collapse: most grid systems cap tablet at 2
+// columns and mobile at 1, regardless of how many columns the desktop
+// design uses — this one rule is why a 4-column desktop card grid
+// becomes a single stacked list on a phone, not four squeezed columns.
+export const BREAKPOINTS = [
+  { key: 'mobile', label: 'Мобільний (до 480px)', widthPx: 140, maxCols: 1 },
+  { key: 'tablet', label: 'Планшет (480–960px)', widthPx: 220, maxCols: 2 },
+  { key: 'desktop', label: 'Десктоп (960px+)', widthPx: 320, maxCols: 99 },
+]
+
+export function responsiveCols(desktopCols, maxCols) {
+  return Math.max(1, Math.min(desktopCols, maxCols))
+}
+
 export function moveItem(arr, index, dir) {
   const next = [...arr]
   const target = index + dir

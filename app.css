@@ -981,6 +981,8 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .wf-card-button { height: 26px; background: #E4E4EA; border-radius: 4px; width: 70px; }
 .wf-annotate-stage { position: relative; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; background: #F5F5F7; margin: 10px 0 16px; cursor: crosshair; }
 .wf-pin { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: #E0373E; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: default; }
+.wf-bp-frame { border: 1px solid var(--line); border-radius: var(--radius); background: #F5F5F7; padding: 8px; flex: none; }
+.wf-bp-label { font-size: 11px; color: #5B5B66; margin-bottom: 8px; text-align: center; }
 
 /* ---------- Motion Lab ---------- */
 .mo-stage { height: 160px; display: flex; align-items: center; justify-content: center; background: #EDEDF0; border-radius: var(--radius); margin: 10px 0 16px; overflow: hidden; }
