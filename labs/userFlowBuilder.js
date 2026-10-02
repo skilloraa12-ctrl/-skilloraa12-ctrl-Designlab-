@@ -15,6 +15,29 @@ export const FLOW_TEMPLATES = [
   { key: 'reset', icon: '🔁', label: 'Скидання пароля', steps: ['start', 'screen', 'action', 'screen', 'end'] },
 ]
 
+// Only "Екран"/"Дія" nodes realistically need error/empty/loading states —
+// "Старт" and "Кінець" are terminal markers, not states that load data or
+// can fail.
+export const EDGE_CASE_NODE_TYPES = ['screen', 'action']
+export const EDGE_CASE_KEYS = ['loading', 'empty', 'error']
+
+// Coverage = how many of (relevant node × edge-case type) combinations are
+// marked as designed. A flow that's fully covered for the happy path but
+// 0% here still has three undesigned states per screen waiting to surprise
+// either the developer (who has to guess) or the user (who hits a blank
+// screen with no explanation).
+export function edgeCaseCoverage(items, covered) {
+  const relevant = items.filter((it) => EDGE_CASE_NODE_TYPES.includes(it.type))
+  const total = relevant.length * EDGE_CASE_KEYS.length
+  let done = 0
+  for (const it of relevant) {
+    for (const key of EDGE_CASE_KEYS) {
+      if (covered[it.id]?.[key]) done += 1
+    }
+  }
+  return { relevant, total, done, pct: total > 0 ? (done / total) * 100 : 0 }
+}
+
 export function moveItem(arr, index, dir) {
   const next = [...arr]
   const target = index + dir
