@@ -67,6 +67,23 @@ export function generateSpacingScale(base, ratio, steps, mode) {
   return out
 }
 
+// --- Readability / line length ---
+// The CSS `ch` unit is defined as the width of the "0" character in the
+// current font — which happens to make "Nch" a near-literal way to say
+// "about N characters wide", so no real conversion is needed for the CSS
+// value itself. The px estimate is the commonly-cited rule of thumb that
+// an average character (across a typical paragraph, mixed-width font) is
+// roughly half the font-size wide.
+export function estimateLineWidthPx(cpl, fontSizePx, avgCharRatio = 0.5) {
+  return cpl * fontSizePx * avgCharRatio
+}
+
+export function readabilityRating(cpl) {
+  if (cpl < 45) return { key: 'narrow', label: 'Занадто вузько', hint: 'Рядки короткі — очі "стрибають" на новий рядок занадто часто, це втомлює при довгому читанні.' }
+  if (cpl <= 75) return { key: 'ideal', label: 'Оптимально (45–75 символів)', hint: 'Класичний орієнтир для комфортного читання суцільного тексту.' }
+  return { key: 'wide', label: 'Занадто широко', hint: 'Довгі рядки ускладнюють візуальний перехід на наступний рядок — око може "загубити" місце.' }
+}
+
 // --- Column grid math ---
 // Classic print/web layout formula: split a container into N equal
 // columns separated by a fixed gutter, inset by a side margin on each

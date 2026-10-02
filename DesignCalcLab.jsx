@@ -10,6 +10,7 @@ import {
   pxToRem, remToPx, calcDpi, calcMaxPrintInches, CM_PER_INCH,
   buildClamp, formatBytes, downloadSeconds, msToFrames, framesToMs,
   generateSpacingScale, calcColumnWidth,
+  estimateLineWidthPx, readabilityRating,
 } from './labs/designCalc.js'
 
 const TABS = [
@@ -20,6 +21,7 @@ const TABS = [
   { key: 'duration', icon: '🎞️', label: 'мс ↔ кадри' },
   { key: 'spacing', icon: '📏', label: 'Шкала відступів' },
   { key: 'grid', icon: '▦', label: 'Колонкова сітка' },
+  { key: 'readability', icon: '📖', label: 'Довжина рядка' },
 ]
 
 function copy(text) {
@@ -58,6 +60,7 @@ function PxRemTab({ state, patch }) {
       <HelpBox>
         <p><code>rem</code> завжди відносний до <code>&lt;html&gt;</code>, <code>em</code> — до батьківського елемента; математика однакова, лише точка відліку різна.</p>
         <p>16px — дефолтний розмір шрифту браузера "з коробки", тому більшість проєктів лишають його кореневим без змін. Головна причина використовувати rem замість px у реальних проєктах — доступність: коли користувач збільшує базовий розмір шрифту в налаштуваннях браузера, rem-значення масштабуються разом з ним, а px — ні.</p>
+        <p>Правило, якого варто триматись: рядки й розміри тексту (font-size, line-height, відступи між текстовими блоками) — у rem, а деталі, що мають лишатись фіксованими незалежно від налаштувань шрифту (товщина бордера, розмір іконки у пікселях) — у px. Змішувати обидві одиниці в одному проєкті нормально, якщо цей принцип застосовується послідовно.</p>
       </HelpBox>
 
       <NumField label="Кореневий розмір" value={cfg.rootPx} onChange={(v) => patch('pxrem', { rootPx: v })} suffix="px" min={1} />
@@ -97,6 +100,7 @@ function DpiTab({ state, patch }) {
       <HelpBox>
         <p>300 DPI — стандарт якісного друку (візитки, фото). 150 DPI прийнятний для великих банерів, які розглядають здалека. Менше 150 — помітна пікселізація зблизька.</p>
         <p>Білборди й банери на фасадах будівель навмисно друкують у 20-40 DPI — здалека (з вулиці) око не розрізняє окремі пікселі, а високий DPI на такій площі означав би нереалістично величезний файл. DPI завжди оцінюйте разом з відстанню перегляду, а не як абсолютне правило "більше — краще".</p>
+        <p>Не плутайте DPI (density, скільки пікселів на дюйм) з роздільною здатністю (resolution, скільки всього пікселів у файлі) — зображення 3000×2000px може мати як 300, так і 72 DPI залежно від того, на якому фізичному розмірі ви плануєте його надрукувати; сам файл при цьому не змінюється, DPI — лише метадані про намір, а не властивість пікселів.</p>
       </HelpBox>
 
       <NumField label="Ширина" value={cfg.widthPx} onChange={(v) => patch('dpi', { widthPx: v })} suffix="px" min={1} />
@@ -124,6 +128,7 @@ function FluidTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Формула лінійно інтерполює значення між двома точками (minVw→minPx і maxVw→maxPx), обгорнуте в <code>clamp()</code>, щоб розмір не виходив за межі поза цим діапазоном.</p>
         <p><code>clamp(MIN, PREFERRED, MAX)</code> — браузер рахує PREFERRED (з <code>vw</code>) і бере з трьох значень середнє: якщо PREFERRED менше MIN, застосовується MIN; якщо більше MAX — застосовується MAX. Це замінює кілька медіа-запитів з фіксованими розмірами одним рядком, що плавно стежить за шириною вікна без "стрибків" на кожному брейкпоінті.</p>
+        <p>Ця сама формула застосовна не лише до font-size: той самий <code>clamp()</code> нерідко використовують для fluid-відступів (padding/margin секцій, що плавно звужуються на малих екранах) чи навіть для ширини контейнера — принцип лінійної інтерполяції між двома контрольними точками однаковий для будь-якої CSS-властивості з числовим значенням.</p>
       </HelpBox>
 
       <NumField label="Мін. розмір" value={cfg.minPx} onChange={(v) => patch('fluid', { minPx: v })} suffix="px" min={1} />
@@ -155,6 +160,7 @@ function FileSizeTab({ state, patch }) {
       <HelpBox>
         <p>1 КБ = 1024 Б (бінарний рахунок, як показують файлові менеджери). Швидкість інтернету вимірюється в мегабітах (Мбіт/с), а розмір файлу — в байтах, тому перед діленням байти переводяться в біти (× 8).</p>
         <p>Плутанина "Мбіт vs МБ" — одна з найчастіших помилок у технічних специфікаціях: провайдер рекламує "100 Мбіт/с", але це лише 12.5 МБ/с реальної швидкості завантаження файлу (ділимо на 8). Завжди перевіряйте, яка саме одиниця вказана в документації, перш ніж обіцяти клієнту час завантаження.</p>
+        <p>Реальний час завантаження майже завжди довший за цю "паперову" оцінку: формула не враховує затримку з'єднання (latency), повільний старт TCP, інші фонові запити на тій самій мережі чи просто те, що рекламована "до 100 Мбіт/с" — це теоретичний максимум, а не гарантована швидкість. Використовуйте цей розрахунок як нижню межу, а не точний прогноз.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -187,6 +193,7 @@ function DurationTab({ state, patch }) {
       <HelpBox>
         <p>Кадри = (мс / 1000) × FPS. Наприклад, 500мс при 60fps — це 30 кадрів.</p>
         <p>Анімація, виготовлена в After Effects/Lottie дизайнером при 30fps, програється на вебсторінці з <code>requestAnimationFrame</code>, тобто фактично "в кадрах" браузера, а не в тих, що в оригінальному файлі. Тому розробнику потрібні саме мс (універсальна одиниця для CSS <code>animation-duration</code>/<code>transition-duration</code>), і конвертація кадри→мс — найчастіший запит на передачі анімації в розробку.</p>
+        <p>120fps тут не декоративний пресет — це частота оновлення сучасних "ProMotion"/120Hz екранів смартфонів і моніторів. Анімація, прорахована дизайнером на 30fps, а відтворена браузером на 120Hz-екрані, виглядає плавнішою, ніж задумано (кожен "кадр" дизайнера насправді розтягується на 4 реальні кадри екрана) — варто памʼятати про це при оцінці "на око", наскільки швидким виглядає рух.</p>
       </HelpBox>
 
       <div className="cl-section-title">FPS</div>
@@ -217,6 +224,7 @@ function SpacingTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Лінійний режим додає однаковий крок щоразу (як 8pt-сітка: 8,16,24,32…). Геометричний — множить на коефіцієнт щокроку (росте швидше для великих відступів).</p>
         <p>8pt-сітка (крок 8px) — негласний стандарт більшості дизайн-систем (Material Design, Apple HIG): 8 ділиться без залишку на більшість поширених розмірів екранів і легко розраховується в голові. Геометричний режим природніше відповідає тому, як око сприймає різницю: між 4px і 8px різниця відчутна, а між 60px і 64px — ні, тому для великих відступів потрібен більший абсолютний крок.</p>
+        <p>Та сама шкала зазвичай слугує й для розмірів іконок, радіусів скруглення й навіть ширини бордерів — ідея "одного набору узгоджених чисел на весь проєкт" ширша за самі відступи. Коли в CSS-файлі зустрічаються випадкові числа на кшталт <code>margin: 13px</code>, це майже завжди ознака того, що хтось "на око" підібрав значення, а не звірився зі шкалою.</p>
       </HelpBox>
 
       <div className="cl-btn-row">
@@ -254,6 +262,7 @@ function GridTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Формула: (ширина контейнера − 2×margin − gutter×(колонок−1)) / колонок. Margin віднімається двічі (з обох боків), а gutter — на один менше за кількість колонок, бо проміжок потрібен лише МІЖ колонками, а не навколо кожної.</p>
         <p>Це той самий розрахунок, який робить браузер під капотом для CSS Grid (<code>grid-template-columns: repeat(N, 1fr)</code>) чи Flexbox-сітки — тут він явний, тому можна швидко перевірити, чи влізе елемент фіксованої ширини (наприклад, банер 300px) рівно в 2 чи 3 колонки без дробових пікселів.</p>
+        <p>Відʼємна ширина колонки (помітка нижче) — не теоретичний випадок: вона трапляється, коли додають забагато колонок або занадто широкий gutter для вузького контейнера, наприклад намагаючись утиснути 12-колонкову десктопну сітку в мобільний viewport без зміни параметрів. Це корисний швидкий тест перед тим, як переносити сітку на менший екран.</p>
       </HelpBox>
 
       <NumField label="Ширина контейнера" value={cfg.containerWidth} onChange={(v) => patch('grid', { containerWidth: v })} suffix="px" min={1} />
@@ -284,6 +293,45 @@ function GridTab({ state, patch, toastApi }) {
   )
 }
 
+const LOREM = 'Довжина рядка — одна з найнедооціненіших змінних у типографіці. Коли рядок занадто довгий, око втрачає позицію при переході на новий рядок, а коли занадто короткий — читання перетворюється на серію різких стрибків погляду, що швидко втомлює навіть при цікавому тексті. Цей абзац навмисно довгий, щоб показати, як саме текст переноситься при заданій ширині.'
+
+function ReadabilityTab({ state, patch, toastApi }) {
+  const cfg = state.readability
+  const widthPx = estimateLineWidthPx(cfg.cpl, cfg.fontSizePx)
+  const rating = readabilityRating(cfg.cpl)
+  const css = `max-width: ${cfg.cpl}ch;\nfont-size: ${cfg.fontSizePx}px;\nline-height: ${cfg.lineHeight};`
+  return (
+    <div>
+      <p className="cl-tab-desc">Скільки символів в одному рядку тексту — ключовий, але рідко прорахований фактор зручності читання довгих абзаців.</p>
+      <HelpBox>
+        <p>Орієнтир 45–75 символів на рядок (CPL, characters per line) — класична типографічна рекомендація, що тримається десятиліттями й однаково працює в друкованій книзі та на вебсторінці. Вузькі колонки (газети, мобільні екрани) тяжіють до нижньої межі, широкі текстові блоки на десктопі — до верхньої.</p>
+        <p>CSS-одиниця <code>ch</code> — буквально ширина символу "0" у поточному шрифті, тому <code>max-width: 65ch</code> — це майже дослівний переклад "приблизно 65 символів" у CSS, без жодних обчислень вручну. Px-еквівалент нижче — орієнтовний (середній символ ≈ половина розміру шрифту), бо реальна ширина залежить від конкретного шрифту й суміші літер у тексті.</p>
+        <p>Довжина рядка тісно повʼязана з line-height (міжрядковим інтервалом): довшим рядкам потрібен більший інтервал, щоб око впевненіше знаходило початок наступного рядка — короткі рядки можна "стиснути" сильніше без втрати читабельності.</p>
+      </HelpBox>
+
+      <NumField label="Символів у рядку" value={cfg.cpl} onChange={(v) => patch('readability', { cpl: Math.max(10, Math.round(v)) })} suffix="CPL" min={10} />
+      <NumField label="Розмір шрифту" value={cfg.fontSizePx} onChange={(v) => patch('readability', { fontSizePx: v })} suffix="px" min={8} />
+      <NumField label="Line-height" value={cfg.lineHeight} onChange={(v) => patch('readability', { lineHeight: v })} min={1} />
+
+      <div className="cl-tags" style={{ marginTop: 10 }}>
+        <span className={'cl-badge ' + (rating.key === 'ideal' ? 'pass' : rating.key === 'wide' ? 'fail' : '')} style={rating.key === 'narrow' ? { background: '#FCECC8', color: '#8A5A00' } : undefined}>
+          {rating.label}
+        </span>
+        <span className="cl-tag">≈ {widthPx.toFixed(0)}px</span>
+      </div>
+      <p className="cl-tab-desc">{rating.hint}</p>
+
+      <div className="cl-section-title">Превʼю</div>
+      <div className="dc-fluid-preview">
+        <p style={{ maxWidth: `${cfg.cpl}ch`, fontSize: cfg.fontSizePx, lineHeight: cfg.lineHeight, margin: 0 }}>{LOREM}</p>
+      </div>
+
+      <div className="cl-picker-top"><button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button></div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     pxrem: { px: 16, rem: 1, rootPx: 16 },
@@ -293,6 +341,7 @@ function defaultState() {
     duration: { ms: 500, frames: 30, fps: 60 },
     spacing: { base: 8, ratio: 1, steps: 8, mode: 'linear' },
     grid: { containerWidth: 1200, columns: 12, gutter: 24, margin: 40 },
+    readability: { cpl: 65, fontSizePx: 18, lineHeight: 1.5 },
   }
 }
 
@@ -343,7 +392,7 @@ export default function DesignCalcLab() {
   return (
     <LabShell
       title="Design Calculator Lab"
-      subtitle="px↔rem, DPI/PPI, fluid typography, розмір файлу, мс↔кадри, шкала відступів, колонкова сітка."
+      subtitle="px↔rem, DPI/PPI, fluid typography, розмір файлу, мс↔кадри, шкала відступів, колонкова сітка, довжина рядка."
       icon="🧮"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -374,6 +423,7 @@ export default function DesignCalcLab() {
           {tab === 'duration' && <DurationTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'spacing' && <SpacingTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'grid' && <GridTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'readability' && <ReadabilityTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>
