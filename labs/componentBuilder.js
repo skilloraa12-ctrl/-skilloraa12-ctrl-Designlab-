@@ -176,6 +176,38 @@ export function cardCss(cfg) {
   ].join('\n')
 }
 
+// Alerts reuse the same semantic colors as badges (success/warning/error)
+// but as a full-width banner with an icon and optional dismiss button —
+// a different UI pattern (interruptive, page-level) from an inline label.
+export const ALERT_VARIANTS = [
+  { key: 'info', label: 'Info', icon: 'ℹ️', bg: '#E4E9FB', border: '#B7C4F2', color: '#1F3A8A' },
+  { key: 'success', label: 'Success', icon: '✓', bg: '#D7F2E3', border: '#9FDDB8', color: '#146C43' },
+  { key: 'warning', label: 'Warning', icon: '⚠️', bg: '#FCECC8', border: '#F3CE82', color: '#8A5A00' },
+  { key: 'error', label: 'Error', icon: '✕', bg: '#FBDADA', border: '#F2A7A7', color: '#B42318' },
+]
+
+export function alertStyle(cfg, variant) {
+  return {
+    background: variant.bg, color: variant.color, border: `1px solid ${variant.border}`,
+    borderRadius: cfg.radius, padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 10,
+  }
+}
+
+export function alertCss(cfg) {
+  return ALERT_VARIANTS.map((v) => [
+    `.alert-${v.key} {`,
+    `  background: ${v.bg};`,
+    `  color: ${v.color};`,
+    `  border: 1px solid ${v.border};`,
+    `  border-radius: ${cfg.radius}px;`,
+    `  padding: 12px 16px;`,
+    `  display: flex;`,
+    `  align-items: flex-start;`,
+    `  gap: 10px;`,
+    `}`,
+  ].join('\n')).join('\n\n')
+}
+
 export const CHECK_STATES = ['default', 'hover', 'focus', 'checked', 'disabled']
 
 export function checkboxStyle(cfg, state) {

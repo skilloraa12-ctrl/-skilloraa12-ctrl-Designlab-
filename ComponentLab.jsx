@@ -13,6 +13,7 @@ import {
   BADGE_VARIANTS, badgeStyle, badgeCss,
   CARD_STATES, cardStyle, cardCss,
   CHECK_STATES, checkboxStyle, checkboxCss, radioStyle, radioCss,
+  ALERT_VARIANTS, alertStyle, alertCss,
 } from './labs/componentBuilder.js'
 
 const TABS = [
@@ -22,6 +23,7 @@ const TABS = [
   { key: 'badge', icon: '🏷️', label: 'Бейдж' },
   { key: 'card', icon: '🗂️', label: 'Картка' },
   { key: 'check', icon: '☑️', label: 'Чекбокс/Радіо' },
+  { key: 'alert', icon: '🔔', label: 'Alert' },
 ]
 
 const STATE_LABELS = {
@@ -69,6 +71,7 @@ function ButtonTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Кожен стан — окремий CSS-селектор (<code>:hover</code>, <code>:focus-visible</code>, <code>:active</code>, <code>:disabled</code>), який браузер застосовує автоматично. Тут вони показані поруч, щоб відразу бачити всі варіанти.</p>
         <p>Важливо: <code>:focus-visible</code>, а не просто <code>:focus</code> — перший показує кільце фокусу лише при навігації клавіатурою (Tab), а не при звичайному кліку мишею. Це усуває стару скаргу дизайнерів "чому рамка зʼявляється при кліку" й водночас зберігає доступність для клавіатурних користувачів.</p>
+        <p>Розмір (sm/md/lg) — не просто про естетику: мінімальна сенсорна ціль за рекомендаціями WCAG 2.5.5 — 44×44px, тож «SM» із компактним паддингом годиться лише для щільних desktop-інтерфейсів з мишею, а для мобільних кнопок і сенсорних екранів варто орієнтуватись на «MD» чи «LG».</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -107,6 +110,7 @@ function InputTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Focus ring — акцентна рамка навколо поля при фокусі — критично важлива для доступності: вона показує, який елемент активний при навігації клавіатурою (Tab).</p>
         <p>Стан "Заповнений" (filled) навмисно показаний окремо від "Звичайного": порожнє поле з плейсхолдером і поле з реальним значенням мають виглядати по-різному (тут — темніша рамка), інакше користувач не завжди зрозуміє, чи він вже щось ввів, особливо при швидкому скролі довгої форми.</p>
+        <p>У цьому наборі станів навмисно немає окремого "Error" — на практиці стан помилки валідації зазвичай додається поверх будь-якого з цих станів (червона рамка + текст помилки під полем), а не замінює їх, тож коректніше показувати error як комбінацію "цей стан + помилка", а не сьомий окремий варіант.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -147,6 +151,7 @@ function ToggleTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Позиція кружечка (knob) кодує стан: зліва — вимкнено, справа — увімкнено. Колір доріжки змінюється разом з позицією, тому стан зрозумілий навіть без підпису.</p>
         <p>Перемикач проти чекбоксу: toggle підходить для налаштувань, які діють негайно (режим "темна тема", "сповіщення увімкнено") — дія застосовується в момент кліку. Чекбокс краще для форм, де вибір підтверджується окремою кнопкою "Зберегти" — toggle у формі зі збереженням уводить в оману, бо виглядає як миттєва дія.</p>
+        <p>Семантично toggle — це <code>&lt;input type="checkbox" role="switch"&gt;</code>, а не окремий HTML-елемент: візуально його роблять схожим на перемикач через ту саму техніку приховування нативного input і стилізації сусіднього елемента, що й у чекбоксів/радіо (вкладка «Чекбокс/Радіо» нижче).</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -181,6 +186,7 @@ function BadgeTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Семантичний колір бейджа — це теж свого роду «стан», тільки не інтерактивний: він одразу повідомляє значення (успішно / потребує уваги / помилка) без додаткового тексту.</p>
         <p>Не покладайтесь лише на колір: приблизно 8% чоловіків мають якусь форму дальтонізму й можуть не розрізнити success (зелений) і error (червоний) при слабкому контрасті. Додайте іконку (✓ / ⚠ / ✕) або текстовий лейбл поруч із кольором — колір підсилює значення, а не єдиний носій інформації.</p>
+        <p>Форма «pill» (повністю скруглені кути) проти звичайного «radius» — суто стилістичний вибір, не функціональний: pill-форма читається трохи «м'якше» й частіше трапляється в соціальних/медіа-застосунках, тоді як помірний радіус (4-8px) — типовий вибір для бізнес-/продуктивних інтерфейсів, де тон стриманіший.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Радіус<input type="range" min={0} max={20} value={cfg.radius} onChange={(e) => patch('badge', { radius: parseInt(e.target.value, 10) })} disabled={cfg.pill} /><span>{cfg.pill ? 'pill' : `${cfg.radius}px`}</span></label></div>
@@ -211,6 +217,7 @@ function CardTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Підняття картки (box-shadow + зсув вгору) при наведенні — звичний сигнал «цей елемент клікабельний».</p>
         <p>Якщо картка НЕ клікабельна (просто контейнер для вмісту), не додавайте їй hover-ефект — це створює хибне очікування кліку й дратує, коли нічого не відбувається. Залиште підняття тільки для карток, обгорнутих у посилання чи кнопку, адже hover-стан — це обіцянка інтерактивності, яку потрібно виконати.</p>
+        <p>Стан Focus тут такий самий принципово важливий, як і Hover, хоча про нього частіше забувають: якщо картка — клікабельне посилання, людина, що керує клавіатурою (Tab), має бачити те саме візуальне підтвердження "я зараз тут", що й людина з мишею отримує через hover.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -247,6 +254,7 @@ function CheckTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Форма — головна підказка значення: квадрат = «можна вибрати кілька» (чекбокс), коло = «лише один варіант із групи» (радіо). Міняти ці форми місцями — класична помилка, яка плутає користувача ще до того, як він прочитає підписи.</p>
         <p>Для обох компонентів справжній HTML-елемент (<code>&lt;input type="checkbox"&gt;</code>/<code>radio</code>) зазвичай ховають візуально (не <code>display: none</code>, а через clip/opacity), а стилізований квадрат чи коло — це сусідній елемент, синхронізований через CSS-селектор <code>:checked + .box</code>. Це зберігає нативну доступність (клавіатура, скрінрідери) при повністю кастомному вигляді.</p>
+        <p>Чому не можна просто сховати через <code>display: none</code>? Браузер виключає приховані так елементи з послідовності табуляції й зі списку елементів, які озвучує скрінрідер — фактично компонент стане недоступним з клавіатури. Техніка "visually hidden" (нульовий розмір, <code>clip-path</code>, <code>opacity: 0</code>, але без <code>display: none</code>) лишає елемент технічно присутнім і фокусованим, просто невидимим на екрані.</p>
       </HelpBox>
 
       <div className="cl-picker-top">
@@ -281,6 +289,38 @@ function CheckTab({ state, patch, toastApi }) {
   )
 }
 
+function AlertTab({ state, patch, toastApi }) {
+  const cfg = state.alert
+  const css = alertCss(cfg)
+  return (
+    <div>
+      <p className="cl-tab-desc">Alert (банер) — повноширинне повідомлення на рівні сторінки чи форми: info, success, warning, error.</p>
+      <HelpBox>
+        <p>На відміну від бейджа (маленький інлайн-лейбл усередині іншого контенту), alert — самостійний блок, який зазвичай займає всю ширину контейнера й привертає увагу одразу при появі: підтвердження дії, помилка форми, системне попередження.</p>
+        <p>Кожен варіант має свою іконку поруч із кольором (а не лише колір) — та сама причина доступності, що й для бейджів: колір підсилює сенс, іконка (і текст) несе сам сенс. Рамка (border) трохи темнішого відтінку за фон додає чіткості краю навіть при слабкому контрасті фону з рештою сторінки.</p>
+        <p>Важливе практичне рішення — чи має alert кнопку закриття (✕). Error/warning про стан форми зазвичай ховати не можна (вони мають зникнути автоматично, коли помилку виправлено), а info/success — радше можна: 5-секундний тост чи банер з явним хрестиком, який користувач може прибрати, коли прочитав.</p>
+      </HelpBox>
+
+      <div className="cl-editrow"><label>Радіус<input type="range" min={0} max={20} value={cfg.radius} onChange={(e) => patch('alert', { radius: parseInt(e.target.value, 10) })} /><span>{cfg.radius}px</span></label></div>
+
+      <div className="cl-section-title">Варіанти</div>
+      <div className="l3d-object-list">
+        {ALERT_VARIANTS.map((v) => (
+          <div key={v.key} style={alertStyle(cfg, v)}>
+            <span>{v.icon}</span>
+            <div>
+              <strong>{v.label}</strong>
+              <div style={{ fontSize: 13, opacity: 0.85 }}>Приклад тексту повідомлення для варіанта «{v.label}».</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <CssOut css={css} toastApi={toastApi} />
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     button: { bg: '#3E37E0', color: '#FFFFFF', radius: 10, size: 'md' },
@@ -289,6 +329,7 @@ function defaultState() {
     badge: { radius: 6, pill: false },
     card: { accent: '#3E37E0', radius: 14 },
     check: { accent: '#3E37E0' },
+    alert: { radius: 10 },
   }
 }
 
@@ -339,7 +380,7 @@ export default function ComponentLab() {
   return (
     <LabShell
       title="Component Lab"
-      subtitle="UI-компоненти в усіх станах: default, hover, focus, disabled, checked — поруч, для швидкого порівняння."
+      subtitle="UI-компоненти в усіх станах: default, hover, focus, disabled, checked — і банери alert — поруч, для швидкого порівняння."
       icon="🧩"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -369,6 +410,7 @@ export default function ComponentLab() {
           {tab === 'badge' && <BadgeTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'card' && <CardTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'check' && <CheckTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'alert' && <AlertTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>
