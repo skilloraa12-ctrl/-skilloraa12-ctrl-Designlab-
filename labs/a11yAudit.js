@@ -82,6 +82,29 @@ export function tabOrderIssues(items) {
   return issues
 }
 
+// CSS "order" (flex/grid) changes the VISUAL position of an element
+// without moving it in the DOM — but screen readers (and Tab, by
+// default) still follow DOM order, not visual order. A mismatch between
+// DOM position and visual position is a common, easy-to-miss bug: sighted
+// mouse users see one sequence, screen-reader/keyboard users experience
+// another.
+export function visualOrder(items) {
+  return [...items]
+    .map((it, domIndex) => ({ ...it, domIndex }))
+    .sort((a, b) => a.order - b.order || a.domIndex - b.domIndex)
+}
+
+export function readingOrderIssues(items) {
+  const visual = visualOrder(items)
+  const issues = []
+  visual.forEach((it, visualIndex) => {
+    if (it.domIndex !== visualIndex) {
+      issues.push(`«${it.name}» видно ${visualIndex + 1}-м за рахунком, але в DOM (і для скрінрідера) він ${it.domIndex + 1}-й — порядок не збігається.`)
+    }
+  })
+  return issues
+}
+
 export const CHECKLIST_ITEMS = [
   { id: 'lang', group: 'Структура', label: 'У <html> вказано атрибут lang' },
   { id: 'landmarks', group: 'Структура', label: 'Є landmark-теги: header, nav, main, footer' },

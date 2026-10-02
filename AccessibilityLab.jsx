@@ -10,6 +10,7 @@ import {
   TARGET_MIN_AA, TARGET_MIN_AAA, checkTargetSize,
   validateHeadings, validateAlt, checkFlashSafety, CHECKLIST_ITEMS,
   computeTabOrder, tabOrderIssues,
+  visualOrder, readingOrderIssues,
 } from './labs/a11yAudit.js'
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
   { key: 'labels', icon: '🏷️', label: 'Підписи форм' },
   { key: 'motion', icon: '⚡', label: 'Мигання' },
   { key: 'taborder', icon: '⇥', label: 'Tab-порядок' },
+  { key: 'reading', icon: '👁️', label: 'Порядок читання' },
   { key: 'checklist', icon: '✅', label: 'Чекліст' },
 ]
 
@@ -52,6 +54,7 @@ function TargetTab({ state, patch }) {
       <HelpBox>
         <p>WCAG 2.5.8 (AA) вимагає мінімум 24×24px, WCAG 2.5.5 (AAA) рекомендує 44×44px. Виняток — коли елемент вбудований у текст або має еквівалент більшого розміру поруч.</p>
         <p>44px не випадкове число: це приблизний середній розмір подушечки вказівного пальця дорослої людини на екрані телефону. Типова помилка — іконки "✕" закриття модалки чи "⋮" меню роблять 16-20px заради "охайного" вигляду, і саме вони найчастіше викликають промахи при натисканні на малих екранах.</p>
+        <p>Лайфхак для дизайнерів: сам візуальний елемент (іконка) може лишатись маленьким (16-20px), якщо навколо нього є достатній невидимий padding, що розширює клікабельну/тач-область до 44×44px — WCAG перевіряє саме інтерактивну зону, а не розмір намальованої графіки всередині неї.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Ширина<input type="range" min={8} max={64} value={width} onChange={(e) => patch('target', { width: parseInt(e.target.value, 10) })} /><span>{width}px</span></label></div>
@@ -91,6 +94,7 @@ function HeadingsTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Заголовки формують структуру, якою скрінрідери дають користувачам "перестрибувати" по сторінці. Якщо після H2 одразу йде H4, людина, що навігує по заголовках, не зрозуміє, що пропущено H3.</p>
         <p>Не плутайте рівень заголовка з розміром шрифту — це різні речі. H1 не зобовʼязаний бути найбільшим текстом на сторінці (можна зменшити його CSS-ом), а великий текст не стає заголовком лише через великий <code>font-size</code>. Скрінрідер орієнтується на тег (<code>h1</code>–<code>h6</code>), а не на те, як текст виглядає візуально.</p>
+        <p>Скрінрідери дають "режим навігації по заголовках" (наприклад, клавіша H у NVDA/JAWS) — список усіх H1-H6 на сторінці, схожий на зміст книги. Саме тому пропущений рівень справді заважає: людина бачить у списку H2, потім одразу H4, і не розуміє — чи це помилка верстки, чи вона пропустила якийсь розділ.</p>
       </HelpBox>
 
       <div className="a11y-heading-list">
@@ -131,6 +135,7 @@ function AltTab({ state, patch }) {
       <HelpBox>
         <p>Декоративні зображення (орнаменти, іконки-прикраси) повинні мати <code>alt=""</code>, щоб скрінрідер їх пропускав. Інформативні — повинні мати опис того, що на зображенні, а не його назву файлу чи слово "картинка".</p>
         <p>Третій, менш очевидний випадок — функціональні зображення: іконка в кнопці без тексту (наприклад, іконка кошика на кнопці "Додати в кошик" без підпису). Тут alt описує не зображення, а дію кнопки — "Додати в кошик", а не "іконка кошика". Запитайте себе: "що скрінрідер має сказати, щоб людина зрозуміла функцію елемента?"</p>
+        <p>Ще одна поширена помилка — писати в alt сам факт "зображення" чи "фото": слово "картинка" чи "photo" зайве, бо скрінрідер і так оголошує елемент як "зображення" перед тим, як прочитати alt-текст. Писати "фото кота" замість просто "кіт, що спить на підвіконні" — це дублювання інформації, яку скрінрідер вже й так дає.</p>
       </HelpBox>
 
       <div className="a11y-heading-list">
@@ -169,6 +174,7 @@ function LabelsTab({ state, patch }) {
       <HelpBox>
         <p>Placeholder — не заміна label: він зникає під час вводу і не завжди озвучується скрінрідерами так само надійно. Кожне поле повинно мати <code>&lt;label for="..."&gt;</code> або <code>aria-label</code>.</p>
         <p>Бонус справжнього <code>&lt;label&gt;</code>, про який часто забувають: клік по тексту підпису фокусує саме поле (якщо <code>for</code> збігається з <code>id</code> інпута). Це збільшує клікабельну область — особливо помітно для чекбоксів і радіокнопок, де сам квадратик/кружечок маленький, а підпис поруч — великий і зручний для кліку.</p>
+        <p>Коли візуальний label з якихось причин небажаний (наприклад, поле пошуку з лише іконкою лупи), не прибирайте label повністю — замініть його на <code>aria-label="Пошук"</code> прямо на інпуті: це дає скрінрідеру той самий текст, не займаючи візуального місця на екрані.</p>
       </HelpBox>
 
       <div className="a11y-heading-list">
@@ -217,6 +223,7 @@ function MotionTab({ state, patch }) {
       <HelpBox>
         <p>WCAG 2.3.1 забороняє контент, що мигає частіше за 3 рази за секунду (загальний поріг спалаху). Демо нижче навмисно обмежене 5 Гц і приглушеними кольорами — для безпеки.</p>
         <p>Це стосується не лише "дизайнерських" ефектів: автоматичні каруселі з різким фейдом, GIF-банери реклами й навіть надто швидка loading-анімація спінера можуть випадково перетнути цей поріг. Завжди поважайте <code>prefers-reduced-motion</code> — медіа-запит, який система вмикає для людей, що явно попросили менше руху на екрані (не тільки через епілепсію, а й через вестибулярні розлади чи укачування).</p>
+        <p>Правило WCAG насправді трохи складніше за просто "3 Гц": воно також враховує розмір зони, що мигає (менше 10% екрана — ризик нижчий) і контраст кольорів спалаху. Але простий орієнтир "не більше 3 різких перемикань на секунду, і без різких контрастних кольорів типу чорний↔червоний" покриває переважну більшість реальних випадків.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Частота<input type="range" min={1} max={5} step={0.5} value={hz} onChange={(e) => patch('motion', { hz: parseFloat(e.target.value) })} /><span>{hz} Гц</span></label></div>
@@ -300,6 +307,10 @@ function ChecklistTab({ state, patch }) {
   return (
     <div>
       <p className="cl-tab-desc">Швидкий чекліст базових вимог доступності — пройдіться перед релізом інтерфейсу.</p>
+      <HelpBox>
+        <p>Цей чекліст — не повна заміна аудиту доступності, а швидкий самоконтроль: він покриває найчастіші й найдешевші для виправлення проблеми (ті, що зазвичай пропускають саме через те, що про них просто забули, а не через технічну складність).</p>
+        <p>Пункти згруповані за тим самим принципом, що й решта вкладок цієї лабораторії — Структура (заголовки/landmarks), Навігація (клавіатура/фокус/tab-порядок), Контент (alt/labels/помилки), Рух і час (анімації), Адаптивність (зум/цілі) — тож кожен пункт тут можна "перевірити на практиці" в одній із сусідніх вкладок, а не лише абстрактно позначити галочкою.</p>
+      </HelpBox>
 
       <div className="a11y-progress-track"><div className="a11y-progress-fill" style={{ width: `${(doneCount / total) * 100}%` }} /></div>
       <p className="cl-tab-desc">{doneCount} / {total} виконано</p>
@@ -321,6 +332,59 @@ function ChecklistTab({ state, patch }) {
   )
 }
 
+function ReadingOrderTab({ state, patch }) {
+  const items = state.reading.items
+  const visual = visualOrder(items)
+  const issues = readingOrderIssues(items)
+  function setOrder(id, order) {
+    patch('reading', { items: items.map((it) => (it.id === id ? { ...it, order } : it)) })
+  }
+  return (
+    <div>
+      <p className="cl-tab-desc">CSS-властивість <code>order</code> (у flex/grid) міняє, ДЕ елемент видно на екрані — але не міняє, де він стоїть у HTML-коді.</p>
+      <HelpBox>
+        <p>Скрінрідер і стандартна клавіатурна навігація (Tab) ігнорують <code>order</code> — вони йдуть за порядком у DOM. Якщо дизайнер переставив блоки візуально через <code>order</code>, не змінивши їх місце в HTML, зряча людина з мишею бачить один порядок, а людина зі скрінрідером чи клавіатурою — зовсім інший.</p>
+        <p>Класичний приклад — мобільна версія картки товару, де ціну візуально піднімають над назвою через <code>order: -1</code> для кращого вигляду, а в HTML назва й далі йде першою. Для зрячого мишею користувача це непомітно, а скрінрідер оголосить "Назва, потім Ціна", хоча на екрані людина бачить "Ціна, потім Назва" — неспівпадіння плутає, коли хтось намагається описати елемент іншій людині по телефону.</p>
+        <p>Нижче — список блоків у порядку DOM (зверху вниз, як у коді). Змініть «order» для будь-якого з них і подивіться, як розходиться візуальний порядок (ліва колонка) і порядок DOM/скрінрідера (права, незмінна).</p>
+      </HelpBox>
+
+      <div className="a11y-heading-list">
+        {items.map((it) => (
+          <div key={it.id} className="a11y-field-row">
+            <span className="a11y-heading-sample">{it.name}</span>
+            <div className="cl-btn-row">
+              {[-1, 0, 1, 2, 3].map((ov) => (
+                <button key={ov} className={'harmony-btn' + (it.order === ov ? ' active' : '')} onClick={() => setOrder(it.id, ov)}>
+                  {ov}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="cl-section-title">Порівняння</div>
+      <div className="l3d-template-grid">
+        <div className="l3d-template-card">
+          <div className="cl-tab-desc" style={{ fontWeight: 600 }}>👁 Візуально (CSS order)</div>
+          <ol className="a11y-taborder-result">
+            {visual.map((it) => <li key={it.id}>{it.name}</li>)}
+          </ol>
+        </div>
+        <div className="l3d-template-card">
+          <div className="cl-tab-desc" style={{ fontWeight: 600 }}>📄 DOM / скрінрідер</div>
+          <ol className="a11y-taborder-result">
+            {items.map((it) => <li key={it.id}>{it.name}</li>)}
+          </ol>
+        </div>
+      </div>
+
+      <div className="cl-section-title">Результат перевірки</div>
+      <IssueList issues={issues} okMessage="Візуальний порядок збігається з порядком DOM" />
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     target: { width: 32, height: 32 },
@@ -336,6 +400,12 @@ function defaultState() {
       { id: nextId(), name: 'Кнопка "Профіль"', tabindex: 0 },
     ] },
     checklist: { checked: {} },
+    reading: { items: [
+      { id: nextId(), name: 'Заголовок товару', order: 0 },
+      { id: nextId(), name: 'Ціна', order: 0 },
+      { id: nextId(), name: 'Кнопка "Купити"', order: 0 },
+      { id: nextId(), name: 'Опис', order: 0 },
+    ] },
   }
 }
 
@@ -386,7 +456,7 @@ export default function AccessibilityLab() {
   return (
     <LabShell
       title="Accessibility Lab"
-      subtitle="Перевірка інтерфейсу: розмір цілей, ієрархія заголовків, alt-текст, підписи форм, безпека мигання, Tab-порядок і загальний чекліст."
+      subtitle="Перевірка інтерфейсу: розмір цілей, ієрархія заголовків, alt-текст, підписи форм, безпека мигання, Tab-порядок, порядок читання (DOM vs CSS order) і загальний чекліст."
       icon="🔓"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -416,6 +486,7 @@ export default function AccessibilityLab() {
           {tab === 'labels' && <LabelsTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'motion' && <MotionTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'taborder' && <TabOrderTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'reading' && <ReadingOrderTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'checklist' && <ChecklistTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
