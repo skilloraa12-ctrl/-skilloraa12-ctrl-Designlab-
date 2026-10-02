@@ -63,6 +63,28 @@ export function buildCheckerboardCss({ size, color, bg }) {
   ].join('\n')
 }
 
+// Graph-paper / canvas grid: two pairs of linear-gradient "line" layers,
+// a thin minor grid repeating every cellSize, and a bolder major grid
+// repeating every cellSize*majorEvery, painted on top of it. This is the
+// same two-tier grid you see as the canvas background in Figma,
+// Photoshop or a printed engineering notebook.
+export function buildGraphPaperCss({ cellSize, majorEvery, lineWidth, color, majorColor, bg }) {
+  const majorSize = cellSize * majorEvery
+  return [
+    `background-color: ${bg};`,
+    `background-image:`,
+    `  linear-gradient(${majorColor} ${lineWidth}px, transparent ${lineWidth}px),`,
+    `  linear-gradient(90deg, ${majorColor} ${lineWidth}px, transparent ${lineWidth}px),`,
+    `  linear-gradient(${color} ${lineWidth}px, transparent ${lineWidth}px),`,
+    `  linear-gradient(90deg, ${color} ${lineWidth}px, transparent ${lineWidth}px);`,
+    `background-size:`,
+    `  ${majorSize}px ${majorSize}px,`,
+    `  ${majorSize}px ${majorSize}px,`,
+    `  ${cellSize}px ${cellSize}px,`,
+    `  ${cellSize}px ${cellSize}px;`,
+  ].join('\n')
+}
+
 export function buildTrianglesSvg({ cellSize, cols, rows, colorA, colorB, bg }) {
   const w = cellSize * cols
   const h = cellSize * rows
