@@ -11,6 +11,7 @@ import {
   EASING_PRESETS, sampleCubicBezier,
   defaultKeyframeSteps, buildKeyframesCss,
   staggerDelays, buildScrollRevealSnippet,
+  LOADER_TYPES, buildLoaderCss,
 } from './labs/motionBuilder.js'
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
   { key: 'easing', icon: '📈', label: 'Easing' },
   { key: 'stagger', icon: '☰', label: 'Stagger' },
   { key: 'scroll', icon: '🖱️', label: 'Scroll Reveal' },
+  { key: 'loaders', icon: '⏳', label: 'Завантаження' },
 ]
 
 function copy(text) {
@@ -60,6 +62,7 @@ function TransitionsTab({ state, patch, toastApi }) {
       <HelpBox>
         <p><code>transition</code> анімує зміну CSS-властивості між двома станами — тут це перехід від прихованого до видимого при натисканні Play.</p>
         <p>Анімуйте лише <code>opacity</code> і <code>transform</code> — браузер рахує їх на GPU без перерахунку layout, тож анімація лишається плавною навіть на слабких пристроях. Анімація <code>width</code>, <code>top</code> чи <code>margin</code> змушує браузер перераховувати позиції всіх сусідніх елементів на кожному кадрі — звідси "рваний" рух.</p>
+        <p>Затримка (delay) корисна не лише для декоративного ефекту — вона дозволяє "узгодити" кілька елементів, що зʼявляються послідовно (наприклад, спершу заголовок, через 100мс — підзаголовок, ще через 100мс — кнопка), не вдаючись до повноцінного stagger-списку (вкладка «Stagger» нижче — саме для таких послідовностей з багатьма однаковими елементами).</p>
       </HelpBox>
 
       <div className="cl-section-title">Тип</div>
@@ -122,6 +125,7 @@ function KeyframesTab({ state, patch, toastApi }) {
       <HelpBox>
         <p>Кожна точка — стан елемента (прозорість, зсув, масштаб, обертання) на певному відсотку тривалості. Браузер плавно інтерполює між сусідніми точками.</p>
         <p>Keyframes зручні там, де <code>transition</code> не вистачає — наприклад, "підстрибування" кнопки після кліку: точка на 0% (норма) → точка на 40% (збільшена) → точка на 70% (трохи менша) → точка на 100% (норма). Такий рух із "перельотом" у двох напрямках просто неможливо описати одним <code>transition</code> між двома станами.</p>
+        <p>Прапорець «Loop» вмикає <code>animation-iteration-count: infinite</code> — корисно для постійних декоративних циклів (плаваючі елементи, пульсація іконки), але для одноразових акцентів (підтвердження дії, поява повідомлення) лишайте вимкненим, інакше анімація ніколи не зупиниться й почне відволікати, а не підкреслювати момент.</p>
       </HelpBox>
 
       <div className="l3d-object-list">
@@ -174,6 +178,7 @@ function EasingTab({ state, patch }) {
       <HelpBox>
         <p>Графік показує прогрес анімації (вісь Y) залежно від часу (вісь X). "Spring" і "Bounce" виходять за межі 0–1 — елемент на мить "перелітає" ціль, що й дає відчуття пружності.</p>
         <p>Правило вибору: "Ease Out" — для елементів, що зʼявляються (вони мають різко стартувати й плавно зупинитись, як природний рух); "Ease In" — для тих, що зникають; "Spring"/"Bounce" — для акцентних UI-реакцій (модалки, тултіпи, лайк-кнопки), де трохи "живого" перельоту підсилює відчуття відгуку. "Linear" майже ніколи не виглядає природно для руху — залиште його для прогрес-барів і обертання лоадерів.</p>
+        <p>Cubic-bezier easing — це лише наближення «пружності» за допомогою двох контрольних точок кривої; справжня фізична пружина (маса + жорсткість + демпфування, як у Framer Motion чи iOS) рахується окремим диференціальним рівнянням і може «дотягувати» коливання довше або коротше за фіксовану тривалість. Для більшості інтерфейсних переходів cubic-bezier-наближення (як-от пресет «Spring» тут) виглядає практично нерозрізненим і значно простіше в підтримці чистим CSS.</p>
       </HelpBox>
 
       <div className="cl-section-title">Пресет</div>
@@ -208,6 +213,7 @@ function StaggerTab({ state, patch }) {
       <HelpBox>
         <p>Кожен наступний елемент отримує <code>transition-delay</code> на крок більший за попередній — весь список "каскадом" входить в кадр.</p>
         <p>Крок затримки 50–100мс читається як "природна черга" і не сповільнює сприйняття; при 200мс+ список починає здаватись "повільним", особливо якщо елементів багато (10 елементів × 200мс = 2 секунди лише на останній). Для довгих списків (картки товарів, стрічка) обмежте stagger першими 5–6 елементами, а решту показуйте без затримки.</p>
+        <p>У чистому CSS без JS той самий ефект роблять через <code>:nth-child()</code> і функцію <code>calc()</code> у значенні <code>animation-delay</code> (приклад — у коді нижче) — React тут лише обчислює конкретні мілісекунди для демонстрації, а в реальному проєкті з фіксованою кількістю елементів CSS-формула працює без жодного JavaScript.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Кількість<input type="range" min={3} max={10} value={count} onChange={(e) => patch('stagger', { count: parseInt(e.target.value, 10) })} /><span>{count}</span></label></div>
@@ -271,6 +277,7 @@ function ScrollRevealTab({ state, patch, toastApi }) {
         <p>На відміну від інших вкладок, тут анімацію запускає не клік, а сам факт, що елемент заїхав у видиму область екрана. Для цього потрібен <code>IntersectionObserver</code> — браузерний API, який повідомляє, коли елемент перетинає межі контейнера (або viewport), без постійного опитування позиції скролу (що було б повільно і "сіпалось" би).</p>
         <p>Поріг (threshold) — яка частка елемента має бути видно, щоб спрацювала поява: 0 — досить одного пікселя, 1 — елемент має бути видимий повністю. Для карток контенту зазвичай достатньо 0.2–0.4, щоб анімація стартувала трохи заздалегідь і виглядала плавно, а не "вистрибувала" в останній момент.</p>
         <p>Прапорець "Повторювати" вирішує типову дилему дизайну: показати ефект лише один раз (елемент назавжди лишається видимим після першої появи — менше відволікає при скролі вгору-вниз) чи ховати елемент знову щоразу, як він виходить з екрана (більш "живо", але може набриднути при частому скролі).</p>
+        <p>Важливо для доступності: ефект reveal-on-scroll варто вимикати (або робити миттєвим) для людей із налаштуванням <code>prefers-reduced-motion: reduce</code> в ОС — медіа-запит <code>@media (prefers-reduced-motion: reduce)</code> у CSS дозволяє прибрати transition саме для таких користувачів, не змінюючи поведінку для решти.</p>
       </HelpBox>
 
       <div className="cl-section-title">Тип і напрямок</div>
@@ -313,6 +320,45 @@ function ScrollRevealTab({ state, patch, toastApi }) {
   )
 }
 
+function LoadersTab({ state, patch, toastApi }) {
+  const { type, durationMs, color } = state.loaders
+  const css = buildLoaderCss(type, { durationMs, color })
+  return (
+    <div>
+      <p className="cl-tab-desc">Анімації стану завантаження — нескінченні цикли, які повідомляють "зачекайте, щось відбувається", на відміну від усіх інших вкладок, що анімують одноразову зміну стану.</p>
+      <HelpBox>
+        <p>Усі чотири варіанти побудовані на тих самих "дешевих" властивостях (<code>transform</code>, <code>opacity</code>, <code>background-position</code>), що й решта вкладок цієї лабораторії — завантажувач, який сам гальмує сторінку через важку анімацію, іронічно погіршує саме той момент, коли й так щось повільне відбувається.</p>
+        <p>Spinner і Dots підходять для коротких очікувань (клік по кнопці, запит до API) — вони не дають уявлення про прогрес, лише сигналізують активність. Skeleton (імітація контуру контенту, що завантажується) краще підходить для довших завантажень сторінки, бо одразу показує приблизну структуру майбутнього контенту й зменшує відчуття "порожнечі", поки дані ще не прийшли.</p>
+        <p>Для Dots затримка між крапками — це <code>durationMs / 6</code>: при тривалості циклу 1000мс кожна наступна крапка стартує на ~167мс пізніше за попередню, що й дає ефект "хвилі", а не синхронного стрибання всіх трьох одночасно.</p>
+      </HelpBox>
+
+      <div className="cl-section-title">Тип</div>
+      <div className="cl-btn-row">
+        {LOADER_TYPES.map((t) => <button key={t.key} className={'harmony-btn' + (type === t.key ? ' active' : '')} onClick={() => patch('loaders', { type: t.key })}>{t.label}</button>)}
+      </div>
+
+      <div className="cl-editrow"><label>Тривалість циклу<input type="range" min={400} max={2400} step={100} value={durationMs} onChange={(e) => patch('loaders', { durationMs: parseInt(e.target.value, 10) })} /><span>{durationMs}мс</span></label></div>
+      <div className="cl-picker-top">
+        <span style={{ fontSize: 12, color: 'var(--muted)', width: 70, flex: 'none' }}>Колір</span>
+        <input type="color" className="cl-swatch-input" value={color} onChange={(e) => patch('loaders', { color: e.target.value })} />
+        <input className="cl-hex-input" value={color} onChange={(e) => patch('loaders', { color: e.target.value })} />
+      </div>
+
+      <style>{css}</style>
+      <div className="cl-section-title">Превʼю</div>
+      <div className="mo-stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {type === 'dots' ? (
+          <div className="loader"><span /><span /><span /></div>
+        ) : (
+          <div className="loader" />
+        )}
+      </div>
+      <div className="cl-picker-top"><button className="harmony-btn" onClick={() => { copy(css); toastApi.show('✓ CSS скопійовано') }}>Copy CSS</button></div>
+      <pre className="cl-code-block">{css}</pre>
+    </div>
+  )
+}
+
 function defaultState() {
   return {
     transitions: { type: 'fade', direction: 'up', durationMs: 500, delayMs: 0, easingKey: 'ease' },
@@ -320,6 +366,7 @@ function defaultState() {
     easing: { key: 'spring' },
     stagger: { count: 6, baseDelayMs: 70, durationMs: 350 },
     scroll: { type: 'slideFade', direction: 'up', durationMs: 500, threshold: 0.4, repeat: false },
+    loaders: { type: 'spinner', durationMs: 900, color: '#3E37E0' },
   }
 }
 
@@ -370,7 +417,7 @@ export default function MotionLab() {
   return (
     <LabShell
       title="Motion Lab"
-      subtitle="CSS-переходи, keyframe-анімації, криві легкості (easing), stagger-ефекти й scroll-reveal з живим превʼю."
+      subtitle="CSS-переходи, keyframe-анімації, криві легкості (easing), stagger-ефекти, scroll-reveal й анімації завантаження з живим превʼю."
       icon="🎞️"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -399,6 +446,7 @@ export default function MotionLab() {
           {tab === 'easing' && <EasingTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'stagger' && <StaggerTab state={state} patch={patch} toastApi={toastApi} />}
           {tab === 'scroll' && <ScrollRevealTab state={state} patch={patch} toastApi={toastApi} />}
+          {tab === 'loaders' && <LoadersTab state={state} patch={patch} toastApi={toastApi} />}
         </div>
       </div>
     </LabShell>

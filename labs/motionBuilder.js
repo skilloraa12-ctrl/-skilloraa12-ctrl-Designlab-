@@ -80,6 +80,75 @@ export function staggerDelays(count, baseDelayMs) {
   return Array.from({ length: count }, (_, i) => i * baseDelayMs)
 }
 
+// Infinite "loading state" animations — unlike every other tab here,
+// these loop forever and have no "from/to" user-facing state; they exist
+// purely to tell the user "wait, something is happening".
+export const LOADER_TYPES = [
+  { key: 'spinner', label: 'Spinner' },
+  { key: 'pulse', label: 'Pulse' },
+  { key: 'skeleton', label: 'Skeleton' },
+  { key: 'dots', label: 'Dots' },
+]
+
+export function buildLoaderCss(type, { durationMs, color }) {
+  if (type === 'spinner') {
+    return [
+      `.loader {`,
+      `  width: 32px; height: 32px;`,
+      `  border: 3px solid color-mix(in srgb, ${color} 20%, transparent);`,
+      `  border-top-color: ${color};`,
+      `  border-radius: 50%;`,
+      `  animation: spin ${durationMs}ms linear infinite;`,
+      `}`,
+      `@keyframes spin { to { transform: rotate(360deg); } }`,
+    ].join('\n')
+  }
+  if (type === 'pulse') {
+    return [
+      `.loader {`,
+      `  width: 32px; height: 32px; border-radius: 50%;`,
+      `  background: ${color};`,
+      `  animation: pulse ${durationMs}ms ease-in-out infinite;`,
+      `}`,
+      `@keyframes pulse {`,
+      `  0%, 100% { transform: scale(1); opacity: 1; }`,
+      `  50% { transform: scale(1.3); opacity: 0.5; }`,
+      `}`,
+    ].join('\n')
+  }
+  if (type === 'skeleton') {
+    return [
+      `.loader {`,
+      `  width: 160px; height: 16px; border-radius: 4px;`,
+      `  background: color-mix(in srgb, ${color} 15%, transparent);`,
+      `  background-image: linear-gradient(90deg, transparent, color-mix(in srgb, ${color} 35%, transparent), transparent);`,
+      `  background-size: 60px 100%;`,
+      `  background-repeat: no-repeat;`,
+      `  animation: shimmer ${durationMs}ms linear infinite;`,
+      `}`,
+      `@keyframes shimmer {`,
+      `  0% { background-position: -80px 0; }`,
+      `  100% { background-position: 220px 0; }`,
+      `}`,
+    ].join('\n')
+  }
+  // dots
+  return [
+    `.loader { display: flex; gap: 6px; }`,
+    `.loader span {`,
+    `  width: 10px; height: 10px; border-radius: 50%;`,
+    `  background: ${color};`,
+    `  animation: bounce ${durationMs}ms ease-in-out infinite;`,
+    `}`,
+    `.loader span:nth-child(2) { animation-delay: ${Math.round(durationMs / 6)}ms; }`,
+    `.loader span:nth-child(3) { animation-delay: ${Math.round((durationMs / 6) * 2)}ms; }`,
+    `@keyframes bounce {`,
+    `  0%, 80%, 100% { transform: translateY(0); }`,
+    `  40% { transform: translateY(-8px); }`,
+    `}`,
+  ].join('\n')
+}
+
 // Real-world scroll-triggered reveal: unlike the other tabs (triggered by a
 // button click), this one needs a tiny bit of JS, because CSS alone has no
 // "element entered the viewport" event. IntersectionObserver is the
