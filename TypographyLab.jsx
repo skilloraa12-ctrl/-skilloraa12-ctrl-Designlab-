@@ -6,13 +6,14 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { FONT_STACKS, RATIOS, TRACKING_PRESETS, computeScale, buildCssVariables, buildCssSnippet, rateMeasure } from './labs/typeScale.js'
+import { FONT_STACKS, RATIOS, TRACKING_PRESETS, PAIRING_PRESETS, computeScale, buildCssVariables, buildCssSnippet, rateMeasure } from './labs/typeScale.js'
 
 const TABS = [
   { key: 'scale', icon: '📏', label: 'Шкала' },
   { key: 'lineHeight', icon: '↕️', label: 'Міжрядковий інтервал' },
   { key: 'tracking', icon: '🔠', label: 'Трекінг' },
   { key: 'measure', icon: '📰', label: 'Довжина рядка' },
+  { key: 'pairing', icon: '🔗', label: 'Поєднання шрифтів' },
   { key: 'preview', icon: '🖼', label: 'Превʼю' },
   { key: 'export', icon: '📤', label: 'Експорт' },
 ]
@@ -66,6 +67,7 @@ function ScaleTab({ state, setBaseSize, setRatio, setFontFamily, isPro }) {
       <HelpBox>
         <p>Base — розмір звичайного тексту (зазвичай 16px). Ratio — у скільки разів кожен наступний рівень більший за попередній. Менше ratio (1.125) — акуратна різниця між заголовками, більше (1.618, золотий перетин) — контрастні, «кричущі» заголовки.</p>
         <p>Модульна шкала розвʼязує типову проблему "на око": без системи дизайнер і розробник поступово накопичують десятки несистемних розмірів (14px, 15px, 16px, 17px, 18px...), кожен виправданий окремо, а разом — візуально непослідовні. Із шкалою кожен новий текстовий стиль у макеті — це вибір одного з фіксованого набору кроків, а не нове число з нуля.</p>
+        <p>Назви на кшталт "Major Third" чи "Perfect Fifth" — запозичені з музичної теорії: ratio шкали відповідає співвідношенню частот відповідного музичного інтервалу. Це не випадковий збіг назв — обидва поля (музика й типографіка) незалежно прийшли до ідеї, що геометрично (а не лінійно) зростаючі кроки сприймаються людиною як більш "гармонійні", ніж довільні.</p>
       </HelpBox>
 
       <div className="cl-section-title">Шрифт</div>
@@ -109,6 +111,7 @@ function LineHeightTab({ state, setLineHeightHeading, setLineHeightBody }) {
       <HelpBox>
         <p>1.0 = рядки впритул одне до одного. 1.5–1.7 — комфортно для довгого тексту (як у книжках). Для великих заголовків з 1-2 рядків зазвичай достатньо 1.05–1.2 — просторіший інтервал там просто виглядає як зайвий відступ.</p>
         <p>Правило, яке рідко формулюють явно: чим ширший рядок (довша "довжина рядка" — див. вкладку поруч), тим більший line-height йому потрібен, щоб очі не "загубили" початок наступного рядка. Вузька колонка тексту (мобільний екран) комфортно читається навіть при 1.4, та сама колонка розтягнута на весь широкий десктопний екран — потребує ближче до 1.7-1.8.</p>
+        <p>У CSS безрозмірне значення (<code>line-height: 1.5</code>, без px чи em) — майже завжди правильний вибір: воно перераховується відносно власного <code>font-size</code> кожного елемента, тож дочірні елементи з іншим розміром шрифту успадковують правильне СПІВВІДНОШЕННЯ, а не фіксоване число пікселів, яке довелось би перевизначати для кожного розміру тексту окремо.</p>
       </HelpBox>
 
       <div className="cl-section-title">Heading line-height ({state.lineHeightHeading.toFixed(2)})</div>
@@ -133,6 +136,7 @@ function TrackingTab({ state, setHeadingTracking, setLabelTracking }) {
       <HelpBox>
         <p>Негативний трекінг (−0.02em) трохи «стискає» великий заголовок — без нього між великими літерами буває забагато повітря. Позитивний трекінг (+0.05…0.15em) на коротких UPPERCASE-підписах (eyebrow, лейбли) робить їх акуратнішими й легшими для сканування оком.</p>
         <p>Чому розмір впливає на потрібний трекінг: зі збільшенням кегля проміжки між літерами (закладені в шрифт за замовчуванням) ростуть пропорційно й починають виглядати непропорційно великими — тому заголовки 40px+ майже завжди виграють від легкого негативного трекінгу, а той самий трекінг на тексті 14px зробив би літери нечитабельно злиплими.</p>
+        <p>Великий позитивний трекінг (0.15em+) практично завжди йде в парі з UPPERCASE: малі літери при широкій розрядці починають "розсипатись" і важче впізнаються за формою слова цілком, тоді як капс, вже складений з окремих прямокутних форм, переносить розрядку набагато охайніше.</p>
       </HelpBox>
 
       <div className="cl-section-title">Heading tracking ({state.headingTracking.toFixed(3)}em)</div>
@@ -168,6 +172,7 @@ function MeasureTab({ state, setMeasureCh, setMeasureFontSize }) {
       <HelpBox>
         <p>45–75 символів на рядок — усталена норма для комфортного читання довгого тексту (книги, статті зазвичай цілять у ~66). CSS-одиниця <code>ch</code> дорівнює ширині символу "0" поточного шрифту — тому <code>max-width: 65ch</code> на практиці й дає приблизно 65 символів у рядку, без ручного підрахунку.</p>
         <p>Саме тому широкі десктопні макети майже ніколи не розтягують текстову колонку на весь екран: при 1920px ширини й 16px тексту рядок без обмеження міг би вмістити 200+ символів — читати такий текст фізично важче, тому колонку обмежують через <code>max-width</code> незалежно від того, скільки вільного місця є навколо.</p>
+        <p>Та сама вкладка «Довжина рядка» є й у Design Calculator Lab — тут вона прив'язана до живого превʼю конкретного абзацу й шрифту цієї системи, тоді як калькулятор дає чистий CSS-сніпет без контексту. Користуйтесь тим інструментом, що зручніший для поточної задачі — математика під капотом однакова.</p>
       </HelpBox>
 
       <div className="cl-editrow"><label>Довжина (ch)<input type="range" min={20} max={110} value={state.measureCh} onChange={(e) => setMeasureCh(parseInt(e.target.value, 10))} /><span>{state.measureCh}ch</span></label></div>
@@ -197,6 +202,7 @@ function PreviewTab({ state }) {
       <p className="cl-tab-desc">Уся система разом — шкала, інтервали й трекінг — на реалістичному фрагменті сторінки.</p>
       <HelpBox>
         <p>Перевіряти типографіку окремими елементами (один заголовок, один абзац) оманливо — проблеми часто виникають лише в сукупності: коли заголовок і підзаголовок стоять поруч, різниця в розмірі може виявитись замалою, щоб читач одразу бачив ієрархію. Завжди робіть фінальну перевірку на реалістичному макеті, як тут, а не на ізольованих зразках.</p>
+        <p>Зверніть увагу, що eyebrow-лейбл, підзаголовок і дрібний підпис тут навмисно взяли різні налаштування (різний трекінг, різна lineHeight) — у реальній системі кожен текстовий "тип" (не лише розмір) має свою роль і власний набір параметрів, а не лише одну спільну шкалу розмірів на всі випадки.</p>
       </HelpBox>
       <div className="tl-article-preview" style={{ fontFamily: font }}>
         <div style={{ fontSize: get('sm'), letterSpacing: `${state.labelTracking}em`, textTransform: 'uppercase', color: 'var(--accent)', fontWeight: 600, marginBottom: 10 }}>
@@ -225,6 +231,7 @@ function ExportTab({ state }) {
       <p className="cl-tab-desc">Забери готову систему: CSS-змінні для будь-якого сайту, приклад стилів заголовків/тексту, або дані у JSON.</p>
       <HelpBox>
         <p>CSS-змінні (<code>:root {'{'} --fs-base: ...; {'}'}</code>) — для вставки в існуючий проєкт, де стилі елементів вже написані й потрібні лише значення. Готовий CSS-сніпет — коли починаєте верстку з нуля й хочете одразу робочі <code>h1</code>/<code>p</code>/<code>.eyebrow</code>. JSON — якщо передаєте шкалу іншому інструменту чи зберігаєте її як джерело правди поза CSS (наприклад, для генерації стилів у дизайн-токенах).</p>
+        <p>Чому всі розміри в CSS-змінних в <code>rem</code>, а не в <code>px</code>, хоча ви редагували все в пікселях? Та сама причина доступності, що й на вкладці «Шкала»: rem масштабується разом із налаштуванням розміру шрифту браузера, тому експортований CSS лишається доступним навіть без додаткової роботи.</p>
       </HelpBox>
       <div className="cl-section-title">Текст</div>
       <div className="cl-picker-top">
@@ -242,6 +249,44 @@ function ExportTab({ state }) {
   )
 }
 
+function PairingTab({ state, setHeadingFont, setBodyFont }) {
+  return (
+    <div>
+      <p className="cl-tab-desc">Поєднання двох різних шрифтів — для заголовків і для основного тексту — замість одного шрифту на все, щоб підкреслити ієрархію не лише розміром.</p>
+      <HelpBox>
+        <p>Хороше поєднання будується на контрасті, достатньому, щоб читатись як навмисний вибір, а не випадковість: serif-заголовок + sans-текст (класична газетна пара), або той самий шрифт у двох дуже різних накресленнях. Два схожі, але не ідентичні шрифти (наприклад, Arial для заголовків і Verdana для тексту) — найризикованіший варіант: різниця недостатньо виразна, щоб виглядати навмисною, тому часто читається просто як помилка.</p>
+        <p>Безпечний запасний варіант, якщо немає впевненості: один і той самий шрифт для всього, але з різною насиченістю (weight) — звичайний текст і жирний заголовок. Це не "поєднання" у строгому сенсі, зате гарантовано не конфліктує, бо обидва накреслення спроєктовані як частина однієї родини символів.</p>
+        <p>Моноширинний шрифт у парі із sans — поширений вибір для технічної документації: заголовки розділів — звичайним шрифтом, а код чи технічні значення всередині тексту — моноширинним, що одразу сигналізує "це дослівне значення, не проза".</p>
+      </HelpBox>
+
+      <div className="cl-section-title">Готові поєднання</div>
+      <div className="cl-btn-row">
+        {PAIRING_PRESETS.map((p) => (
+          <button
+            key={p.key}
+            className={'harmony-btn' + (state.headingFont === p.heading && state.bodyFont === p.body ? ' active' : '')}
+            onClick={() => { setHeadingFont(p.heading); setBodyFont(p.body) }}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="cl-section-title">Шрифт заголовка</div>
+      <FontPicker fontFamily={state.headingFont} setFontFamily={setHeadingFont} />
+
+      <div className="cl-section-title">Шрифт тексту</div>
+      <FontPicker fontFamily={state.bodyFont} setFontFamily={setBodyFont} />
+
+      <div className="cl-section-title">Превʼю</div>
+      <div className="tl-article-preview">
+        <h2 style={{ fontFamily: FONT_STACKS[state.headingFont].css, fontSize: 30, fontWeight: 600, margin: '0 0 10px' }}>Заголовок у шрифті «{FONT_STACKS[state.headingFont].label}»</h2>
+        <p style={{ fontFamily: FONT_STACKS[state.bodyFont].css, fontSize: 16, lineHeight: 1.6, margin: 0 }}>{SAMPLE_PARAGRAPH}</p>
+      </div>
+    </div>
+  )
+}
+
 const DEFAULT_STATE = {
   fontFamily: 'sans',
   baseSize: 16,
@@ -252,6 +297,8 @@ const DEFAULT_STATE = {
   labelTracking: 0.08,
   measureCh: 65,
   measureFontSize: 16,
+  headingFont: 'serif',
+  bodyFont: 'sans',
 }
 
 export default function TypographyLab() {
@@ -301,7 +348,7 @@ export default function TypographyLab() {
   return (
     <LabShell
       title="Typography Lab"
-      subtitle="Модульна типографічна шкала, міжрядковий інтервал, трекінг, довжина рядка і превʼю в контексті — на веб-безпечних шрифтах, без завантаження зовнішніх файлів."
+      subtitle="Модульна типографічна шкала, міжрядковий інтервал, трекінг, довжина рядка, поєднання шрифтів і превʼю в контексті — на веб-безпечних шрифтах, без завантаження зовнішніх файлів."
       icon="🔤"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -353,6 +400,13 @@ export default function TypographyLab() {
               state={state}
               setMeasureCh={(v) => patch({ measureCh: v })}
               setMeasureFontSize={(v) => patch({ measureFontSize: v })}
+            />
+          )}
+          {tab === 'pairing' && (
+            <PairingTab
+              state={state}
+              setHeadingFont={(v) => patch({ headingFont: v })}
+              setBodyFont={(v) => patch({ bodyFont: v })}
             />
           )}
           {tab === 'preview' && <PreviewTab state={state} />}

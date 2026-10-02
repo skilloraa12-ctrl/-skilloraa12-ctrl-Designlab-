@@ -25,7 +25,7 @@ export const LABS = [
   { id: 'drawing', route: '/labs/drawing', icon: '✏️', title: 'Drawing Lab', desc: 'Малювання з шарами, історією дій та експортом.', category: 'visual', tools: 5, status: 'soon' },
   { id: 'grid', route: '/labs/grid', icon: '📐', title: 'Grid Lab', desc: 'Колонкові, модульні, базові та ізометричні сітки, брейкпоінти — з накладанням на макет і експортом у CSS.', category: 'layout', tools: 6, status: 'available' },
   { id: 'layout', route: '/labs/layout', icon: '🧩', title: 'Layout Lab', desc: 'Фрейми, контейнери, секції та готові пресети макетів.', category: 'layout', tools: 4, status: 'soon' },
-  { id: 'typography', route: '/labs/typography', icon: '🔤', title: 'Typography Lab', desc: 'Типографічні шкали, міжрядковий інтервал, трекінг, довжина рядка, превʼю в контексті.', category: 'typography', tools: 6, status: 'available' },
+  { id: 'typography', route: '/labs/typography', icon: '🔤', title: 'Typography Lab', desc: 'Типографічні шкали, міжрядковий інтервал, трекінг, довжина рядка, поєднання шрифтів, превʼю в контексті.', category: 'typography', tools: 7, status: 'available' },
   { id: 'image', route: '/labs/image', icon: '🖼️', title: 'Image Lab', desc: 'Кадрування, корекція кольору, ефекти та експорт зображень.', category: 'visual', tools: 5, status: 'soon' },
   { id: 'texture', route: '/labs/texture', icon: '🧱', title: 'Texture Lab', desc: 'Генерація й редагування текстур: папір, шум, тканина, метал.', category: 'visual', tools: 4, status: 'soon' },
   { id: 'pattern', route: '/labs/pattern', icon: '🔳', title: 'Pattern Lab', desc: 'Патерни: крапки, лінії, хвилі, геометрія, шахівниця, сітка для канвасу — з експортом у SVG/CSS.', category: 'visual', tools: 6, status: 'available' },

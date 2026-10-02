@@ -52,6 +52,18 @@ export function rateMeasure(ch) {
   return { rating: 'good', label: 'Комфортна довжина рядка (45–75 символів)' }
 }
 
+// Classic pairing principle: combine two typefaces that are different
+// enough to read as an intentional choice (serif heading + sans body, or
+// a wide label font + a plain reading font), not so different that they
+// clash. Pairing the exact same family for both is "safe" but creates no
+// visual hierarchy beyond size.
+export const PAIRING_PRESETS = [
+  { key: 'classic', label: 'Класична (Serif + Sans)', heading: 'serif', body: 'sans' },
+  { key: 'modern', label: 'Сучасна (Sans + Sans)', heading: 'sans', body: 'arial' },
+  { key: 'editorial', label: 'Редакційна (Serif + Serif)', heading: 'times', body: 'serif' },
+  { key: 'technical', label: 'Технічна (Sans + Mono)', heading: 'trebuchet', body: 'mono' },
+]
+
 export const TRACKING_PRESETS = [
   { label: 'Щільний', value: -0.02 },
   { label: 'Звичайний', value: 0 },
