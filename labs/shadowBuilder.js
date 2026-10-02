@@ -75,6 +75,33 @@ export const PRESETS = [
   },
 ]
 
+function clamp255(n) {
+  return Math.max(0, Math.min(255, Math.round(n)))
+}
+function mix(hex, amount) {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  const target = amount > 0 ? 255 : 0
+  const t = Math.abs(amount)
+  const mixed = [r, g, b].map((c) => clamp255(c + (target - c) * t))
+  return `#${mixed.map((c) => c.toString(16).padStart(2, '0')).join('')}`
+}
+
+// Neumorphism (aka "soft UI"): a single background color and two
+// box-shadow layers derived from it — a lighter "highlight" on the side
+// facing the light, and a darker "shadow" on the opposite side. The
+// element appears to be pressed into or raised from the same surface
+// it sits on, rather than floating above a different-colored background.
+export function buildNeumorphicCss({ bg, distance, blur, intensity, inset }) {
+  const lightColor = mix(bg, intensity)
+  const darkColor = mix(bg, -intensity)
+  const i = inset ? 'inset ' : ''
+  const shadow = `${i}${distance}px ${distance}px ${blur}px ${darkColor},\n  ${i}-${distance}px -${distance}px ${blur}px ${lightColor}`
+  return { css: `background: ${bg};\nborder-radius: 20px;\nbox-shadow: ${shadow};`, shadow, lightColor, darkColor }
+}
+
 export function buildTextShadowCss({ x, y, blur, color, opacity }) {
   return `${x}px ${y}px ${blur}px ${hexToRgba(color, opacity)}`
 }
