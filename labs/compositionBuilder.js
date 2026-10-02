@@ -91,6 +91,19 @@ export const NEGATIVE_SPACE_LABELS = {
   empty: { label: 'Порожньо', hint: 'Контенту замало відносно простору — переконайтесь, що це навмисний мінімалізм, а не випадковість.' },
 }
 
+// --- Gestalt: proximity ---
+// The human eye groups items that are close together into a single
+// perceived unit, regardless of any border or background — this is why
+// spacing alone (not color, not lines) is often enough to imply
+// structure. Returns an array of groups, each a list of item indices.
+export function groupByProximity(total, perGroup) {
+  const groups = []
+  for (let i = 0; i < total; i += perGroup) {
+    groups.push(Array.from({ length: Math.min(perGroup, total - i) }, (_, k) => i + k))
+  }
+  return groups
+}
+
 // --- Visual balance ---
 // Each item: { x: signed distance from center (-1..1), weight: 0..1 }.
 // Torque = x * weight, summed; net torque near 0 means balanced.
