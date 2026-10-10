@@ -3,6 +3,7 @@
 // Слаги збігаються з category в data/tools/tools.js для консистентності.
 export const LEVELS = {
   'web-design': { title: 'Web Design', ua: 'Сайти та вебсторінки' },
+  'app-design': { title: 'App Design', ua: 'Мобільні застосунки' },
 }
 
-export const LEVEL_ORDER = ['web-design']
+export const LEVEL_ORDER = ['web-design', 'app-design']

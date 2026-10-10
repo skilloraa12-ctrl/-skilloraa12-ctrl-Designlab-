@@ -15,8 +15,10 @@
 // 24 штуки для Web Design) → уроки (файли в lessons/).
 //
 // Усі 24 підкатегорії Web Design мають написані уроки (96 уроків
-// загалом). Якщо в майбутньому додасться підкатегорія без власного
-// файлу в lessons/ (новий напрямок дизайну), AcademySubcategory чесно
+// загалом). App Design: поки написана лише 'app-design-basics' (id
+// 5101-5108 — діапазон з зсувом +5000, щоб гарантовано не перетинатись
+// із Web Design, замість order*100). Якщо в майбутньому додасться
+// підкатегорія без власного файлу в lessons/, AcademySubcategory чесно
 // покаже заплановані теми (список, не посилання) замість фейкового
 // порожнього уроку, поки для неї не буде написано реальний вміст.
 import { LESSONS as webDesignBasics } from './lessons/web-design-basics.js'
@@ -43,6 +45,7 @@ import { LESSONS as designToDevelopment } from './lessons/design-to-development.
 import { LESSONS as websiteTypesPractice } from './lessons/website-types-practice.js'
 import { LESSONS as realProjects } from './lessons/real-projects.js'
 import { LESSONS as webDesignerPortfolio } from './lessons/web-designer-portfolio.js'
+import { LESSONS as appDesignBasics } from './lessons/app-design-basics.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -69,6 +72,7 @@ export const MODULES = [
   ...websiteTypesPractice,
   ...realProjects,
   ...webDesignerPortfolio,
+  ...appDesignBasics,
 ]
 
 export function getModule(id) {
