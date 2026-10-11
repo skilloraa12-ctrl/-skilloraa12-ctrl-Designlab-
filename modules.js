@@ -89,6 +89,7 @@ import { LESSONS as crossPlatformConsistency } from './lessons/cross-platform-co
 import { LESSONS as desktopSoftwareUi } from './lessons/desktop-software-ui.js'
 import { LESSONS as emergingPlatformsUi } from './lessons/emerging-platforms-ui.js'
 import { LESSONS as accessibleComplexUi } from './lessons/accessible-complex-ui.js'
+import { LESSONS as designSystemsScale } from './lessons/design-systems-scale.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -159,6 +160,7 @@ export const MODULES = [
   ...desktopSoftwareUi,
   ...emergingPlatformsUi,
   ...accessibleComplexUi,
+  ...designSystemsScale,
 ]
 
 export function getModule(id) {

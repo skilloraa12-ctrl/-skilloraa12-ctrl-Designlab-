@@ -146,6 +146,12 @@ const FOCUS_RULES = [
   { id: 'table-header-scope', words: ['th scope', 'доступна структура таблиці даних'] },
   { id: 'dialog-aria-modal', words: ['role="dialog"', 'aria-modal', 'доступна реалізація модального вікна', 'aria-labelledby чи aria-label'] },
   { id: 'keyboard-trap-bug', words: ['keyboard trap (wcag', 'preventdefault() на події tab'] },
+  { id: 'design-system-steward', words: ['governance дизайн-системи', 'розпорядник» (steward)'] },
+  { id: 'token-tier-structure', words: ['мапування на нижчому рівні', 'примітивні токени (сирі'] },
+  { id: 'contribution-pr-model', words: ['contribution model —'] },
+  { id: 'changelog-migration', words: ['людиночитний changelog', 'без збільшення major-версії'] },
+  { id: 'component-docs-example', words: ['якісна документація компонента поєднує', 'без одночасно готової докум'] },
+  { id: 'coverage-usage-metrics', words: ['adoption metrics —', 'design system coverage'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1740,6 +1746,74 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 100 56 L 100 96 M 80 76 L 120 76" fill="none" stroke="#5a5a66" strokeWidth="2" opacity="0.6" />
         <path d="M 150 76 L 160 76" fill="none" stroke="#e5484d" strokeWidth="2.5" strokeLinecap="round" />
         <path d="M 150 70 L 142 76 L 150 82" fill="none" stroke="#e5484d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'design-system-steward') {
+    return (
+      <Frame>
+        <circle cx="100" cy="56" r="16" fill={accent} opacity="0.85" />
+        <path d="M 92 56 L 97 61 L 108 50" fill="none" stroke="#1c1c22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {[0, 1, 2].map((i) => (
+          <circle key={i} cx={50 + i * 50} cy="98" r="10" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        ))}
+        <path d="M 100 72 L 50 88 M 100 72 L 100 88 M 100 72 L 150 88" fill="none" stroke="#3a3a44" strokeWidth="1.5" strokeDasharray="3 2" />
+      </Frame>
+    )
+  }
+  if (focus === 'token-tier-structure') {
+    return (
+      <Frame>
+        <rect x="70" y="40" width="60" height="16" rx="4" fill="#5a5a66" />
+        <path d="M 100 56 L 100 66" fill="none" stroke="#3a3a44" strokeWidth="2" />
+        <rect x="55" y="66" width="90" height="16" rx="4" fill={accent} opacity="0.75" />
+        <path d="M 100 82 L 100 92" fill="none" stroke="#3a3a44" strokeWidth="2" />
+        <rect x="40" y="92" width="120" height="16" rx="4" fill={accent} opacity="0.95" />
+      </Frame>
+    )
+  }
+  if (focus === 'contribution-pr-model') {
+    return (
+      <Frame>
+        <circle cx="54" cy="56" r="14" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 68 56 L 100 56" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        <rect x="100" y="42" width="60" height="28" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <path d="M 112 56 L 118 62 L 130 48" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="80" y="86" width="60" height="22" rx="6" fill="#1c1c22" stroke="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'changelog-migration') {
+    return (
+      <Frame>
+        <rect x="40" y="40" width="120" height="68" rx="6" fill="#26262e" stroke="#3a3a44" />
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <circle cx="54" cy={56 + i * 16} r="3" fill={accent} />
+            <rect x="64" y={52 + i * 16} width="84" height="8" rx="3" fill="#5a5a66" opacity={1 - i * 0.2} />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'component-docs-example') {
+    return (
+      <Frame>
+        <rect x="30" y="40" width="68" height="68" rx="6" fill="#26262e" stroke="#4cb782" strokeWidth="2" />
+        <path d="M 54 72 L 60 78 L 74 62" fill="none" stroke="#4cb782" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="102" y="40" width="68" height="68" rx="6" fill="#26262e" stroke="#e5484d" strokeWidth="2" />
+        <path d="M 126 62 L 146 86 M 146 62 L 126 86" fill="none" stroke="#e5484d" strokeWidth="2.5" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'coverage-usage-metrics') {
+    return (
+      <Frame>
+        <circle cx="70" cy="76" r="30" fill="none" stroke="#3a3a44" strokeWidth="10" />
+        <path d="M 70 46 A 30 30 0 1 1 46 100" fill="none" stroke={accent} strokeWidth="10" strokeLinecap="round" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="128" y={50 + i * 18} width={40 - i * 10} height="10" rx="3" fill="#5a5a66" opacity={1 - i * 0.25} />
+        ))}
       </Frame>
     )
   }
