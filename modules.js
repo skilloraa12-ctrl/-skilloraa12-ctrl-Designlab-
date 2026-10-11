@@ -56,6 +56,7 @@ import { LESSONS as appComponents } from './lessons/app-components.js'
 import { LESSONS as appAdaptiveDesign } from './lessons/app-adaptive-design.js'
 import { LESSONS as appDesignSystems } from './lessons/app-design-systems.js'
 import { LESSONS as appWireframing } from './lessons/app-wireframing.js'
+import { LESSONS as appPrototyping } from './lessons/app-prototyping.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -93,6 +94,7 @@ export const MODULES = [
   ...appAdaptiveDesign,
   ...appDesignSystems,
   ...appWireframing,
+  ...appPrototyping,
 ]
 
 export function getModule(id) {
