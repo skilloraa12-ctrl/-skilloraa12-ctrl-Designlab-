@@ -94,6 +94,7 @@ import { LESSONS as usabilityTesting } from './lessons/usability-testing.js'
 import { LESSONS as uiDesignProcessPortfolio } from './lessons/ui-design-process-portfolio.js'
 import { LESSONS as uiFinalProject } from './lessons/ui-final-project.js'
 import { LESSONS as gameDesignBasics } from './lessons/game-design-basics.js'
+import { LESSONS as gameDesignProcess } from './lessons/game-design-process.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -169,6 +170,7 @@ export const MODULES = [
   ...uiDesignProcessPortfolio,
   ...uiFinalProject,
   ...gameDesignBasics,
+  ...gameDesignProcess,
 ]
 
 export function getModule(id) {

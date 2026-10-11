@@ -172,6 +172,10 @@ const FOCUS_RULES = [
   { id: 'game-toy-puzzle-game', words: ['три терміни часто плутають', 'toy — система без заданої мети', 'puzzle має фіксовану мету', 'називають «грою» будь-яку інтерактивну'] },
   { id: 'game-key-questions', words: ['перш ніж малювати рівень чи писати документ', 'перше питання завжди про гравця', 'центральна дія гри (ядро) має бути цікавою'] },
   { id: 'game-design-vs-dev', words: ['суміжні, але окремі дисципліни', 'технічна реалізація (програмування, рушій', 'вважають, що game designer обов’язково має вміти'] },
+  { id: 'game-ideation-divergent', words: ['головна пастка — плутати «думку» з «концепцією»', 'концепція (жанр + центральна дія + мета) — не одне й те саме', 'дивергентний етап (багато варіантів без критики'] },
+  { id: 'game-playtest-silent', words: ['плейтест — перевірка на людях, які не автор гри', 'головне правило — мовчати під час сесії', 'підказують гравцю під час сесії замість того'] },
+  { id: 'game-pitch-hook', words: ['пітч відповідає: що гравець робить (ядро)', 'починають пітч з опису сетингу чи сюжету'] },
+  { id: 'game-scope-jam-studio', words: ['на джемі одна доведена механіка завжди краще', 'планують на джем кілька механік одночасно'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2110,6 +2114,56 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 100 79 L 118 79" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
         <rect x="124" y="40" width="46" height="78" rx="6" fill="#1b1b22" stroke="#3a3a44" strokeWidth="2" />
         <text x="147" y="72" textAnchor="middle" fontSize="16" fill="#5a5a66" fontFamily="monospace">{'</>'}</text>
+      </Frame>
+    )
+  }
+  if (focus === 'game-ideation-divergent') {
+    return (
+      <Frame>
+        <circle cx="46" cy="86" r="8" fill={accent} />
+        {[[100, 42], [130, 66], [140, 96], [120, 124], [90, 136]].map(([x, y], i) => (
+          <g key={i}>
+            <path d={`M 54 86 L ${x} ${y}`} stroke={i === 2 ? accent : '#5a5a66'} strokeWidth={i === 2 ? 2.5 : 1.5} />
+            <circle cx={x} cy={y} r={i === 2 ? 9 : 6} fill={i === 2 ? accent : '#3a3a44'} />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-playtest-silent') {
+    return (
+      <Frame>
+        <circle cx="56" cy="64" r="16" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 48 68 L 64 68" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+        <rect x="40" y="96" width="32" height="40" rx="4" fill="#26262e" stroke="#3a3a44" strokeWidth="2" />
+        <rect x="100" y="48" width="70" height="46" rx="8" fill="#1b2230" stroke={accent} strokeWidth="2" />
+        <circle cx="170" cy="52" r="10" fill="none" stroke={accent} strokeWidth="2" />
+        <path d="M 163 59 L 177 45" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-pitch-hook') {
+    return (
+      <Frame>
+        <rect x="28" y="44" width="144" height="64" rx="10" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <path d="M 28 108 L 44 108 L 36 124 Z" fill="#26262e" stroke={accent} strokeWidth="2" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="44" y={60 + i * 16} width={i === 0 ? 100 : 70} height="8" rx="4" fill={i === 0 ? accent : '#5a5a66'} />
+        ))}
+        <path d="M 150 30 C 150 46, 166 46, 166 30" stroke={accent} strokeWidth="2.5" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-scope-jam-studio') {
+    return (
+      <Frame>
+        <rect x="30" y="92" width="36" height="36" rx="4" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <text x="48" y="140" textAnchor="middle" fontSize="9" fill="#8a8a9a">джем</text>
+        <rect x="100" y="40" width="80" height="88" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="112" y={54 + i * 18} width="56" height="8" rx="3" fill="#5a5a66" />
+        ))}
+        <text x="140" y="140" textAnchor="middle" fontSize="9" fill="#8a8a9a">студія</text>
       </Frame>
     )
   }
