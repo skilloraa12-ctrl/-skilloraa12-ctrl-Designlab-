@@ -152,6 +152,12 @@ const FOCUS_RULES = [
   { id: 'changelog-migration', words: ['людиночитний changelog', 'без збільшення major-версії'] },
   { id: 'component-docs-example', words: ['якісна документація компонента поєднує', 'без одночасно готової докум'] },
   { id: 'coverage-usage-metrics', words: ['adoption metrics —', 'design system coverage'] },
+  { id: 'five-second-glance', words: ['цінний для hero-секцій', 'замінник повноцінного юзабіліті-тестування'] },
+  { id: 'first-click-heatmap', words: ['правильний перший клік значно'] },
+  { id: 'test-script-intro', words: ['usability test script —'] },
+  { id: 'moderated-live-session', words: ['критичний компроміс moderated', 'обирають moderated-тестування'] },
+  { id: 'affinity-theme-clusters', words: ['synthesizing findings —', 'універсальний патерн (проблема в кількох'] },
+  { id: 'ab-test-split-traffic', words: ['a/b-тестування принципово', 'a/b-тест випадково розподіляє', 'a/b-тест відповідає на', 'завершують a/b-тест занадто рано'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1814,6 +1820,73 @@ function BrowserMockup({ focus, alert }) {
         {[0, 1, 2].map((i) => (
           <rect key={i} x="128" y={50 + i * 18} width={40 - i * 10} height="10" rx="3" fill="#5a5a66" opacity={1 - i * 0.25} />
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'five-second-glance') {
+    return (
+      <Frame>
+        <rect x="40" y="42" width="120" height="70" rx="8" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="52" y="54" width="70" height="8" rx="3" fill="#5a5a66" />
+        <rect x="52" y="68" width="50" height="6" rx="3" fill="#3a3a44" />
+        <circle cx="150" cy="58" r="12" fill="none" stroke={accent} strokeWidth="2.5" />
+        <path d="M 150 52 L 150 58 L 154 61" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'first-click-heatmap') {
+    return (
+      <Frame>
+        <rect x="30" y="38" width="140" height="78" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <circle cx="90" cy="60" r="22" fill={accent} opacity="0.35" />
+        <circle cx="90" cy="60" r="10" fill={accent} opacity="0.85" />
+        <circle cx="130" cy="92" r="10" fill="#5a5a66" opacity="0.4" />
+        <circle cx="54" cy="96" r="7" fill="#5a5a66" opacity="0.3" />
+      </Frame>
+    )
+  }
+  if (focus === 'test-script-intro') {
+    return (
+      <Frame>
+        <rect x="46" y="38" width="108" height="78" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="58" y={50 + i * 15} width={i === 1 ? 60 : 84} height="7" rx="3" fill={i === 1 ? accent : '#5a5a66'} opacity={i === 1 ? 0.9 : 0.7} />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'moderated-live-session') {
+    return (
+      <Frame>
+        <circle cx="62" cy="64" r="20" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <path d="M 54 70 Q 62 78 70 70" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+        <path d="M 86 64 L 110 64" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        <circle cx="140" cy="64" r="16" fill="#1c1c22" stroke="#3a3a44" strokeWidth="2" />
+        <rect x="46" y="98" width="108" height="10" rx="4" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'affinity-theme-clusters') {
+    return (
+      <Frame>
+        {[[40, 44], [66, 54], [40, 70]].map(([x, y], i) => (
+          <rect key={i} x={x} y={y} width="48" height="16" rx="4" fill={accent} opacity="0.8" />
+        ))}
+        {[[120, 48], [138, 72], [112, 90]].map(([x, y], i) => (
+          <rect key={i} x={x} y={y} width="48" height="16" rx="4" fill="#5a5a66" opacity="0.6" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'ab-test-split-traffic') {
+    return (
+      <Frame>
+        <circle cx="42" cy="76" r="10" fill="#5a5a66" />
+        <path d="M 52 76 L 76 50 M 52 76 L 76 102" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        <rect x="86" y="36" width="56" height="28" rx="6" fill={accent} opacity="0.85" />
+        <rect x="86" y="92" width="56" height="28" rx="6" fill="#26262e" stroke="#3a3a44" strokeWidth="2" />
+        <rect x="152" y="44" width="20" height="12" rx="3" fill={accent} />
+        <rect x="152" y="100" width="12" height="12" rx="3" fill="#3a3a44" />
       </Frame>
     )
   }

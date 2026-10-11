@@ -90,6 +90,7 @@ import { LESSONS as desktopSoftwareUi } from './lessons/desktop-software-ui.js'
 import { LESSONS as emergingPlatformsUi } from './lessons/emerging-platforms-ui.js'
 import { LESSONS as accessibleComplexUi } from './lessons/accessible-complex-ui.js'
 import { LESSONS as designSystemsScale } from './lessons/design-systems-scale.js'
+import { LESSONS as usabilityTesting } from './lessons/usability-testing.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -161,6 +162,7 @@ export const MODULES = [
   ...emergingPlatformsUi,
   ...accessibleComplexUi,
   ...designSystemsScale,
+  ...usabilityTesting,
 ]
 
 export function getModule(id) {
