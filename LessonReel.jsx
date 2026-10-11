@@ -242,6 +242,10 @@ const FOCUS_RULES = [
   { id: 'game-a11y-assist-options', words: ['опції асисту (assist options) — підхід до доступності, що виходить', 'опції асисту — набір окремих, незалежних можливостей', 'модульний підхід принципово відрізняється від монолітного вибору склад', 'пропонують лише єдиний монолітний перемикач складності замість набору'] },
   { id: 'game-a11y-remap-controls', words: ['повне перепризначення означає, що всі дії гри доступні для зміни', 'жорстко закріплена дія (навіть одна) часто стає нездоланним бар’єром', 'дозволяють перепризначення лише «безпечної» підмножини дій (рух, камер'] },
   { id: 'game-a11y-motion-sickness', words: ['укачування (motion sickness) у відеограх виникає через невідповідність', 'укачування виникає через невідповідність візуального руху на екрані', 'типові тригери: швидке обертання камери, штучний нахил голови', 'фіксують вузьке поле зору (fov) без слайдера налаштування'] },
+  { id: 'game-gdd-structure', words: ['gdd фіксує дизайнерські рішення гри для кількох дуже різних читачів', 'типові секції: концепція, механіки, об’єкти й персонажі, рівні, нарати'] },
+  { id: 'game-gdd-onepager', words: ['one-pager — максимально стиснута версія ігрової концепції, що вміщуєть', 'one-pager — стиснута версія концепції на одну сторінку: жанр, централь', 'призначення — швидке внутрішнє узгодження розуміння ідеї чи перший кон', 'намагаються вмістити деталізований опис усіх механік і систем на одну'] },
+  { id: 'game-gdd-pitchdeck', words: ['пітч-дек — мультислайдова презентація, принципово інша за призначенням', 'пітч-дек переконує конкретну аудиторію підтримати проєкт, тоді як gdd', 'типова структура: хук-слайд, демонстрація центральної дії, порівняння', 'будують пітч-дек як скорочену версію gdd — перелік механік і систем'] },
+  { id: 'game-gdd-living-doc', words: ['два протилежні підходи до роботи з gdd: upfront-специфікація намагаєт', 'upfront-специфікація намагається зафіксувати всі деталі до розробки', 'деталізований план до будь-якого плейтесту неминуче містить рішення', 'трактують gdd як незмінний контракт, опираючись змінам навіть після'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2947,6 +2951,51 @@ function BrowserMockup({ focus, alert }) {
         <path d="M100 150 L60 90 A60 60 0 0 1 140 90 Z" fill="none" stroke="#5a5a66" strokeWidth="2" />
         <circle cx="100" cy="120" r="55" fill="none" stroke={accent} strokeWidth="3" opacity="0.5" />
         <circle cx="100" cy="120" r="30" fill="none" stroke={accent} strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-gdd-structure') {
+    return (
+      <Frame>
+        <rect x="30" y="50" width="140" height="140" rx="6" fill="#1c1c22" stroke="#3a3a44" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <rect key={i} x="42" y={66 + i * 24} width={i % 2 === 0 ? 110 : 80} height="10" rx="5" fill={i === 0 ? accent : '#3a3a44'} />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-gdd-onepager') {
+    return (
+      <Frame>
+        <rect x="55" y="50" width="90" height="120" rx="6" fill="#1c1c22" stroke={accent} strokeWidth="2" />
+        <circle cx="145" cy="58" r="10" fill={accent} />
+        <text x="145" y="62" textAnchor="middle" fontSize="12" fontWeight="700" fill="#15151c">1</text>
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="65" y={70 + i * 22} width="70" height="8" rx="4" fill="#8a8a9a" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-gdd-pitchdeck') {
+    return (
+      <Frame>
+        <rect x="40" y="100" width="120" height="70" rx="6" fill="#2a2a34" stroke="#3a3a44" />
+        <rect x="50" y="85" width="120" height="70" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <rect x="60" y="70" width="120" height="70" rx="6" fill="#1c1c22" stroke={accent} strokeWidth="2" />
+        <path d="M75 95 L165 95" stroke={accent} strokeWidth="3" />
+        <path d="M75 110 L140 110" stroke="#8a8a9a" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-gdd-living-doc') {
+    return (
+      <Frame>
+        <rect x="40" y="55" width="90" height="130" rx="6" fill="#1c1c22" stroke="#3a3a44" />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="52" y={72 + i * 24} width="66" height="8" rx="4" fill="#8a8a9a" />
+        ))}
+        <path d="M150 90 A30 30 0 1 1 150 150" stroke={accent} strokeWidth="3" fill="none" />
+        <path d="M144 144 L150 150 L156 142" stroke={accent} strokeWidth="3" fill="none" />
       </Frame>
     )
   }
