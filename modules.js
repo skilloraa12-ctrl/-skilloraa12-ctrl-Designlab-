@@ -108,6 +108,7 @@ import { LESSONS as multiplayerSocialDesign } from './lessons/multiplayer-social
 import { LESSONS as monetizationF2p } from './lessons/monetization-f2p.js'
 import { LESSONS as hudIngameUi } from './lessons/hud-ingame-ui.js'
 import { LESSONS as gameMenusNavigation } from './lessons/game-menus-navigation.js'
+import { LESSONS as gameAccessibility } from './lessons/game-accessibility.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -197,6 +198,7 @@ export const MODULES = [
   ...monetizationF2p,
   ...hudIngameUi,
   ...gameMenusNavigation,
+  ...gameAccessibility,
 ]
 
 export function getModule(id) {

@@ -238,6 +238,10 @@ const FOCUS_RULES = [
   { id: 'game-hud-lab-capstone', words: ['фінальна практика підкатегорії обʼєднує diegetic/non-diegetic/meta/spa', 'реальна збірка hud йде в порядку: спочатку мінімалізм', 'lab матеріалізує цей процес у готовий html/css/react-код'] },
   { id: 'game-menu-settings-categories', words: ['екран налаштувань у грі часто містить десятки окремих опцій', 'екран налаштувань групує десятки опцій за категоріями', 'типовий паттерн усередині категорії — рядок: підпис зліва', 'роблять єдиний плаский список усіх налаштувань без категоризації'] },
   { id: 'game-menu-controller-focus-order', words: ['прості одноколонкові меню природно мають лінійний порядок фокусу', 'контролер переміщує фокус дискретно в заздалегідь визначеному порядку'] },
+  { id: 'game-a11y-captions', words: ['реалізують лише субтитри діалогів, ігноруючи ігрово-критичні немовні'] },
+  { id: 'game-a11y-assist-options', words: ['опції асисту (assist options) — підхід до доступності, що виходить', 'опції асисту — набір окремих, незалежних можливостей', 'модульний підхід принципово відрізняється від монолітного вибору склад', 'пропонують лише єдиний монолітний перемикач складності замість набору'] },
+  { id: 'game-a11y-remap-controls', words: ['повне перепризначення означає, що всі дії гри доступні для зміни', 'жорстко закріплена дія (навіть одна) часто стає нездоланним бар’єром', 'дозволяють перепризначення лише «безпечної» підмножини дій (рух, камер'] },
+  { id: 'game-a11y-motion-sickness', words: ['укачування (motion sickness) у відеограх виникає через невідповідність', 'укачування виникає через невідповідність візуального руху на екрані', 'типові тригери: швидке обертання камери, штучний нахил голови', 'фіксують вузьке поле зору (fov) без слайдера налаштування'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2897,6 +2901,52 @@ function BrowserMockup({ focus, alert }) {
         ))}
         <path d="M100 95 L100 115" stroke="#5a5a66" strokeWidth="2" />
         <path d="M94 109 L100 115 L106 109" stroke="#5a5a66" strokeWidth="2" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-a11y-captions') {
+    return (
+      <Frame>
+        <rect x="30" y="70" width="140" height="50" rx="8" fill="#2a2a34" />
+        <path d="M40 85 q4 -10 8 0 q4 10 8 0 q4 -10 8 0" stroke={accent} strokeWidth="2" fill="none" />
+        <rect x="70" y="80" width="90" height="8" rx="4" fill="#8a8a9a" />
+        <rect x="70" y="96" width="60" height="8" rx="4" fill="#8a8a9a" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-a11y-assist-options') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <rect x="40" y={70 + i * 30} width="40" height="18" rx="9" fill={i !== 2 ? accent : '#3a3a44'} />
+            <circle cx={i !== 2 ? 70 : 50} cy={79 + i * 30} r="7" fill="#fff" />
+            <rect x="90" y={73 + i * 30} width="70" height="10" rx="5" fill="#8a8a9a" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-a11y-remap-controls') {
+    return (
+      <Frame>
+        {['W', 'A', 'S', 'D'].map((k, i) => (
+          <g key={k}>
+            <rect x={40 + (i % 2) * 50} y={70 + Math.floor(i / 2) * 40} width="36" height="28" rx="6" fill={i === 0 ? accent : '#2a2a34'} stroke={i === 0 ? accent : '#3a3a44'} strokeWidth="2" />
+            <text x={58 + (i % 2) * 50} y={89 + Math.floor(i / 2) * 40} textAnchor="middle" fontSize="12" fontWeight="700" fill={i === 0 ? '#15151c' : '#8a8a9a'}>{k}</text>
+          </g>
+        ))}
+        <path d="M130 84 L160 84" stroke={accent} strokeWidth="2" />
+        <path d="M154 78 L160 84 L154 90" stroke={accent} strokeWidth="2" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-a11y-motion-sickness') {
+    return (
+      <Frame>
+        <path d="M100 150 L60 90 A60 60 0 0 1 140 90 Z" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="100" cy="120" r="55" fill="none" stroke={accent} strokeWidth="3" opacity="0.5" />
+        <circle cx="100" cy="120" r="30" fill="none" stroke={accent} strokeWidth="2" />
       </Frame>
     )
   }
