@@ -224,6 +224,10 @@ const FOCUS_RULES = [
   { id: 'game-economy-crafting', words: ['крафтингова економіка — система, де гравець перетворює базові ресурси', 'крафтингова економіка перетворює базові ресурси в складніші предмети ч', 'крафтинг природно працює як sink для надлишкових базових ресурсів і fa', 'роблять кінцевий крафтований предмет дешевшим на ринку, ніж сума інгре'] },
   { id: 'game-economy-inflation', words: ['інфляція в економіці гри — поступове знецінення валюти через те, що гр', 'інфляція — поступове знецінення валюти через те, що гравці накопичують', 'класичний симптом — ціни на предмети постійно зростають через надлишок', 'проєктують sinks зі статичною вартістю, що не масштабується з часом ра'] },
   { id: 'game-economy-soft-hard', words: ['soft currency (м’яка валюта) — валюта, яку гравець заробляє через звич', 'soft currency заробляється через звичайну гру без прямих витрат грошей', 'soft currency дає відчуття справедливого прогресу; hard currency дає с', 'роблять контент, критичний для проходження, не косметику, доступним ли'] },
+  { id: 'game-competitive-cooperative', words: ['конкурентний дизайн ставить гравців один проти одного — перемога одног', 'конкурентний дизайн — гравці один проти одного (zero-sum); кооперативн', 'конкурентний дизайн потребує симетрії чи зваженої асиметрії; кооперати'] },
+  { id: 'game-matchmaking-rating', words: ['matchmaking — система, що зводить гравців у матчі чи сесії один з одни', 'matchmaking зводить гравців у матчі, прагнучи справедливого, цікавого', 'skill rating (наприклад elo) — числове представлення навички, що оновл', 'роблять межі допустимої різниці рейтингу занадто вузькими, що призводи'] },
+  { id: 'game-social-mechanics', words: ['соціальні механіки — системи, що підтримують причетність, relatedness', 'соціальні механіки підтримують причетність через структуровану взаємод', 'гільдії дають постійну групову структуру, спільні довгострокові цілі й', 'показують у лідерборді лише глобальний топ, недосяжний для більшості'] },
+  { id: 'game-griefing-prevention', words: ['грифінг — поведінка гравця, спрямована на навмисне псування досвіду ін', 'грифінг — навмисне псування досвіду інших гравців заради власного задо', 'структурні обмеження механік (а не лише правила поведінки) запобігають'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2719,6 +2723,53 @@ function BrowserMockup({ focus, alert }) {
         <circle cx="70" cy="100" r="24" fill="none" stroke="#5a5a66" strokeWidth="2.5" />
         <circle cx="140" cy="100" r="24" fill="none" stroke={accent} strokeWidth="2.5" />
         <text x="140" y="106" textAnchor="middle" fontSize="15" fontWeight="700" fill={accent}>$</text>
+      </Frame>
+    )
+  }
+  if (focus === 'game-competitive-cooperative') {
+    return (
+      <Frame>
+        <circle cx="50" cy="90" r="16" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="110" cy="90" r="16" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 70 90 L 90 90" stroke={accent} strokeWidth="2" />
+        <path d="M 84 84 L 92 90 L 84 96 M 76 84 L 68 90 L 76 96" stroke={accent} strokeWidth="2" fill="none" />
+        <circle cx="140" cy="130" r="14" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="166" cy="130" r="14" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 153 118 L 153 100" stroke={accent} strokeWidth="2" strokeDasharray="3 2" />
+        <circle cx="153" cy="94" r="6" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-matchmaking-rating') {
+    return (
+      <Frame>
+        <circle cx="60" cy="90" r="16" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <text x="60" y="96" textAnchor="middle" fontSize="12" fontWeight="700" fill={accent}>1200</text>
+        <circle cx="150" cy="90" r="16" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <text x="150" y="96" textAnchor="middle" fontSize="12" fontWeight="700" fill="#5a5a66">1180</text>
+        <path d="M 78 90 L 132 90" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-social-mechanics') {
+    return (
+      <Frame>
+        <path d="M 50 60 L 70 60 L 70 85 L 60 100 L 50 85 Z" fill="none" stroke={accent} strokeWidth="2.5" />
+        <circle cx="105" cy="75" r="10" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="125" cy="75" r="10" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x={150} y={60 + i * 16} width={30 - i * 8} height="10" rx="3" fill={i === 0 ? accent : '#5a5a66'} />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-griefing-prevention') {
+    return (
+      <Frame>
+        <rect x="40" y="70" width="18" height="60" fill="#5a5a66" />
+        <rect x="140" y="70" width="18" height="60" fill="#5a5a66" />
+        <circle cx="99" cy="100" r="14" fill="none" stroke={accent} strokeWidth="2.5" strokeDasharray="4 3" />
+        <path d="M 90 100 L 108 100" stroke={accent} strokeWidth="2" />
       </Frame>
     )
   }
