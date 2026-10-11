@@ -214,6 +214,11 @@ const FOCUS_RULES = [
   { id: 'game-genre-strategy-resources', words: ['стратегія — жанр, де ядро — планування й управління ресурсами чи юніта', 'ядро стратегії — планування й управління ресурсами чи юнітами на вищом', 'гравці очікують прозору економіку ресурсів — приховані витрати сприйма'] },
   { id: 'game-genre-roguelike-permadeath', words: ['roguelike визначають дві ключові конвенції: процедурна генерація конте', 'ці конвенції працюють разом — без процедурної генерації permadeath був', 'додають permadeath без процедурної генерації, перетворюючи смерть на п'] },
   { id: 'game-genre-break-convention', words: ['жанрові конвенції — не недоторканні закони, а усталені очікування грав', 'жанрові конвенції — усталені очікування гравців, а не недоторканні зак'] },
+  { id: 'game-narrative-channels', words: ['сторітелінг у грі інтерактивний: історія переживається через дії гравц'] },
+  { id: 'game-environmental-storytelling', words: ['середовищний наратив (environmental storytelling) — розповідь історії', 'середовищний наратив розповідає історію через деталі простору (розташу', 'роблять середовищні деталі занадто прямолінійними чи з явними підписам'] },
+  { id: 'game-branching-narrative-tree', words: ['розгалужена історія (branching narrative) — наративна структура, де рі', 'branching narrative — структура, де рішення гравця веде до різних сюже', 'головний виклик — експоненційне зростання обсягу контенту на кожній то', 'обіцяють «значущий вибір», який насправді ніяк не впливає на подальший'] },
+  { id: 'game-ludo-narrative-dissonance', words: ['ludo-narrative dissonance — суперечність між тим, що розповідає сюжет', 'дисонанс виникає через взаємно суперечливі історії від двох систем пов', 'пишуть сюжет про персонажа, наприклад пацифіста, що прямо суперечить т'] },
+  { id: 'game-narrative-mechanics-harmony', words: ['протилежність ludo-narrative dissonance — наратив, свідомо побудований', 'злагода наративу й механік — коли ядро гри (найчастіша дія гравця) є п', 'практичний підхід: починати з питання, яка ігрова дія могла б буквальн', 'пишуть сюжет окремо від механік і намагаються «прикрутити» його до вже'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2608,6 +2613,57 @@ function BrowserMockup({ focus, alert }) {
           <rect key={i} x={36 + i * 34} y="90" width="24" height="24" rx="4" fill={i === 2 ? accent : '#26262e'} stroke={i === 2 ? accent : '#5a5a66'} strokeWidth="2" />
         ))}
         <path d="M 110 72 L 115 82 L 126 83 L 118 91 L 120 102 L 110 96 L 100 102 L 102 91 L 94 83 L 105 82 Z" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-narrative-channels') {
+    return (
+      <Frame>
+        <path d="M 40 60 L 80 60 L 80 90 L 68 90 L 60 100 L 60 90 L 40 90 Z" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="92" y="60" width="36" height="30" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="150" cy="75" r="16" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 150 63 L 150 69 M 150 81 L 150 87 M 138 75 L 144 75 M 156 75 L 162 75" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-environmental-storytelling') {
+    return (
+      <Frame>
+        <rect x="50" y="90" width="40" height="10" rx="3" fill="#5a5a66" transform="rotate(-18 70 95)" />
+        <rect x="110" y="70" width="10" height="40" rx="3" fill="#5a5a66" transform="rotate(25 115 90)" />
+        <circle cx="130" cy="130" r="8" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-branching-narrative-tree') {
+    return (
+      <Frame>
+        <circle cx="100" cy="56" r="10" fill={accent} />
+        <path d="M 100 66 L 60 110 M 100 66 L 100 110 M 100 66 L 140 110" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        {[60, 100, 140].map((x) => (
+          <circle key={x} cx={x} cy="120" r="9" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-ludo-narrative-dissonance') {
+    return (
+      <Frame>
+        <rect x="30" y="60" width="60" height="40" rx="8" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <rect x="110" y="60" width="60" height="40" rx="8" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <path d="M 90 80 L 110 80" stroke={accent} strokeWidth="2.5" />
+        <path d="M 96 72 L 104 88 M 104 72 L 96 88" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-narrative-mechanics-harmony') {
+    return (
+      <Frame>
+        <circle cx="80" cy="100" r="28" fill="none" stroke={accent} strokeWidth="2.5" />
+        <circle cx="128" cy="100" r="20" fill="none" stroke={accent} strokeWidth="2.5" />
+        {[0, 90, 180, 270].map((deg) => (
+          <line key={deg} x1="80" y1="100" x2={80 + 34 * Math.cos((deg * Math.PI) / 180)} y2={100 + 34 * Math.sin((deg * Math.PI) / 180)} stroke={accent} strokeWidth="2" opacity="0.5" />
+        ))}
       </Frame>
     )
   }
