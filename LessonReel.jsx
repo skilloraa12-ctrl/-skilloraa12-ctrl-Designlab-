@@ -198,6 +198,11 @@ const FOCUS_RULES = [
   { id: 'game-power-curve-graph', words: ['крива сили (power curve) — графік того, як росте «сила» гравця', 'лінійна крива проста для балансування, але часто відчувається монотонн'] },
   { id: 'game-balance-data-cycle', words: ['баланс неможливо остаточно підтвердити лише розрахунками на папері', 'балансування через плейтести означає збір об’єктивних даних (winrate', 'балансують гру виключно за суб’єктивним відчуттям гравців «це здається'] },
   { id: 'game-dominant-strategy-crown', words: ['домінантна стратегія — варіант дії чи вибір, що кращий або рівний за в', 'домінантна стратегія — варіант, кращий або рівний за всі інші в будь-я', 'наявність домінантної стратегії вбиває тактичне різноманіття', 'не перевіряють дані плейтестів на наявність варіанту, який обирають зн'] },
+  { id: 'game-difficulty-curve-peaks', words: ['крива складності — спланований графік того, як змінюється виклик гри', 'крива складності — спланований графік виклику від початку до кінця гри', 'хороша крива включає «піки» напруги (боси) і «долини» полегшення', 'проєктують складність як пряму монотонно зростаючу лінію без жодних'] },
+  { id: 'game-pacing-rhythm', words: ['темп (pacing) — як швидко й у якому ритмі змінюються типи активності в', 'темп (pacing) — як швидко й у якому ритмі змінюються типи активності (', 'хороший темп чергує саму природу активності, щоб уникнути монотонності', 'планують лише числову криву складності, не враховуючи різноманіття тип'] },
+  { id: 'game-learn-by-doing', words: ['класичний прийом — перша зустріч із новою механікою в середовищі, де н'] },
+  { id: 'game-skill-vs-grind', words: ['skill-based прогресія — гравець стає «сильнішим» через покращення влас', 'skill-based прогресія — гравець стає сильнішим через покращення власно', 'grind-based прогресія — гравець стає сильнішим через накопичення ресур', 'роблять успіх у складному виклику залежним виключно від grind (рівня п'] },
+  { id: 'game-difficulty-options', words: ['опції складності — явний вибір рівня виклику, що пропонується гравцю', 'опції складності (легка/середня/складна) — явний вибір виклику для гра', 'поверхнева реалізація (лише масштабування урону/здоров’я) ризикує злам', 'реалізують опції складності лише множенням урону чи здоров’я на коефіц'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2435,6 +2440,54 @@ function BrowserMockup({ focus, alert }) {
         <rect x="30" y="130" width="32" height="32" rx="5" fill="#26262e" stroke="#5a5a66" strokeWidth="2" opacity="0.4" />
         <rect x="84" y="130" width="32" height="32" rx="5" fill="#26262e" stroke="#5a5a66" strokeWidth="2" opacity="0.4" />
         <rect x="138" y="130" width="32" height="32" rx="5" fill="#26262e" stroke="#5a5a66" strokeWidth="2" opacity="0.4" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-difficulty-curve-peaks') {
+    return (
+      <Frame>
+        <path d="M 35 170 L 35 50 M 35 170 L 170 170" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <path d="M 40 150 L 60 120 L 75 145 L 95 90 L 110 130 L 130 70 L 150 110 L 165 45" stroke={accent} strokeWidth="2.5" fill="none" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-pacing-rhythm') {
+    return (
+      <Frame>
+        {[{ h: 50, c: accent }, { h: 30, c: '#5a5a66' }, { h: 55, c: accent }, { h: 20, c: '#5a5a66' }, { h: 60, c: accent }, { h: 25, c: '#5a5a66' }].map((b, i) => (
+          <rect key={i} x={36 + i * 24} y={170 - b.h} width="16" height={b.h} fill={b.c} rx="3" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-learn-by-doing') {
+    return (
+      <Frame>
+        <rect x="30" y="60" width="140" height="110" rx="8" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="4 3" />
+        <circle cx="70" cy="115" r="14" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <path d="M 90 115 L 130 115" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        <path d="M 124 108 L 136 115 L 124 122" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-skill-vs-grind') {
+    return (
+      <Frame>
+        <circle cx="60" cy="90" r="20" fill="none" stroke={accent} strokeWidth="2.5" />
+        <circle cx="60" cy="90" r="8" fill={accent} />
+        <rect x="120" y="60" width="16" height="20" fill="#5a5a66" />
+        <rect x="120" y="82" width="16" height="20" fill="#5a5a66" />
+        <rect x="120" y="104" width="16" height="20" fill="#5a5a66" />
+        <path d="M 90 90 L 100 90" stroke="#3a3a44" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-difficulty-options') {
+    return (
+      <Frame>
+        {[{ h: 40 }, { h: 70 }, { h: 110 }].map((b, i) => (
+          <rect key={i} x={40 + i * 44} y={170 - b.h} width="30" height={b.h} rx="4" fill={i === 0 ? accent : '#26262e'} stroke={i === 0 ? accent : '#5a5a66'} strokeWidth="2" />
+        ))}
       </Frame>
     )
   }
