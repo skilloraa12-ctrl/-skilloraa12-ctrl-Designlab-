@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import NavBar from './NavBar.jsx'
 import Home from './Home.jsx'
 import Register from './Register.jsx'
@@ -27,6 +27,7 @@ import DesignCalcLab from './DesignCalcLab.jsx'
 import WireframeLab from './WireframeLab.jsx'
 import MotionLab from './MotionLab.jsx'
 import UserFlowLab from './UserFlowLab.jsx'
+import UiPreviewLab from './UiPreviewLab.jsx'
 import Portfolio from './Portfolio.jsx'
 import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
@@ -45,10 +46,12 @@ import ToolsDetail from './ToolsDetail.jsx'
 import CheatsheetsPage from './CheatsheetsPage.jsx'
 
 export default function App() {
+  const location = useLocation()
+  const isWideLab = location.pathname.startsWith('/labs/ui-preview')
   return (
     <div className="app">
       <NavBar />
-      <main className="main">
+      <main className={'main' + (isWideLab ? ' main--wide' : '')}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
@@ -90,6 +93,7 @@ export default function App() {
           <Route path="/labs/wireframe" element={<RequireAuth><WireframeLab /></RequireAuth>} />
           <Route path="/labs/motion" element={<RequireAuth><MotionLab /></RequireAuth>} />
           <Route path="/labs/user-flow" element={<RequireAuth><UserFlowLab /></RequireAuth>} />
+          <Route path="/labs/ui-preview" element={<RequireAuth><UiPreviewLab /></RequireAuth>} />
           <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />

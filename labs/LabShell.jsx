@@ -18,10 +18,11 @@ export default function LabShell({
   onRedo,
   toast,
   extra,
+  wide,
   children,
 }) {
   return (
-    <div className="lab-shell">
+    <div className={'lab-shell' + (wide ? ' lab-shell--wide' : '')}>
       <div className="lab-shell-header">
         <Link to={backTo} className="lab-shell-back">← Labs</Link>
         <div className="lab-shell-title-row">
