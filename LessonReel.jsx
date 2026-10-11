@@ -77,6 +77,12 @@ const FOCUS_RULES = [
   { id: 'breadcrumb-attribute', words: ['attribute-based', 'location-based'] },
   { id: 'scrollable-tabs', words: ['scrollable tabs', 'активна вкладка'] },
   { id: 'nav-hierarchy-levels', words: ['primary navigation', 'secondary navigation', 'tertiary navigation', 'navigation hierarchy'] },
+  { id: 'table-filter-chips', words: ['filtering у таблиці', 'активних фільтрів'] },
+  { id: 'table-sort-indicator', words: ['sorting', 'без сортування', 'активного сортування'] },
+  { id: 'table-bulk-select', words: ['bulk actions', 'масові дії'] },
+  { id: 'table-inline-edit', words: ['inline editing'] },
+  { id: 'table-pagination', words: ['pagination', 'infinite scroll'] },
+  { id: 'table-responsive-card', words: ['responsive tables', 'card transformation', 'column priority'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -874,6 +880,81 @@ function BrowserMockup({ focus, alert }) {
         <rect x="30" y="48" width="140" height="20" rx="4" fill={accent} opacity="0.9" />
         <rect x="50" y="78" width="100" height="16" rx="4" fill={accent} opacity="0.55" />
         <rect x="70" y="104" width="60" height="13" rx="4" fill={accent} opacity="0.3" />
+      </Frame>
+    )
+  }
+  if (focus === 'table-sort-indicator') {
+    return (
+      <Frame>
+        <rect x="30" y="56" width="140" height="22" rx="4" fill="#26262e" stroke="#3a3a44" />
+        <rect x="42" y="64" width="50" height="7" rx="3" fill="#5a5a66" />
+        <path d="M 108 62 L 113 68 L 118 62 M 108 72 L 113 66 L 118 72" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="42" y={90 + i * 16} width="120" height="8" rx="3" fill="#3a3a44" opacity={1 - i * 0.2} />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'table-filter-chips') {
+    return (
+      <Frame>
+        <path d="M 40 56 L 90 56 L 70 80 L 70 102 L 60 98 L 60 80 Z" fill="none" stroke={accent} strokeWidth="2.5" strokeLinejoin="round" />
+        {[{ x: 102, w: 34 }, { x: 140, w: 34 }].map((c, i) => (
+          <g key={i}>
+            <rect x={c.x} y="60" width={c.w} height="18" rx="9" fill="#26262e" stroke={accent} strokeWidth="1.5" />
+            <rect x={c.x + 8} y="66" width={c.w - 20} height="6" rx="3" fill="#5a5a66" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'table-bulk-select') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <rect x="34" y={58 + i * 24} width="16" height="16" rx="3" fill={i < 2 ? accent : '#26262e'} stroke={i < 2 ? accent : '#5a5a66'} strokeWidth="2" />
+            {i < 2 && <path d={`M 38 ${66 + i * 24} L 41 ${69 + i * 24} L 47 ${62 + i * 24}`} fill="none" stroke="#17171a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+            <rect x="60" y={62 + i * 24} width="110" height="8" rx="3" fill="#3a3a44" />
+          </g>
+        ))}
+        <rect x="124" y="130" width="46" height="18" rx="9" fill={accent} opacity="0.9" />
+      </Frame>
+    )
+  }
+  if (focus === 'table-inline-edit') {
+    return (
+      <Frame>
+        <rect x="40" y="76" width="120" height="30" rx="5" fill="#26262e" stroke={accent} strokeWidth="2.5" strokeDasharray="3 3" />
+        <rect x="52" y="86" width="60" height="10" rx="3" fill="#5a5a66" />
+        <path d="M 130 82 L 144 82 L 144 96 L 130 96" fill="none" stroke={accent} strokeWidth="0" />
+        <path d="M 126 100 L 142 84 L 148 90 L 132 106 L 124 108 Z" fill="none" stroke={accent} strokeWidth="2" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'table-pagination') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].map((i) => (
+          <circle key={i} cx={64 + i * 24} cy="100" r="11" fill={i === 1 ? accent : '#26262e'} stroke={i === 1 ? accent : '#3a3a44'} strokeWidth="1.5" opacity={i === 1 ? 1 : 0.85} />
+        ))}
+        <path d="M 40 100 L 28 100 M 164 100 L 176 100" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'table-responsive-card') {
+    return (
+      <Frame>
+        <rect x="24" y="52" width="70" height="96" rx="4" fill="#26262e" stroke="#3a3a44" />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="32" y={64 + i * 20} width="54" height="8" rx="3" fill="#5a5a66" opacity={1 - i * 0.15} />
+        ))}
+        <path d="M 106 100 L 124 100" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="3 3" />
+        <path d="M 117 94 L 124 100 L 117 106" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="136" y="60" width="40" height="80" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="144" y="70" width="24" height="8" rx="3" fill={accent} opacity="0.8" />
+        <rect x="144" y="86" width="24" height="6" rx="3" fill="#3a3a44" />
+        <rect x="144" y="98" width="24" height="6" rx="3" fill="#3a3a44" />
       </Frame>
     )
   }
