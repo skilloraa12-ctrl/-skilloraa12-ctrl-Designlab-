@@ -5,6 +5,7 @@ import { getSubcategory } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
+import GameDesignStudio from './GameDesignStudio.jsx'
 import LessonMentor from './LessonMentor.jsx'
 import AudioNarration from './AudioNarration.jsx'
 import PresentationMode from './PresentationMode.jsx'
@@ -122,7 +123,7 @@ export default function Module() {
                   // Бейдж про вбудований ескізник має сам відкривати SketchPad,
                   // а не бути просто написом, що дублює кнопку нижче —
                   // інакше клік по ньому виглядає як кнопка, що не працює.
-                  if (t.name.includes('ескізник')) {
+                  if (t.name.includes('ескізник') || t.name.includes('Game Design Studio')) {
                     return (
                       <button
                         key={'f' + i}
@@ -172,7 +173,7 @@ export default function Module() {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
             <button className="complete-btn" onClick={() => setSketchOpen(true)}>
-              🖊 Створити ескіз у застосунку
+              {module.level === 'game-design' ? '🖊 Відкрити «Game Design Studio»' : '🖊 Створити ескіз у застосунку'}
             </button>
             <button className="mentor-cta" onClick={() => setMentorOpen(true)}>
               <span className="mentor-cta-icon">💬<span className="dot" /></span>
@@ -195,7 +196,11 @@ export default function Module() {
             <LessonMentor module={module} prev={prev} next={next} onClose={() => setMentorOpen(false)} />
           )}
 
-          {sketchOpen && (
+          {sketchOpen && module.level === 'game-design' && (
+            <GameDesignStudio module={module} onClose={() => setSketchOpen(false)} />
+          )}
+
+          {sketchOpen && module.level !== 'game-design' && (
             <SketchPad
               module={module}
               onClose={() => setSketchOpen(false)}

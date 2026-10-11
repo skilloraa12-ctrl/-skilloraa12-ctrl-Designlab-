@@ -1330,3 +1330,32 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .gb-levelselect { display: grid; gap: 10px; width: 100%; max-width: 420px; }
 .gb-level-card { aspect-ratio: 1; background: var(--gb-accent, #F59E0B); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: #15151c; }
 .gb-level-card--locked { background: rgba(255,255,255,.08); color: rgba(255,255,255,.3); }
+
+/* ---------- Game Design Studio (практичний інструмент замість SketchPad) ---------- */
+.gds { margin-top: 4px; }
+.gds-steps { display: flex; gap: 8px; margin-bottom: 18px; }
+.gds-step-dot {
+  width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; border: 1.5px solid var(--line); color: var(--muted); background: var(--surface);
+}
+.gds-step-dot.active { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.gds-step-dot.done { border-color: var(--accent); color: var(--accent); }
+.gds-step { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.gds-rules-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 16px; max-width: 480px; }
+.gds-object-card { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); padding: 10px; margin-bottom: 8px; }
+.gds-object-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.gds-object-head input { flex: 1; }
+.gds-object-behavior {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 12.5px; padding: 8px 10px; resize: vertical;
+}
+.gds-grid { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; width: fit-content; max-width: 100%; overflow-x: auto; }
+.gds-grid-row { display: flex; gap: 2px; }
+.gds-grid-cell {
+  width: 32px; height: 32px; flex: none; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2);
+  cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; padding: 0;
+}
+.gds-grid-cell:hover { border-color: var(--accent); }
+@media (max-width: 620px) {
+  .gds-grid-cell { width: 26px; height: 26px; font-size: 12px; }
+}
