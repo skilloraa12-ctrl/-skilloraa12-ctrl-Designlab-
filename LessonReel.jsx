@@ -203,6 +203,10 @@ const FOCUS_RULES = [
   { id: 'game-learn-by-doing', words: ['класичний прийом — перша зустріч із новою механікою в середовищі, де н'] },
   { id: 'game-skill-vs-grind', words: ['skill-based прогресія — гравець стає «сильнішим» через покращення влас', 'skill-based прогресія — гравець стає сильнішим через покращення власно', 'grind-based прогресія — гравець стає сильнішим через накопичення ресур', 'роблять успіх у складному виклику залежним виключно від grind (рівня п'] },
   { id: 'game-difficulty-options', words: ['опції складності — явний вибір рівня виклику, що пропонується гравцю', 'опції складності (легка/середня/складна) — явний вибір виклику для гра', 'поверхнева реалізація (лише масштабування урону/здоров’я) ризикує злам', 'реалізують опції складності лише множенням урону чи здоров’я на коефіц'] },
+  { id: 'game-level-design-principles', words: ['level design — дисципліна компонування конкретного ігрового простору', 'level design — компонування конкретного простору, що реалізує механіки', 'розставляють ворогів і предмети випадково, не звʼязуючи ризик і винаго'] },
+  { id: 'game-level-pacing-flow', words: ['вузькі лінійні коридори стискають темп і фокусують увагу; широкі відкр'] },
+  { id: 'game-landmark-wayfinding', words: ['роблять весь рівень візуально одноманітним, не виділяючи жодної точки'] },
+  { id: 'game-critical-path-exploration', words: ['critical path — обов’язковий маршрут, який гравець мусить пройти, щоб', 'critical path — обов’язковий маршрут для завершення гри; дослідження —', 'critical path має бути завжди прохідним і зрозумілим; дослідницький ко', 'ховають обов’язковий для завершення гри елемент у технічно необов’язко'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2488,6 +2492,43 @@ function BrowserMockup({ focus, alert }) {
         {[{ h: 40 }, { h: 70 }, { h: 110 }].map((b, i) => (
           <rect key={i} x={40 + i * 44} y={170 - b.h} width="30" height={b.h} rx="4" fill={i === 0 ? accent : '#26262e'} stroke={i === 0 ? accent : '#5a5a66'} strokeWidth="2" />
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-level-design-principles') {
+    return (
+      <Frame>
+        <rect x="30" y="100" width="140" height="18" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="120" cy="80" r="10" fill={accent} />
+        <path d="M 120 80 L 120 95" stroke={accent} strokeWidth="2" strokeDasharray="2 2" />
+        <path d="M 95 95 L 105 115 M 105 95 L 95 115" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-level-pacing-flow') {
+    return (
+      <Frame>
+        <rect x="30" y="60" width="24" height="110" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="70" y="120" width="100" height="50" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-landmark-wayfinding') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].flatMap((col) => [0, 1].map((row) => (
+          <rect key={`${col}-${row}`} x={36 + col * 34} y={70 + row * 50} width="26" height="26" rx="4" fill="#26262e" stroke="#3a3a44" strokeWidth="1.5" />
+        )))}
+        <rect x={36 + 34} y={70 + 50} width="26" height="26" rx="4" fill={accent} stroke={accent} strokeWidth="2.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-critical-path-exploration') {
+    return (
+      <Frame>
+        <path d="M 30 90 L 170 90" stroke={accent} strokeWidth="3" fill="none" />
+        <path d="M 90 90 L 130 140" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" fill="none" />
+        <circle cx="134" cy="146" r="10" fill="none" stroke="#5a5a66" strokeWidth="2" />
       </Frame>
     )
   }
