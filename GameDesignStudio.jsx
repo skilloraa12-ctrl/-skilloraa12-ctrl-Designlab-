@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useProgress } from './ProgressContext.jsx'
 import { useLabToast } from './labs/useLabToast.js'
 import LabToast from './labs/LabToast.jsx'
@@ -45,11 +45,58 @@ const TILE_TYPES = [
   { id: 'finish', icon: '🏁', label: 'Фініш' },
 ]
 
+const TILE_COLORS = {
+  empty: '#1c1c22',
+  ground: '#6b4a30',
+  platform: '#2fa36b',
+  enemy: '#6b4fa0',
+  collectible: '#c8912b',
+  hazard: '#a63a2c',
+  start: '#2f6fa3',
+  finish: '#26262e',
+}
+
 const GRID_COLS = 10
 const GRID_ROWS = 6
 
 function emptyGrid() {
   return Array.from({ length: GRID_ROWS }, () => Array.from({ length: GRID_COLS }, () => 'empty'))
+}
+
+function gridHasContent(grid) {
+  return grid.some((row) => row.some((cell) => cell !== 'empty'))
+}
+
+// Малює сітку рівня на canvas — спільна логіка для живого прев'ю (LevelTab)
+// і для знімка, що йде в портфоліо, щоб обидва завжди показували те саме.
+function drawLevelGrid(ctx, grid, cellSize) {
+  const rows = grid.length
+  const cols = grid[0]?.length || 0
+  ctx.fillStyle = '#15151c'
+  ctx.fillRect(0, 0, cols * cellSize, rows * cellSize)
+  grid.forEach((row, r) => {
+    row.forEach((cellType, c) => {
+      const x = c * cellSize
+      const y = r * cellSize
+      ctx.fillStyle = TILE_COLORS[cellType] || TILE_COLORS.empty
+      ctx.fillRect(x + 1, y + 1, cellSize - 2, cellSize - 2)
+      const def = TILE_TYPES.find((t) => t.id === cellType)
+      if (def?.icon) {
+        ctx.font = `${Math.round(cellSize * 0.56)}px sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(def.icon, x + cellSize / 2, y + cellSize / 2 + 1)
+      }
+    })
+  })
+}
+
+function renderLevelPreviewDataUrl(grid, cellSize = 36) {
+  const canvas = document.createElement('canvas')
+  canvas.width = (grid[0]?.length || 0) * cellSize
+  canvas.height = grid.length * cellSize
+  drawLevelGrid(canvas.getContext('2d'), grid, cellSize)
+  return canvas.toDataURL('image/png')
 }
 
 const DEFAULT_TEST_QUESTIONS = [
@@ -153,7 +200,28 @@ function ObjectsTab({ objects, onAdd, onUpdate, onRemove }) {
   )
 }
 
-function LevelTab({ grid, onPaint, activeTile, setActiveTile }) {
+function LevelPreview({ grid, canvasRef }) {
+  const cellSize = 28
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    canvas.width = (grid[0]?.length || 0) * cellSize
+    canvas.height = grid.length * cellSize
+    drawLevelGrid(canvas.getContext('2d'), grid, cellSize)
+  }, [grid, canvasRef])
+  return (
+    <div className="gds-preview">
+      <div className="cl-section-title">Перегляд рівня</div>
+      {gridHasContent(grid) ? (
+        <canvas ref={canvasRef} className="gds-preview-canvas" />
+      ) : (
+        <p className="cl-tab-desc">Порожньо — розстав клітинки на сітці зліва, і тут одразу зʼявиться чистий перегляд рівня, без кнопок редагування.</p>
+      )}
+    </div>
+  )
+}
+
+function LevelTab({ grid, onPaint, activeTile, setActiveTile, previewRef }) {
   return (
     <div>
       <p className="cl-tab-desc">Обери тип клітинки внизу, тоді клікай по сітці, щоб розставити старт, фініш, платформи, ворогів і предмети — проста схема рівня, не фінальний рівень.</p>
@@ -164,16 +232,19 @@ function LevelTab({ grid, onPaint, activeTile, setActiveTile }) {
           </button>
         ))}
       </div>
-      <div className="gds-grid">
-        {grid.map((row, r) => (
-          <div className="gds-grid-row" key={r}>
-            {row.map((cell, c) => (
-              <button key={c} className="gds-grid-cell" onClick={() => onPaint(r, c)}>
-                {TILE_TYPES.find((t) => t.id === cell)?.icon}
-              </button>
-            ))}
-          </div>
-        ))}
+      <div className="gds-level-layout">
+        <div className="gds-grid">
+          {grid.map((row, r) => (
+            <div className="gds-grid-row" key={r}>
+              {row.map((cell, c) => (
+                <button key={c} className="gds-grid-cell" onClick={() => onPaint(r, c)}>
+                  {TILE_TYPES.find((t) => t.id === cell)?.icon}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+        <LevelPreview grid={grid} canvasRef={previewRef} />
       </div>
     </div>
   )
@@ -215,6 +286,7 @@ export default function GameDesignStudio({ module, onClose }) {
   const [grid, setGrid] = useState(emptyGrid)
   const [activeTile, setActiveTile] = useState('ground')
   const [testItems, setTestItems] = useState(DEFAULT_TEST_QUESTIONS.map((text) => ({ id: nextId(), text, checked: false, custom: false })))
+  const levelPreviewRef = useRef(null)
 
   function addObject(def) {
     setObjects((prev) => [...prev, { id: nextId(), type: def.type, name: def.label, behavior: def.defaultBehavior }])
@@ -241,10 +313,14 @@ export default function GameDesignStudio({ module, onClose }) {
   const planText = buildPlanText({ module, gameType, goal, difficulty, objects, grid, testItems })
 
   function handleSaveToPortfolio() {
+    const attachments = gridHasContent(grid)
+      ? [{ url: renderLevelPreviewDataUrl(grid), name: 'level.png', type: 'image' }]
+      : []
     addPortfolioItem({
       title: `${module?.title || 'Game Design Studio'} — план гри`,
       desc: planText,
       tags: [module?.title, 'Game Design Studio'].filter(Boolean),
+      attachments,
     })
     toastApi.show('✓ Збережено в портфоліо')
   }
@@ -337,7 +413,7 @@ export default function GameDesignStudio({ module, onClose }) {
             </div>
             {activeTab === 'rules' && <RulesTab gameType={gameType} goal={goal} difficulty={difficulty} planText={planText} toastApi={toastApi} />}
             {activeTab === 'objects' && <ObjectsTab objects={objects} onAdd={addObject} onUpdate={updateObject} onRemove={removeObject} />}
-            {activeTab === 'level' && <LevelTab grid={grid} onPaint={paintCell} activeTile={activeTile} setActiveTile={setActiveTile} />}
+            {activeTab === 'level' && <LevelTab grid={grid} onPaint={paintCell} activeTile={activeTile} setActiveTile={setActiveTile} previewRef={levelPreviewRef} />}
             {activeTab === 'test' && <TestTab items={testItems} onToggle={toggleTest} onAdd={addTest} onRemove={removeTest} />}
             <button className="cl-mini-btn" style={{ marginTop: 14 }} onClick={() => setStep(3)}>← До складності</button>
           </div>
