@@ -57,6 +57,10 @@ const FOCUS_RULES = [
   { id: 'fitts-law', words: ['fitts', 'закон фіттса', 'закону фіттса'] },
   { id: 'hicks-law', words: ['hick', 'закон хіка', 'закону хіка'] },
   { id: 'ui-discoverability', words: ['discoverability', 'здатність до виявлення'] },
+  { id: 'gestalt-common-fate', words: ['common fate', 'спільна доля', 'спільну долю'] },
+  { id: 'gestalt-continuity', words: ['continuity', 'вирівняної осі', 'уявній осі'] },
+  { id: 'gestalt-proximity', words: ['proximity'] },
+  { id: 'gestalt-perceptual-hierarchy', words: ['perceptual hierarchy', 'перцептивна ієрархія', 'перцептивної ієрархії'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -623,6 +627,57 @@ function BrowserMockup({ focus, alert }) {
         <rect x="76" y="92" width="24" height="24" rx="4" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="3 3" />
         <circle cx="128" cy="100" r="16" fill="none" stroke={accent} strokeWidth="2.5" />
         <path d="M 139 111 L 150 122" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'gestalt-common-fate') {
+    return (
+      <Frame>
+        {[64, 100, 136].map((cy) => (
+          <g key={cy}>
+            <circle cx="70" cy={cy} r="9" fill={accent} opacity="0.9" />
+            <path d={`M 84 ${cy} L 118 ${cy}`} fill="none" stroke={accent} strokeWidth="2" strokeDasharray="4 3" opacity="0.6" />
+            <path d={`M 108 ${cy - 5} L 118 ${cy} L 108 ${cy + 5}`} fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+          </g>
+        ))}
+        <circle cx="140" cy="64" r="9" fill={accent} opacity="0.9" />
+        <circle cx="140" cy="100" r="9" fill={accent} opacity="0.9" />
+        <circle cx="140" cy="136" r="9" fill={accent} opacity="0.9" />
+      </Frame>
+    )
+  }
+  if (focus === 'gestalt-continuity') {
+    return (
+      <Frame>
+        <path d="M 30 100 L 170 100" fill="none" stroke="#3a3a44" strokeWidth="2" strokeDasharray="3 4" />
+        {[38, 74, 110, 146, 162].map((cx) => (
+          <circle key={cx} cx={cx} cy="100" r="7" fill={accent} opacity="0.85" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'gestalt-proximity') {
+    return (
+      <Frame>
+        {[62, 78, 94].map((cx) => (
+          <circle key={cx} cx={cx} cy="100" r="8" fill={accent} />
+        ))}
+        {[138, 160].map((cx) => (
+          <circle key={cx} cx={cx} cy="100" r="8" fill="#5a5a66" />
+        ))}
+        <path d="M 46 100 L 110 100" fill="none" stroke="#3a3a44" strokeWidth="1.5" strokeDasharray="2 3" opacity="0.5" />
+        <path d="M 126 100 L 174 100" fill="none" stroke="#3a3a44" strokeWidth="1.5" strokeDasharray="2 3" opacity="0.3" />
+      </Frame>
+    )
+  }
+  if (focus === 'gestalt-perceptual-hierarchy') {
+    return (
+      <Frame>
+        <circle cx="100" cy="100" r="30" fill={accent} opacity="0.9" />
+        <circle cx="48" cy="60" r="12" fill={accent} opacity="0.35" />
+        <circle cx="156" cy="70" r="10" fill={accent} opacity="0.25" />
+        <circle cx="54" cy="148" r="9" fill={accent} opacity="0.2" />
+        <circle cx="152" cy="144" r="8" fill={accent} opacity="0.15" />
       </Frame>
     )
   }

@@ -71,6 +71,7 @@ import { LESSONS as appRealProjects } from './lessons/app-real-projects.js'
 import { LESSONS as appDesignerPortfolio } from './lessons/app-designer-portfolio.js'
 import { LESSONS as uiFoundations } from './lessons/ui-foundations.js'
 import { LESSONS as interactionDesign } from './lessons/interaction-design.js'
+import { LESSONS as perceptionGestalt } from './lessons/perception-gestalt.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -123,6 +124,7 @@ export const MODULES = [
   ...appDesignerPortfolio,
   ...uiFoundations,
   ...interactionDesign,
+  ...perceptionGestalt,
 ]
 
 export function getModule(id) {
