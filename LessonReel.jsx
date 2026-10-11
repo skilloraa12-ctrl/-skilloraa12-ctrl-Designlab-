@@ -246,6 +246,8 @@ const FOCUS_RULES = [
   { id: 'game-gdd-onepager', words: ['one-pager — максимально стиснута версія ігрової концепції, що вміщуєть', 'one-pager — стиснута версія концепції на одну сторінку: жанр, централь', 'призначення — швидке внутрішнє узгодження розуміння ідеї чи перший кон', 'намагаються вмістити деталізований опис усіх механік і систем на одну'] },
   { id: 'game-gdd-pitchdeck', words: ['пітч-дек — мультислайдова презентація, принципово інша за призначенням', 'пітч-дек переконує конкретну аудиторію підтримати проєкт, тоді як gdd', 'типова структура: хук-слайд, демонстрація центральної дії, порівняння', 'будують пітч-дек як скорочену версію gdd — перелік механік і систем'] },
   { id: 'game-gdd-living-doc', words: ['два протилежні підходи до роботи з gdd: upfront-специфікація намагаєт', 'upfront-специфікація намагається зафіксувати всі деталі до розробки', 'деталізований план до будь-якого плейтесту неминуче містить рішення', 'трактують gdd як незмінний контракт, опираючись змінам навіть після'] },
+  { id: 'game-proto-paper-speed', words: ['головна перевага — швидкість ітерації: зміна правила займає секунди'] },
+  { id: 'game-proto-rapid-iteration', words: ['швидка ітерація — здатність змінити механіку й одразу побачити резул', 'швидка ітерація — короткий цикл «зміна → перевірка»', 'техніки прискорення: live-зміна параметрів без перезапуску', 'ігнорують інвестицію часу в інструменти швидкої ітерації (live-tuning)'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2996,6 +2998,26 @@ function BrowserMockup({ focus, alert }) {
         ))}
         <path d="M150 90 A30 30 0 1 1 150 150" stroke={accent} strokeWidth="3" fill="none" />
         <path d="M144 144 L150 150 L156 142" stroke={accent} strokeWidth="3" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-proto-paper-speed') {
+    return (
+      <Frame>
+        <circle cx="100" cy="110" r="45" fill="none" stroke="#5a5a66" strokeWidth="3" />
+        <path d="M100 110 L100 80" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+        <path d="M100 110 L125 120" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+        <path d="M60 70 L75 60" stroke="#5a5a66" strokeWidth="3" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-proto-rapid-iteration') {
+    return (
+      <Frame>
+        <path d="M70 90 A30 30 0 1 1 70 150" stroke={accent} strokeWidth="3" fill="none" />
+        <path d="M64 144 L70 150 L76 142" stroke={accent} strokeWidth="3" fill="none" />
+        <rect x="110" y="110" width="60" height="10" rx="5" fill="#3a3a44" />
+        <circle cx="145" cy="115" r="8" fill={accent} />
       </Frame>
     )
   }

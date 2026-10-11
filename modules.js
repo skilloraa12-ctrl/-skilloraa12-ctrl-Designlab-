@@ -110,6 +110,7 @@ import { LESSONS as hudIngameUi } from './lessons/hud-ingame-ui.js'
 import { LESSONS as gameMenusNavigation } from './lessons/game-menus-navigation.js'
 import { LESSONS as gameAccessibility } from './lessons/game-accessibility.js'
 import { LESSONS as gameDesignDocumentation } from './lessons/game-design-documentation.js'
+import { LESSONS as gamePrototyping } from './lessons/game-prototyping.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -201,6 +202,7 @@ export const MODULES = [
   ...gameMenusNavigation,
   ...gameAccessibility,
   ...gameDesignDocumentation,
+  ...gamePrototyping,
 ]
 
 export function getModule(id) {
