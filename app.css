@@ -1345,6 +1345,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .gds-object-card { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); padding: 10px; margin-bottom: 8px; }
 .gds-object-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .gds-object-head input { flex: 1; }
+.gds-object-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex: none; }
 .gds-object-behavior {
   width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); color: var(--ink);
   font-family: var(--sans); font-size: 12.5px; padding: 8px 10px; resize: vertical;
@@ -1362,3 +1363,14 @@ button.tool-badge--action:hover { border-color: var(--green); }
 }
 .gds-preview { flex: 1; min-width: 220px; }
 .gds-preview-canvas { display: block; max-width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); }
+.gds-level-toolbar-label { font-size: 12px; color: var(--muted); margin-right: 4px; }
+.gds-check-ok {
+  font-size: 13px; padding: 10px 12px; border-radius: var(--radius-sm); margin: 4px 0 0;
+  background: color-mix(in srgb, var(--green) 10%, var(--surface)); border: 1px solid var(--green); color: var(--green);
+}
+.gds-check-problems {
+  padding: 10px 12px; border-radius: var(--radius-sm); margin: 4px 0 0;
+  background: color-mix(in srgb, var(--coral) 10%, var(--surface)); border: 1px solid var(--coral);
+}
+.gds-check-problems li { color: var(--coral); }
+.gds-check-problems li::before { color: var(--coral); }
