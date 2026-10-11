@@ -141,6 +141,11 @@ const FOCUS_RULES = [
   { id: 'kiosk-public-terminal', words: ['kiosk ui', 'auto-reset to idle'] },
   { id: 'tabletop-orientation', words: ['large display ui', 'інтерактивний стіл'] },
   { id: 'continue-where-left-off', words: ['продовжити з того місця', 'continue where you left off'] },
+  { id: 'aria-attribute-widget', words: ['accessible rich internet applications', 'aria не змінює', 'три категорії атрибутів', 'role="button"'] },
+  { id: 'roving-tabindex-widget', words: ['roving tabindex', 'композитного віджета окремо фокусованим'] },
+  { id: 'table-header-scope', words: ['th scope', 'доступна структура таблиці даних'] },
+  { id: 'dialog-aria-modal', words: ['role="dialog"', 'aria-modal', 'доступна реалізація модального вікна', 'aria-labelledby чи aria-label'] },
+  { id: 'keyboard-trap-bug', words: ['keyboard trap (wcag', 'preventdefault() на події tab'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1681,6 +1686,60 @@ function BrowserMockup({ focus, alert }) {
         <rect x="146" y="46" width="40" height="54" rx="6" fill="#26262e" stroke="#3a3a44" />
         <rect x="152" y="76" width="28" height="5" rx="2" fill="#3a3a44" />
         <rect x="152" y="76" width="16" height="5" rx="2" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'aria-attribute-widget') {
+    return (
+      <Frame>
+        <rect x="40" y="48" width="120" height="54" rx="6" fill="#1c1c22" stroke="#3a3a44" />
+        <rect x="52" y="58" width="60" height="7" rx="3" fill={accent} opacity="0.85" />
+        <rect x="52" y="72" width="80" height="6" rx="3" fill="#5a5a66" />
+        <rect x="52" y="84" width="50" height="6" rx="3" fill="#5a5a66" />
+        <path d="M 140 64 L 148 72 L 140 80" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'roving-tabindex-widget') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x={30 + i * 38} y="58" width="30" height="30" rx="6" fill={i === 1 ? accent : '#26262e'} opacity={i === 1 ? 0.9 : 1} stroke={i === 1 ? accent : '#3a3a44'} strokeWidth={i === 1 ? 2.5 : 1.5} />
+        ))}
+        <path d="M 60 100 L 98 100" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        <path d="M 90 94 L 98 100 L 90 106" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'table-header-scope') {
+    return (
+      <Frame>
+        <rect x="30" y="42" width="140" height="18" rx="3" fill={accent} opacity="0.85" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="30" y={64 + i * 16} width="140" height="12" rx="2" fill="#26262e" stroke="#3a3a44" />
+        ))}
+        <path d="M 60 50 L 60 108" fill="none" stroke={accent} strokeWidth="1.5" strokeDasharray="2 2" opacity="0.6" />
+      </Frame>
+    )
+  }
+  if (focus === 'dialog-aria-modal') {
+    return (
+      <Frame>
+        <rect x="16" y="18" width="168" height="94" rx="8" fill="#1c1c22" opacity="0.55" />
+        <rect x="52" y="44" width="96" height="60" rx="8" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <rect x="64" y="56" width="60" height="8" rx="3" fill="#5a5a66" />
+        <rect x="64" y="70" width="72" height="6" rx="3" fill="#3a3a44" />
+        <rect x="64" y="86" width="40" height="12" rx="4" fill={accent} opacity="0.85" />
+      </Frame>
+    )
+  }
+  if (focus === 'keyboard-trap-bug') {
+    return (
+      <Frame>
+        <rect x="50" y="46" width="100" height="60" rx="8" fill="none" stroke="#e5484d" strokeWidth="2.5" strokeDasharray="5 3" />
+        <path d="M 100 56 L 100 96 M 80 76 L 120 76" fill="none" stroke="#5a5a66" strokeWidth="2" opacity="0.6" />
+        <path d="M 150 76 L 160 76" fill="none" stroke="#e5484d" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M 150 70 L 142 76 L 150 82" fill="none" stroke="#e5484d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       </Frame>
     )
   }

@@ -88,6 +88,7 @@ import { LESSONS as heuristicsCritique } from './lessons/heuristics-critique.js'
 import { LESSONS as crossPlatformConsistency } from './lessons/cross-platform-consistency.js'
 import { LESSONS as desktopSoftwareUi } from './lessons/desktop-software-ui.js'
 import { LESSONS as emergingPlatformsUi } from './lessons/emerging-platforms-ui.js'
+import { LESSONS as accessibleComplexUi } from './lessons/accessible-complex-ui.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -157,6 +158,7 @@ export const MODULES = [
   ...crossPlatformConsistency,
   ...desktopSoftwareUi,
   ...emergingPlatformsUi,
+  ...accessibleComplexUi,
 ]
 
 export function getModule(id) {
