@@ -82,6 +82,7 @@ import { LESSONS as dashboardsDataviz } from './lessons/dashboards-dataviz.js'
 import { LESSONS as notificationsFeedback } from './lessons/notifications-feedback.js'
 import { LESSONS as onboardingAdoption } from './lessons/onboarding-adoption.js'
 import { LESSONS as enterpriseSaasUi } from './lessons/enterprise-saas-ui.js'
+import { LESSONS as darkPatternsEthics } from './lessons/dark-patterns-ethics.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -145,6 +146,7 @@ export const MODULES = [
   ...notificationsFeedback,
   ...onboardingAdoption,
   ...enterpriseSaasUi,
+  ...darkPatternsEthics,
 ]
 
 export function getModule(id) {

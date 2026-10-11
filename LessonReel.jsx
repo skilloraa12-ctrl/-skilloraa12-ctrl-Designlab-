@@ -116,6 +116,11 @@ const FOCUS_RULES = [
   { id: 'workspace-switcher', words: ['workspace switcher', 'multi-tenant ui', 'робочий простір недостатньо візуально виразним'] },
   { id: 'bulk-progress-async', words: ['bulk operations ui', 'partial failure', 'фонової асинхронної обробки'] },
   { id: 'density-toggle-enterprise', words: ['enterprise data density', 'user-configurable density', 'тим самим рівнем просторості'] },
+  { id: 'roach-motel-trap', words: ['roach motel'] },
+  { id: 'forced-continuity-billing', words: ['forced continuity', 'автоматичним списанням'] },
+  { id: 'hidden-costs-checkout', words: ['hidden costs', 'базову» ціну товару'] },
+  { id: 'ethical-design-balance', words: ['етичний ui design', 'friction symmetry'] },
+  { id: 'plain-explanation-test', words: ['тест прямого пояснення', 'plain explanation test'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1369,6 +1374,66 @@ function BrowserMockup({ focus, alert }) {
         {[0, 1].map((i) => (
           <rect key={i} x="118" y={46 + i * 28} width="62" height="18" rx="4" fill={i === 0 ? accent : '#26262e'} opacity={i === 0 ? 0.85 : 1} stroke="#3a3a44" />
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'roach-motel-trap') {
+    return (
+      <Frame>
+        <rect x="40" y="46" width="52" height="20" rx="10" fill={accent} opacity="0.85" />
+        <path d="M 96 56 L 134 56" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" />
+        <path d="M 126 50 L 134 56 L 126 62" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="140" y="46" width="30" height="20" rx="4" fill="#1c1c22" stroke="#3a3a44" />
+        <path d="M 150 94 Q 100 80 60 94 Q 100 108 150 94 Z" fill="none" stroke="#e5484d" strokeWidth="2" strokeDasharray="3 2" />
+        <rect x="90" y="86" width="20" height="14" rx="3" fill="#26262e" stroke="#e5484d" opacity="0.6" />
+      </Frame>
+    )
+  }
+  if (focus === 'forced-continuity-billing') {
+    return (
+      <Frame>
+        <rect x="40" y="48" width="120" height="44" rx="8" fill="#26262e" stroke="#3a3a44" />
+        <rect x="52" y="58" width="60" height="8" rx="3" fill="#5a5a66" />
+        <rect x="52" y="72" width="90" height="6" rx="3" fill="#3a3a44" />
+        <circle cx="150" cy="60" r="8" fill="#e5484d" opacity="0.85" />
+        <path d="M 146 60 L 150 64 L 154 56" fill="none" stroke="#1c1c22" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="60" y="104" width="80" height="12" rx="5" fill={accent} opacity="0.3" />
+      </Frame>
+    )
+  }
+  if (focus === 'hidden-costs-checkout') {
+    return (
+      <Frame>
+        <rect x="34" y="46" width="60" height="30" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="44" y="58" width="40" height="8" rx="3" fill={accent} opacity="0.7" />
+        <path d="M 100 60 L 130 60" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        <path d="M 122 54 L 130 60 L 122 66" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="136" y="46" width="44" height="52" rx="6" fill="#26262e" stroke="#e5484d" strokeWidth="2" />
+        <rect x="144" y="56" width="28" height="6" rx="2" fill="#5a5a66" />
+        <rect x="144" y="66" width="28" height="6" rx="2" fill="#e5484d" opacity="0.7" />
+        <rect x="144" y="76" width="28" height="6" rx="2" fill="#e5484d" opacity="0.7" />
+      </Frame>
+    )
+  }
+  if (focus === 'ethical-design-balance') {
+    return (
+      <Frame>
+        <rect x="42" y="56" width="50" height="20" rx="6" fill={accent} opacity="0.85" />
+        <rect x="108" y="56" width="50" height="20" rx="6" fill={accent} opacity="0.85" />
+        <path d="M 100 44 L 100 100" fill="none" stroke="#3a3a44" strokeWidth="2" />
+        <path d="M 60 44 L 140 44" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="100" cy="44" r="4" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'plain-explanation-test') {
+    return (
+      <Frame>
+        <rect x="36" y="44" width="128" height="52" rx="8" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <path d="M 52 60 Q 48 54 54 52 Q 56 46 62 50" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+        <rect x="68" y="56" width="80" height="7" rx="3" fill="#5a5a66" />
+        <rect x="68" y="68" width="60" height="6" rx="3" fill="#3a3a44" />
+        <path d="M 100 96 L 92 110 L 108 110 Z" fill="#26262e" stroke={accent} strokeWidth="1.5" />
       </Frame>
     )
   }
