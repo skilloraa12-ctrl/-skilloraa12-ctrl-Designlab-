@@ -52,7 +52,7 @@ export default function Home() {
       </div>
       <div className="direction-grid">
         {DIRECTIONS.map((d) =>
-          d.id === 'web-design' || d.id === 'app-design' ? (
+          d.id === 'web-design' || d.id === 'app-design' || d.id === 'ui-design' || d.id === 'game-design' ? (
             <Link className="direction-card" key={d.id} to={`/academy/${d.id}`}>
               <span className="direction-emoji">{d.emoji}</span>
               <div>
