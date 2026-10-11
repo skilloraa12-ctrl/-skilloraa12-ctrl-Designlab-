@@ -132,6 +132,11 @@ const FOCUS_RULES = [
   { id: 'feedback-sandwich-sbi', words: ['situation-behavior-impact', 'i like, i wish, what if'] },
   { id: 'self-review-checklist-items', words: ['self-review checklist', 'сліпа зона автора'] },
   { id: 'reviewer-rotation-gate', words: ['ротація рецензентів', 'peer review'] },
+  { id: 'menu-bar-completeness', words: ['menu bar'] },
+  { id: 'multi-window-doc-utility', words: ['multi-window ui', 'document windows'] },
+  { id: 'sacred-shortcuts-lock', words: ['священні» скорочення', 'священне» скорочення'] },
+  { id: 'unsaved-changes-indicator', words: ['незбережених змін'] },
+  { id: 'native-vs-custom-control', words: ['native control —', 'native controls'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1569,6 +1574,59 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 88 60 L 112 60" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" />
         <path d="M 104 54 L 112 60 L 104 66" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         <rect x="56" y="94" width="88" height="14" rx="6" fill="#26262e" stroke="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'menu-bar-completeness') {
+    return (
+      <Frame>
+        <rect x="20" y="36" width="160" height="14" rx="3" fill="#26262e" stroke="#3a3a44" />
+        {['File', 'Edit', 'View'].map((_, i) => (
+          <rect key={i} x={30 + i * 32} y="40" width="24" height="6" rx="2" fill="#5a5a66" />
+        ))}
+        <rect x="30" y="54" width="90" height="56" rx="4" fill="#26262e" stroke={accent} strokeWidth="1.5" />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="38" y={62 + i * 12} width="70" height="6" rx="2" fill="#5a5a66" opacity={0.9 - i * 0.1} />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'multi-window-doc-utility') {
+    return (
+      <Frame>
+        <rect x="26" y="40" width="94" height="66" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="26" y="40" width="94" height="10" rx="3" fill={accent} opacity="0.6" />
+        <rect x="128" y="54" width="56" height="78" rx="6" fill="#26262e" stroke="#3a3a44" opacity="0.6" />
+        <rect x="128" y="54" width="56" height="10" rx="3" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'sacred-shortcuts-lock') {
+    return (
+      <Frame>
+        <rect x="76" y="70" width="48" height="34" rx="6" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <path d="M 86 70 L 86 56 A 14 14 0 0 1 114 56 L 114 70" fill="none" stroke={accent} strokeWidth="3" />
+        <circle cx="100" cy="86" r="5" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'unsaved-changes-indicator') {
+    return (
+      <Frame>
+        <rect x="40" y="44" width="120" height="16" rx="4" fill="#26262e" stroke="#3a3a44" />
+        <rect x="52" y="50" width="70" height="5" rx="2" fill="#5a5a66" />
+        <circle cx="140" cy="52" r="5" fill={accent} />
+        <rect x="40" y="74" width="120" height="40" rx="6" fill="#1c1c22" opacity="0.3" />
+      </Frame>
+    )
+  }
+  if (focus === 'native-vs-custom-control') {
+    return (
+      <Frame>
+        <rect x="38" y="52" width="56" height="22" rx="5" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <rect x="46" y="60" width="40" height="6" rx="3" fill="#5a5a66" />
+        <rect x="106" y="52" width="56" height="22" rx="11" fill={accent} opacity="0.85" />
+        <circle cx="152" cy="63" r="8" fill="#ffffff" opacity="0.9" />
       </Frame>
     )
   }
