@@ -248,6 +248,11 @@ const FOCUS_RULES = [
   { id: 'game-gdd-living-doc', words: ['два протилежні підходи до роботи з gdd: upfront-специфікація намагаєт', 'upfront-специфікація намагається зафіксувати всі деталі до розробки', 'деталізований план до будь-якого плейтесту неминуче містить рішення', 'трактують gdd як незмінний контракт, опираючись змінам навіть після'] },
   { id: 'game-proto-paper-speed', words: ['головна перевага — швидкість ітерації: зміна правила займає секунди'] },
   { id: 'game-proto-rapid-iteration', words: ['швидка ітерація — здатність змінити механіку й одразу побачити резул', 'швидка ітерація — короткий цикл «зміна → перевірка»', 'техніки прискорення: live-зміна параметрів без перезапуску', 'ігнорують інвестицію часу в інструменти швидкої ітерації (live-tuning)'] },
+  { id: 'game-playtest-methods', words: ['внутрішній плейтест швидкий і дешевий, але упереджений — команда вже', 'закритий зовнішній плейтест дає свіжий погляд при контрольованих умова', 'використовують лише внутрішній плейтест протягом усієї розробки, покла'] },
+  { id: 'game-playtest-protocol', words: ['silent observation — мовчазне спостереження без втручання; think-alo', 'silent observation дає чистішу поведінкову картину, бо вербалізація са'] },
+  { id: 'game-playtest-actions-vs-words', words: ['центральний принцип аналізу плейтесту: дії гравця й словесний фідбек', 'дії гравця й словесний фідбек часто не збігаються — довіряти діям біль', 'причини розбіжності: ввічливість, неусвідомлені справжні мотиви, пропо', 'реалізовують запропоноване гравцем конкретне рішення буквально, без ан'] },
+  { id: 'game-playtest-synthesis', words: ['збір фідбеку від кількох сесій плейтесту дає розрізнені окремі спосте', 'збір дає розрізнені спостереження; синтез перетворює їх у дієві виснов', 'один гравець із проблемою — анекдот; кілька гравців з тією самою пробл', 'реагують окремою зміною дизайну на кожен індивідуальний коментар одраз'] },
+  { id: 'game-playtest-cycle', words: ['кожен цикл потребує чіткої гіпотези до плейтесту — без неї неможливо'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -3018,6 +3023,70 @@ function BrowserMockup({ focus, alert }) {
         <path d="M64 144 L70 150 L76 142" stroke={accent} strokeWidth="3" fill="none" />
         <rect x="110" y="110" width="60" height="10" rx="5" fill="#3a3a44" />
         <circle cx="145" cy="115" r="8" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-playtest-methods') {
+    return (
+      <Frame>
+        <circle cx="45" cy="90" r="8" fill={accent} />
+        <circle cx="65" cy="90" r="8" fill={accent} />
+        <circle cx="95" cy="90" r="7" fill="#5a5a66" />
+        <circle cx="112" cy="90" r="7" fill="#5a5a66" />
+        <circle cx="129" cy="90" r="7" fill="#5a5a66" />
+        <circle cx="146" cy="90" r="7" fill="#5a5a66" />
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <circle key={i} cx={40 + i * 22} cy="140" r="5" fill="#3a3a44" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-playtest-protocol') {
+    return (
+      <Frame>
+        <circle cx="65" cy="100" r="30" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M50 100 L80 100" stroke="#5a5a66" strokeWidth="3" />
+        <path d="M40 90 L50 100 M40 110 L50 100" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="140" cy="100" r="30" fill="none" stroke={accent} strokeWidth="2" />
+        <path d="M125 90 Q140 80 155 90" stroke={accent} strokeWidth="2" fill="none" />
+        <rect x="150" y="75" width="22" height="14" rx="4" fill={accent} opacity="0.7" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-playtest-actions-vs-words') {
+    return (
+      <Frame>
+        <rect x="35" y="130" width="50" height="30" rx="15" fill="#2a2a34" />
+        <text x="60" y="150" textAnchor="middle" fontSize="10" fill="#8a8a9a">OK</text>
+        <path d="M100 80 L100 160" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M130 90 L160 70" stroke={accent} strokeWidth="3" />
+        <path d="M154 64 L160 70 L154 76" stroke={accent} strokeWidth="3" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-playtest-synthesis') {
+    return (
+      <Frame>
+        <circle cx="40" cy="70" r="6" fill={accent} />
+        <circle cx="55" cy="85" r="6" fill={accent} />
+        <circle cx="45" cy="95" r="6" fill={accent} />
+        <ellipse cx="48" cy="85" rx="28" ry="28" fill="none" stroke={accent} strokeWidth="2" opacity="0.5" />
+        <circle cx="130" cy="70" r="6" fill="#5a5a66" />
+        <circle cx="145" cy="80" r="6" fill="#5a5a66" />
+        <ellipse cx="137" cy="75" rx="20" ry="20" fill="none" stroke="#5a5a66" strokeWidth="2" opacity="0.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-playtest-cycle') {
+    return (
+      <Frame>
+        <circle cx="100" cy="115" r="45" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="100" cy="70" r="7" fill={accent} />
+        <circle cx="145" cy="115" r="7" fill="#3a3a44" />
+        <circle cx="100" cy="160" r="7" fill="#3a3a44" />
+        <circle cx="55" cy="115" r="7" fill="#3a3a44" />
+        <path d="M100 70 A45 45 0 0 1 145 115" stroke={accent} strokeWidth="3" fill="none" />
+        <path d="M139 109 L145 115 L137 119" stroke={accent} strokeWidth="3" fill="none" />
       </Frame>
     )
   }

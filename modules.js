@@ -111,6 +111,7 @@ import { LESSONS as gameMenusNavigation } from './lessons/game-menus-navigation.
 import { LESSONS as gameAccessibility } from './lessons/game-accessibility.js'
 import { LESSONS as gameDesignDocumentation } from './lessons/game-design-documentation.js'
 import { LESSONS as gamePrototyping } from './lessons/game-prototyping.js'
+import { LESSONS as playtestingIteration } from './lessons/playtesting-iteration.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -203,6 +204,7 @@ export const MODULES = [
   ...gameAccessibility,
   ...gameDesignDocumentation,
   ...gamePrototyping,
+  ...playtestingIteration,
 ]
 
 export function getModule(id) {
