@@ -103,6 +103,7 @@ import { LESSONS as difficultyProgression } from './lessons/difficulty-progressi
 import { LESSONS as levelDesignFundamentals } from './lessons/level-design-fundamentals.js'
 import { LESSONS as gameGenresConventions } from './lessons/game-genres-conventions.js'
 import { LESSONS as narrativeDesign } from './lessons/narrative-design.js'
+import { LESSONS as gameEconomy } from './lessons/game-economy.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -187,6 +188,7 @@ export const MODULES = [
   ...levelDesignFundamentals,
   ...gameGenresConventions,
   ...narrativeDesign,
+  ...gameEconomy,
 ]
 
 export function getModule(id) {

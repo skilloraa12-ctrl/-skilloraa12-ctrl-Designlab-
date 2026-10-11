@@ -219,6 +219,11 @@ const FOCUS_RULES = [
   { id: 'game-branching-narrative-tree', words: ['розгалужена історія (branching narrative) — наративна структура, де рі', 'branching narrative — структура, де рішення гравця веде до різних сюже', 'головний виклик — експоненційне зростання обсягу контенту на кожній то', 'обіцяють «значущий вибір», який насправді ніяк не впливає на подальший'] },
   { id: 'game-ludo-narrative-dissonance', words: ['ludo-narrative dissonance — суперечність між тим, що розповідає сюжет', 'дисонанс виникає через взаємно суперечливі історії від двох систем пов', 'пишуть сюжет про персонажа, наприклад пацифіста, що прямо суперечить т'] },
   { id: 'game-narrative-mechanics-harmony', words: ['протилежність ludo-narrative dissonance — наратив, свідомо побудований', 'злагода наративу й механік — коли ядро гри (найчастіша дія гравця) є п', 'практичний підхід: починати з питання, яка ігрова дія могла б буквальн', 'пишуть сюжет окремо від механік і намагаються «прикрутити» його до вже'] },
+  { id: 'game-economy-currency', words: ['валюта в грі — будь-який ресурс, що гравець накопичує й витрачає для д', 'валюта — ресурс, що гравець накопичує й витрачає для досягнення інших', 'класичний поділ: основна валюта (заробляється часто) і преміум-валюта', 'створюють валюту без чіткого визначення, яку дію гравця вона винагород'] },
+  { id: 'game-economy-sinks-faucets', words: ['faucet (кран) — будь-яке джерело, що додає ресурс (валюту) в економіку', 'faucet — джерело, що додає ресурс в економіку; sink — місце, що виводи', 'якщо faucets стабільно переважають sinks, виникає інфляція — валюта на', 'додають багато faucets (джерел доходу) без відповідних sinks, через що'] },
+  { id: 'game-economy-crafting', words: ['крафтингова економіка — система, де гравець перетворює базові ресурси', 'крафтингова економіка перетворює базові ресурси в складніші предмети ч', 'крафтинг природно працює як sink для надлишкових базових ресурсів і fa', 'роблять кінцевий крафтований предмет дешевшим на ринку, ніж сума інгре'] },
+  { id: 'game-economy-inflation', words: ['інфляція в економіці гри — поступове знецінення валюти через те, що гр', 'інфляція — поступове знецінення валюти через те, що гравці накопичують', 'класичний симптом — ціни на предмети постійно зростають через надлишок', 'проєктують sinks зі статичною вартістю, що не масштабується з часом ра'] },
+  { id: 'game-economy-soft-hard', words: ['soft currency (м’яка валюта) — валюта, яку гравець заробляє через звич', 'soft currency заробляється через звичайну гру без прямих витрат грошей', 'soft currency дає відчуття справедливого прогресу; hard currency дає с', 'роблять контент, критичний для проходження, не косметику, доступним ли'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2664,6 +2669,56 @@ function BrowserMockup({ focus, alert }) {
         {[0, 90, 180, 270].map((deg) => (
           <line key={deg} x1="80" y1="100" x2={80 + 34 * Math.cos((deg * Math.PI) / 180)} y2={100 + 34 * Math.sin((deg * Math.PI) / 180)} stroke={accent} strokeWidth="2" opacity="0.5" />
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-economy-currency') {
+    return (
+      <Frame>
+        <circle cx="70" cy="100" r="26" fill="none" stroke="#5a5a66" strokeWidth="2.5" />
+        <text x="70" y="106" textAnchor="middle" fontSize="16" fontWeight="700" fill="#5a5a66">$</text>
+        <circle cx="140" cy="90" r="18" fill={accent} opacity="0.9" />
+        <text x="140" y="96" textAnchor="middle" fontSize="13" fontWeight="700" fill="#17171a">◆</text>
+      </Frame>
+    )
+  }
+  if (focus === 'game-economy-sinks-faucets') {
+    return (
+      <Frame>
+        <path d="M 50 50 L 80 50 L 80 65 L 65 65" stroke="#5a5a66" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M 65 65 L 65 85" stroke={accent} strokeWidth="2" strokeDasharray="3 2" />
+        <rect x="45" y="90" width="110" height="60" rx="6" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 140 150 L 140 170 M 134 164 L 140 170 L 146 164" stroke={accent} strokeWidth="2" strokeLinecap="round" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-economy-crafting') {
+    return (
+      <Frame>
+        <rect x="30" y="80" width="24" height="24" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <text x="62" y="98" fontSize="16" fill="#5a5a66">+</text>
+        <rect x="76" y="80" width="24" height="24" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 108 92 L 128 92" stroke={accent} strokeWidth="2.5" />
+        <path d="M 122 84 L 130 92 L 122 100" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+        <rect x="140" y="72" width="34" height="34" rx="6" fill={accent} opacity="0.9" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-economy-inflation') {
+    return (
+      <Frame>
+        {[40, 70, 110, 150].map((h, i) => (
+          <rect key={i} x={40 + i * 32} y={170 - h} width="20" height={h} fill={i === 3 ? accent : '#5a5a66'} rx="3" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-economy-soft-hard') {
+    return (
+      <Frame>
+        <circle cx="70" cy="100" r="24" fill="none" stroke="#5a5a66" strokeWidth="2.5" />
+        <circle cx="140" cy="100" r="24" fill="none" stroke={accent} strokeWidth="2.5" />
+        <text x="140" y="106" textAnchor="middle" fontSize="15" fontWeight="700" fill={accent}>$</text>
       </Frame>
     )
   }
