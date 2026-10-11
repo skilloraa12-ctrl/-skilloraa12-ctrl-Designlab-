@@ -85,6 +85,7 @@ import { LESSONS as enterpriseSaasUi } from './lessons/enterprise-saas-ui.js'
 import { LESSONS as darkPatternsEthics } from './lessons/dark-patterns-ethics.js'
 import { LESSONS as uxWritingMicrocopy } from './lessons/ux-writing-microcopy.js'
 import { LESSONS as heuristicsCritique } from './lessons/heuristics-critique.js'
+import { LESSONS as crossPlatformConsistency } from './lessons/cross-platform-consistency.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -151,6 +152,7 @@ export const MODULES = [
   ...darkPatternsEthics,
   ...uxWritingMicrocopy,
   ...heuristicsCritique,
+  ...crossPlatformConsistency,
 ]
 
 export function getModule(id) {
