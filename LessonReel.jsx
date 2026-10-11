@@ -253,6 +253,12 @@ const FOCUS_RULES = [
   { id: 'game-playtest-actions-vs-words', words: ['центральний принцип аналізу плейтесту: дії гравця й словесний фідбек', 'дії гравця й словесний фідбек часто не збігаються — довіряти діям біль', 'причини розбіжності: ввічливість, неусвідомлені справжні мотиви, пропо', 'реалізовують запропоноване гравцем конкретне рішення буквально, без ан'] },
   { id: 'game-playtest-synthesis', words: ['збір фідбеку від кількох сесій плейтесту дає розрізнені окремі спосте', 'збір дає розрізнені спостереження; синтез перетворює їх у дієві виснов', 'один гравець із проблемою — анекдот; кілька гравців з тією самою пробл', 'реагують окремою зміною дизайну на кожен індивідуальний коментар одраз'] },
   { id: 'game-playtest-cycle', words: ['кожен цикл потребує чіткої гіпотези до плейтесту — без неї неможливо'] },
+  { id: 'game-feel-core', words: ['game feel — суб’єктивне відчуття безпосереднього контролю й фізичної', 'game feel — суб’єктивне відчуття контролю й фізичної присутності, що', 'гарна механіка з поганим game feel відчувається «липкою»', 'ігнорують game feel як «несуттєву деталь»'] },
+  { id: 'game-feel-juiciness', words: ['«соковитість» (juiciness) — надлишковий, не строго необхідний для фун', 'juiciness — надлишковий візуальний і звуковий фідбек на дію гравця, щ', 'класичний приклад — збір монети: звук, спалах, підстрибування числа', 'плутають соковитість із захаращенням — додають ефекти без урахування'] },
+  { id: 'game-feel-screenshake', words: ['screen shake — коротке тремтіння камери у відповідь на значну подію (', 'screen shake — коротке тремтіння камери у відповідь на значну подію, щ', 'ефективна структура: різкий початок і швидке згасання', 'використовують однакову інтенсивність shake для подій різного масштаб'] },
+  { id: 'game-feel-particles', words: ['частинки (particle effects) — дрібні візуальні елементи (спалахи, іск', 'частинки надають діям фізичної переконливості — видиме «щось відбуваєт', 'використовують однакові частинки для всіх типів подій, незалежно від м'] },
+  { id: 'game-feel-hitstop', words: ['hit-stop (чи «freeze frame») — техніка короткочасної паузи всієї гри', 'hit-stop — короткочасна пауза гри на кілька кадрів у момент удару, що', 'психологічний механізм: мозок інтерпретує раптову зупинку руху як сигн', 'роблять hit-stop занадто довгим, через що гравець відчуває'] },
+  { id: 'game-feel-sensitivity', words: ['чутливість вводу — налаштування того, наскільки малий фізичний рух (р', 'чутливість вводу визначає, наскільки малий фізичний рух перетворюється', 'занадто низька чутливість відчувається «важкою» і втомлює', 'фіксують єдине значення чутливості без можливості ручного налаштування'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -3087,6 +3093,67 @@ function BrowserMockup({ focus, alert }) {
         <circle cx="55" cy="115" r="7" fill="#3a3a44" />
         <path d="M100 70 A45 45 0 0 1 145 115" stroke={accent} strokeWidth="3" fill="none" />
         <path d="M139 109 L145 115 L137 119" stroke={accent} strokeWidth="3" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-feel-core') {
+    return (
+      <Frame>
+        <rect x="40" y="100" width="30" height="30" rx="6" fill={accent} />
+        <path d="M75 115 L115 115" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M109 109 L115 115 L109 121" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <circle cx="140" cy="115" r="16" fill="none" stroke={accent} strokeWidth="3" />
+        <path d="M140 105 L140 115 L148 120" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-feel-juiciness') {
+    return (
+      <Frame>
+        <circle cx="80" cy="110" r="18" fill={accent} />
+        <path d="M80 85 L84 95 M62 100 L72 105 M62 120 L72 115" stroke={accent} strokeWidth="2" opacity="0.6" />
+        <text x="140" y="100" textAnchor="middle" fontSize="16" fontWeight="700" fill={accent}>+10</text>
+        <path d="M140 100 L140 85" stroke={accent} strokeWidth="2" opacity="0.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-feel-screenshake') {
+    return (
+      <Frame>
+        <path d="M30 60 L40 70 L30 80 L40 90" stroke={accent} strokeWidth="3" fill="none" />
+        <path d="M170 60 L160 70 L170 80 L160 90" stroke={accent} strokeWidth="3" fill="none" />
+        <rect x="60" y="90" width="80" height="60" rx="8" fill="#2a2a34" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-feel-particles') {
+    return (
+      <Frame>
+        <circle cx="100" cy="115" r="5" fill={accent} />
+        <circle cx="100" cy="85" r="4" fill={accent} opacity="0.8" />
+        <circle cx="126" cy="100" r="4" fill={accent} opacity="0.8" />
+        <circle cx="126" cy="130" r="4" fill={accent} opacity="0.8" />
+        <circle cx="100" cy="145" r="4" fill={accent} opacity="0.8" />
+        <circle cx="74" cy="130" r="4" fill={accent} opacity="0.8" />
+        <circle cx="74" cy="100" r="4" fill={accent} opacity="0.8" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-feel-hitstop') {
+    return (
+      <Frame>
+        <rect x="50" y="80" width="100" height="70" rx="6" fill="#2a2a34" stroke="#5a5a66" strokeWidth="2" />
+        <rect x="90" y="100" width="8" height="30" rx="2" fill={accent} />
+        <rect x="104" y="100" width="8" height="30" rx="2" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-feel-sensitivity') {
+    return (
+      <Frame>
+        <path d="M40 160 L40 70" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M40 160 L160 160" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M40 160 Q70 155 90 130 T160 75" stroke={accent} strokeWidth="3" fill="none" />
       </Frame>
     )
   }
