@@ -162,6 +162,11 @@ const FOCUS_RULES = [
   { id: 'edge-case-demo', words: ['граничних випадків (10 000 записів'] },
   { id: 'enterprise-case-audience', words: ['enterprise/saas-кейс у портфоліо', 'рецензент enterprise/saas-кейсу', 'релевантні метрики enterprise-кейсу'] },
   { id: 'complex-ui-walkthrough', words: ['презентація складного ui вимагає', 'рецензент складного ui-кейсу', 'представляють складний ui-проєкт як простий лінійний наратив'] },
+  { id: 'capstone-realistic-domain', words: ['конкретний реалістичний домен'] },
+  { id: 'capstone-happy-path-gap', words: ['щасливим шляхом'] },
+  { id: 'capstone-design-system-scope', words: ['ui-орієнтованої дизайн-системи', 'композитний віджет'] },
+  { id: 'capstone-full-integration', words: ['усіх 24 підкатегорій', 'обов’язкова структура:'] },
+  { id: 'capstone-disjointed-screens', words: ['неузгоджених екранів'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1943,6 +1948,69 @@ function BrowserMockup({ focus, alert }) {
         ))}
         <circle cx="150" cy="96" r="12" fill={accent} opacity="0.85" />
         <path d="M 146 96 L 150 100 L 156 90" fill="none" stroke="#1c1c22" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'capstone-realistic-domain') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x={30 + i * 50} y="40" width="40" height="34" rx="6" fill="#26262e" stroke={i === 1 ? accent : '#3a3a44'} strokeWidth={i === 1 ? 2.5 : 2} />
+        ))}
+        <path d="M 80 78 L 80 96" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="3 2" />
+        <rect x="52" y="98" width="56" height="20" rx="6" fill={accent} opacity="0.85" />
+        <path d="M 65 108 L 73 114 L 94 96" fill="none" stroke="#1c1c22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'capstone-happy-path-gap') {
+    return (
+      <Frame>
+        <path d="M 30 70 L 170 70" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+        <circle cx="170" cy="70" r="9" fill="none" stroke={accent} strokeWidth="2.5" />
+        <path d="M 166 70 L 169 73 L 175 65" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 60 70 L 60 104 L 110 104" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 3" />
+        <circle cx="110" cy="104" r="9" fill="none" stroke="#e5484d" strokeWidth="2.5" />
+        <path d="M 106 100 L 114 108 M 114 100 L 106 108" fill="none" stroke="#e5484d" strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'capstone-design-system-scope') {
+    return (
+      <Frame>
+        {[0, 1].map((i) => (
+          <rect key={i} x={30} y={40 + i * 26} width="26" height="18" rx="4" fill="#26262e" stroke="#3a3a44" strokeWidth="2" />
+        ))}
+        <rect x="76" y="38" width="94" height="72" rx="8" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <rect x="88" y="50" width="70" height="10" rx="3" fill="#5a5a66" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="88" y={68 + i * 12} width={60 - i * 10} height="7" rx="2" fill="#3a3a44" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'capstone-full-integration') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x={28 + (i % 2) * 24} y={34 + Math.floor(i / 2) * 24} width="18" height="18" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        ))}
+        <path d="M 70 55 L 100 65" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="3 2" />
+        <rect x="104" y="40" width="68" height="76" rx="8" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="114" y={52 + i * 18} width="48" height="10" rx="3" fill={i === 0 ? accent : '#3a3a44'} opacity={i === 0 ? 0.85 : 1} />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'capstone-disjointed-screens') {
+    return (
+      <Frame>
+        {[[28, 36], [96, 30], [60, 86], [128, 92]].map(([x, y], i) => (
+          <rect key={i} x={x} y={y} width="44" height="30" rx="6" fill="#26262e" stroke="#e5484d" strokeWidth="2" strokeDasharray="4 3" />
+        ))}
+        <circle cx="100" cy="60" r="11" fill="none" stroke="#e5484d" strokeWidth="2" />
+        <path d="M 96 56 L 104 64 M 104 56 L 96 64" fill="none" stroke="#e5484d" strokeWidth="2" strokeLinecap="round" />
       </Frame>
     )
   }
