@@ -207,6 +207,13 @@ const FOCUS_RULES = [
   { id: 'game-level-pacing-flow', words: ['вузькі лінійні коридори стискають темп і фокусують увагу; широкі відкр'] },
   { id: 'game-landmark-wayfinding', words: ['роблять весь рівень візуально одноманітним, не виділяючи жодної точки'] },
   { id: 'game-critical-path-exploration', words: ['critical path — обов’язковий маршрут, який гравець мусить пройти, щоб', 'critical path — обов’язковий маршрут для завершення гри; дослідження —', 'critical path має бути завжди прохідним і зрозумілим; дослідницький ко', 'ховають обов’язковий для завершення гри елемент у технічно необов’язко'] },
+  { id: 'game-genre-platformer-jump', words: ['гравці очікують передбачувану, послідовну фізику стрибка — непередбачу', 'роблять фізику стрибка непослідовною (різна висота чи траєкторія щораз'] },
+  { id: 'game-genre-rpg-stats', words: ['rpg побудовано навколо розвитку персонажа через накопичення статистик', 'гравці очікують видиму, зрозумілу систему чисел (здоров’я, урон, досві', 'додають видимі цифри статистик (рівень, досвід), які насправді не впли'] },
+  { id: 'game-genre-puzzle-logic', words: ['головоломка (puzzle) — жанр, де ядро досвіду — пошук єдиного, чи одног', 'ядро puzzle — пошук правильного розв’язку через логічне міркування', 'головоломка має явну, перевірювану мету («розв’язано» чи «не розв’язан'] },
+  { id: 'game-genre-shooter-silhouette', words: ['fps/shooter — жанр, побудований навколо прицільної стрільби в реальном', 'ядро fps/shooter — просторове усвідомлення й точність приціл-реакції в', 'гравці очікують читабельні силуети ворогів, що виразно відрізняються з', 'роблять силуети різних типів ворогів візуально невиразними, через що г'] },
+  { id: 'game-genre-strategy-resources', words: ['стратегія — жанр, де ядро — планування й управління ресурсами чи юніта', 'ядро стратегії — планування й управління ресурсами чи юнітами на вищом', 'гравці очікують прозору економіку ресурсів — приховані витрати сприйма'] },
+  { id: 'game-genre-roguelike-permadeath', words: ['roguelike визначають дві ключові конвенції: процедурна генерація конте', 'ці конвенції працюють разом — без процедурної генерації permadeath був', 'додають permadeath без процедурної генерації, перетворюючи смерть на п'] },
+  { id: 'game-genre-break-convention', words: ['жанрові конвенції — не недоторканні закони, а усталені очікування грав', 'жанрові конвенції — усталені очікування гравців, а не недоторканні зак'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2529,6 +2536,78 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 30 90 L 170 90" stroke={accent} strokeWidth="3" fill="none" />
         <path d="M 90 90 L 130 140" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" fill="none" />
         <circle cx="134" cy="146" r="10" fill="none" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-genre-platformer-jump') {
+    return (
+      <Frame>
+        <rect x="30" y="150" width="30" height="20" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <rect x="140" y="150" width="30" height="20" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 50 150 Q 100 70, 150 150" stroke={accent} strokeWidth="2.5" fill="none" strokeDasharray="5 3" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-genre-rpg-stats') {
+    return (
+      <Frame>
+        <rect x="40" y="46" width="120" height="124" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <rect x="52" y={64 + i * 32} width="30" height="10" rx="3" fill="#5a5a66" />
+            <rect x="88" y={64 + i * 32} width={50 - i * 12} height="10" rx="3" fill={accent} />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-genre-puzzle-logic') {
+    return (
+      <Frame>
+        {[0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => (
+          <rect key={`${r}-${c}`} x={50 + c * 36} y={60 + r * 36} width="28" height="28" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="1.5" />
+        )))}
+        <path d="M 64 74 L 100 110 L 136 74" stroke={accent} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-genre-shooter-silhouette') {
+    return (
+      <Frame>
+        <circle cx="60" cy="100" r="18" fill={accent} />
+        <path d="M 130 70 L 150 70 L 150 130 L 110 130 L 110 90 Z" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-genre-strategy-resources') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <circle cx={56 + i * 44} cy="100" r="18" fill="none" stroke={i === 1 ? accent : '#5a5a66'} strokeWidth="2.5" />
+            <text x={56 + i * 44} y="105" textAnchor="middle" fontSize="13" fontWeight="700" fill={i === 1 ? accent : '#5a5a66'}>{[10, 25, 40][i]}</text>
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-genre-roguelike-permadeath') {
+    return (
+      <Frame>
+        <path d="M 70 90 L 90 110 M 90 90 L 70 110" stroke="#5a5a66" strokeWidth="3" strokeLinecap="round" />
+        <path d="M 110 70 A 30 30 0 1 1 110 130" stroke={accent} strokeWidth="2.5" fill="none" strokeDasharray="4 3" />
+        <path d="M 104 124 L 110 130 L 118 122" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx="150" cy="60" r="10" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-genre-break-convention') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x={36 + i * 34} y="90" width="24" height="24" rx="4" fill={i === 2 ? accent : '#26262e'} stroke={i === 2 ? accent : '#5a5a66'} strokeWidth="2" />
+        ))}
+        <path d="M 110 72 L 115 82 L 126 83 L 118 91 L 120 102 L 110 96 L 100 102 L 102 91 L 94 83 L 105 82 Z" fill={accent} />
       </Frame>
     )
   }
