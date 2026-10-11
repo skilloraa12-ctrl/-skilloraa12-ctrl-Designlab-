@@ -30,6 +30,8 @@ const FOCUS_RULES = [
   { id: 'process-stages', words: ['етапи створення застосунку', 'app store submission', 'brief (бриф)', 'research (дослідження)'] },
   { id: 'role-handoff', words: ['app designer: роль', 'ux designer', 'ios developer', 'android developer', 'cross-platform developer'] },
   { id: 'dev-layers', words: ['ui layer', 'logic layer', 'data layer', 'swiftui', 'jetpack compose', 'react native', 'flutter'] },
+  { id: 'safe-area', words: ['safe area', 'безпечна зона', 'виїмка камери', 'dynamic island', 'home indicator', 'заокруглені кути корпусу'] },
+  { id: 'screen-structure', words: ['screen structure', 'структура екрана', 'ієрархію екранів', 'рівня навігації', 'своя власна версія app bar'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -277,6 +279,30 @@ function BrowserMockup({ focus, alert }) {
             <text x="32" y={69 + i * 34} fontFamily="sans-serif" fontSize="8" fill="#e8e8ec">{label}</text>
           </g>
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'safe-area') {
+    return (
+      <Frame>
+        <rect x="20" y="44" width="160" height="156" rx="6" fill="#2a2a34" opacity="0.5" />
+        <rect x="70" y="44" width="60" height="16" rx="8" fill="#17171a" />
+        <rect x="20" y="44" width="160" height="156" rx="6" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="3 3" transform="translate(6,8) scale(0.94)" />
+        <rect x="70" y="190" width="60" height="5" rx="2.5" fill={accent} />
+        <text x="30" y="130" fontFamily="sans-serif" fontSize="8" fill="#8a8a9a">Safe Area</text>
+      </Frame>
+    )
+  }
+  if (focus === 'screen-structure') {
+    return (
+      <Frame>
+        <rect x="20" y="46" width="160" height="24" rx="4" fill="#2a2a34" stroke={accent} strokeWidth="1.5" />
+        <circle cx="34" cy="58" r="5" fill={accent} />
+        <text x="46" y="62" fontFamily="sans-serif" fontSize="8" fill="#e8e8ec">Екран 2</text>
+        <path d="M 180 90 L 20 90" stroke="#5a5a66" strokeWidth="1.5" strokeDasharray="3 3" />
+        <rect x="40" y="100" width="120" height="22" rx="4" fill="#26262e" opacity="0.7" />
+        <text x="48" y="115" fontFamily="sans-serif" fontSize="7" fill="#8a8a9a">Екран 1 (попередній)</text>
+        <rect x="20" y="138" width="160" height="40" rx="4" fill="#2a2a34" opacity="0.5" />
       </Frame>
     )
   }
