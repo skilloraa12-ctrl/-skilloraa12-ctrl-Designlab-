@@ -109,6 +109,13 @@ const FOCUS_RULES = [
   { id: 'feature-discovery-badge', words: ['feature discovery', 'new» badge'] },
   { id: 'checklist-progress-steps', words: ['ефект зейгарник'] },
   { id: 'product-tour-steps', words: ['product tour', 'пропустити тур'] },
+  { id: 'permission-gated-element', words: ['permissions ui', 'show-disabled', 'системної логіки вибору підходу'] },
+  { id: 'role-permission-matrix', words: ['permission matrix', 'roles & access', 'custom-ролі', 'матрицю ролей'] },
+  { id: 'settings-sidebar-nav', words: ['settings architecture', 'organization settings', 'organization-рівня', 'бічне дерево категорій'] },
+  { id: 'admin-panel-table', words: ['admin panel'] },
+  { id: 'workspace-switcher', words: ['workspace switcher', 'multi-tenant ui', 'робочий простір недостатньо візуально виразним'] },
+  { id: 'bulk-progress-async', words: ['bulk operations ui', 'partial failure', 'фонової асинхронної обробки'] },
+  { id: 'density-toggle-enterprise', words: ['enterprise data density', 'user-configurable density', 'тим самим рівнем просторості'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1276,6 +1283,91 @@ function BrowserMockup({ focus, alert }) {
         <rect x="44" y="76" width="70" height="6" rx="3" fill="#3a3a44" />
         {[0, 1, 2, 3].map((i) => (
           <circle key={i} cx={82 + i * 12} r="3.5" cy="112" fill={i === 1 ? accent : '#3a3a44'} />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'permission-gated-element') {
+    return (
+      <Frame>
+        <rect x="40" y="50" width="130" height="24" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <rect x="52" y="58" width="80" height="8" rx="3" fill="#5a5a66" />
+        <rect x="40" y="86" width="130" height="24" rx="6" fill="#1c1c22" stroke="#3a3a44" opacity="0.5" />
+        <rect x="52" y="94" width="80" height="8" rx="3" fill="#3a3a44" />
+        <circle cx="158" cy="98" r="9" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <rect x="155" y="92" width="6" height="7" rx="1" fill="none" stroke="#5a5a66" strokeWidth="1.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'role-permission-matrix') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((row) => (
+          <g key={row}>
+            <rect x="34" y={46 + row * 22} width="46" height="14" rx="3" fill="#3a3a44" />
+            {[0, 1, 2].map((col) => (
+              <rect key={col} x={92 + col * 28} y={46 + row * 22} width="20" height="14" rx="3" fill={(row + col) % 2 === 0 ? accent : '#26262e'} opacity={(row + col) % 2 === 0 ? 0.85 : 1} stroke="#3a3a44" />
+            ))}
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'settings-sidebar-nav') {
+    return (
+      <Frame>
+        <rect x="24" y="36" width="52" height="88" rx="6" fill="#26262e" stroke="#3a3a44" />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="32" y={46 + i * 20} width="36" height={i === 1 ? 10 : 8} rx="3" fill={i === 1 ? accent : '#5a5a66'} opacity={i === 1 ? 0.9 : 0.6} />
+        ))}
+        <rect x="88" y="44" width="92" height="12" rx="4" fill="#5a5a66" />
+        <rect x="88" y="66" width="70" height="44" rx="6" fill="#26262e" stroke="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'admin-panel-table') {
+    return (
+      <Frame>
+        <rect x="24" y="40" width="152" height="16" rx="4" fill="#3a3a44" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="24" y={60 + i * 18} width="152" height="14" rx="3" fill="#26262e" stroke="#3a3a44" />
+        ))}
+        <circle cx="34" cy="67" r="4" fill="none" stroke={accent} strokeWidth="1.5" />
+        <rect x="46" y="64" width="70" height="6" rx="3" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'workspace-switcher') {
+    return (
+      <Frame>
+        <rect x="30" y="40" width="100" height="26" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="40" y="48" width="18" height="10" rx="3" fill={accent} />
+        <rect x="64" y="49" width="52" height="8" rx="3" fill="#5a5a66" />
+        <path d="M 150 50 L 158 58 L 150 66" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {[0, 1].map((i) => (
+          <rect key={i} x="30" y={80 + i * 20} width="100" height="16" rx="5" fill="#1c1c22" opacity="0.6" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'bulk-progress-async') {
+    return (
+      <Frame>
+        <rect x="34" y="70" width="132" height="14" rx="7" fill="#26262e" stroke="#3a3a44" />
+        <rect x="34" y="70" width="86" height="14" rx="7" fill={accent} opacity="0.85" />
+        <rect x="34" y="94" width="70" height="8" rx="4" fill="#5a5a66" />
+        <circle cx="150" cy="98" r="6" fill="none" stroke="#e5484d" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'density-toggle-enterprise') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <rect key={i} x="30" y={42 + i * 10} width="70" height="6" rx="2" fill="#5a5a66" opacity={0.9 - i * 0.1} />
+        ))}
+        {[0, 1].map((i) => (
+          <rect key={i} x="118" y={46 + i * 28} width="62" height="18" rx="4" fill={i === 0 ? accent : '#26262e'} opacity={i === 0 ? 0.85 : 1} stroke="#3a3a44" />
         ))}
       </Frame>
     )

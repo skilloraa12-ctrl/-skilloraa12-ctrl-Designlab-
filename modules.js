@@ -81,6 +81,7 @@ import { LESSONS as advancedForms } from './lessons/advanced-forms.js'
 import { LESSONS as dashboardsDataviz } from './lessons/dashboards-dataviz.js'
 import { LESSONS as notificationsFeedback } from './lessons/notifications-feedback.js'
 import { LESSONS as onboardingAdoption } from './lessons/onboarding-adoption.js'
+import { LESSONS as enterpriseSaasUi } from './lessons/enterprise-saas-ui.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -143,6 +144,7 @@ export const MODULES = [
   ...dashboardsDataviz,
   ...notificationsFeedback,
   ...onboardingAdoption,
+  ...enterpriseSaasUi,
 ]
 
 export function getModule(id) {
