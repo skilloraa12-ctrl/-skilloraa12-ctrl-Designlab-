@@ -50,7 +50,7 @@ export const LABS = [
   { id: 'data-viz', route: '/labs/data-viz', icon: '📊', title: 'Data Visualization Lab', desc: 'Графіки: bar, line, pie, radar — з перевіркою читабельності.', category: 'data', tools: 5, status: 'soon' },
   { id: 'editorial', route: '/labs/editorial', icon: '📰', title: 'Editorial Lab', desc: 'Верстка журналу, статті, буклету: колонки, поля, базова лінія.', category: 'print', tools: 4, status: 'soon' },
   { id: 'poster', route: '/labs/poster', icon: '🪧', title: 'Poster Lab', desc: 'Композиція постера: заголовок, зображення, ієрархія, кольори.', category: 'print', tools: 4, status: 'soon' },
-  { id: 'game', route: '/labs/game', icon: '🎮', title: 'Game Design Lab', desc: 'Ігровий UI: HUD, шкали здоровʼя, інвентар, меню.', category: 'advanced', tools: 4, status: 'soon' },
+  { id: 'game', route: '/labs/game', icon: '🎮', title: 'Game Design Lab', desc: 'Складіть HUD поверх ігрового вʼюпорта (шкала здоровʼя, мінімапа, трекер цілі) чи екран меню (інвентар, діалог, налаштування) — і одразу отримайте робочий HTML, CSS і React-код того самого превʼю.', category: 'advanced', tools: 16, status: 'available' },
   { id: 'storyboard', route: '/labs/storyboard', icon: '🎬', title: 'Storyboard Lab', desc: 'Кадри розкадровки з описом дії, камери й діалогів.', category: 'advanced', tools: 3, status: 'soon' },
   { id: 'critique', route: '/labs/critique', icon: '🧠', title: 'Design Critique Lab', desc: 'Оцінка композиції за конкретними, описовими критеріями.', category: 'advanced', tools: 4, status: 'soon' },
   { id: 'pixel', route: '/labs/pixel', icon: '🔍', title: 'Pixel Precision Lab', desc: 'Піксельна сітка, лінійки, точні координати й відстані.', category: 'production', tools: 4, status: 'soon' },

@@ -28,6 +28,7 @@ import WireframeLab from './WireframeLab.jsx'
 import MotionLab from './MotionLab.jsx'
 import UserFlowLab from './UserFlowLab.jsx'
 import UiPreviewLab from './UiPreviewLab.jsx'
+import GameDesignLab from './GameDesignLab.jsx'
 import Portfolio from './Portfolio.jsx'
 import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
@@ -47,7 +48,7 @@ import CheatsheetsPage from './CheatsheetsPage.jsx'
 
 export default function App() {
   const location = useLocation()
-  const isWideLab = location.pathname.startsWith('/labs/ui-preview')
+  const isWideLab = location.pathname.startsWith('/labs/ui-preview') || location.pathname.startsWith('/labs/game')
   return (
     <div className="app">
       <NavBar />
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="/labs/motion" element={<RequireAuth><MotionLab /></RequireAuth>} />
           <Route path="/labs/user-flow" element={<RequireAuth><UserFlowLab /></RequireAuth>} />
           <Route path="/labs/ui-preview" element={<RequireAuth><UiPreviewLab /></RequireAuth>} />
+          <Route path="/labs/game" element={<RequireAuth><GameDesignLab /></RequireAuth>} />
           <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />
