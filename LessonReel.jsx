@@ -42,6 +42,8 @@ const FOCUS_RULES = [
   { id: 'microinteraction-motion', words: ['microinteraction', 'мікровзаємод', 'pull-to-refresh', 'gesture animation', 'анімації жестів', 'scroll animation', 'parallax', 'sticky header'] },
   { id: 'figma-tool-ui', words: ['layers panel', 'design panel', 'assets panel', 'export panel', 'canvas', 'main component', 'toolbar', 'figma interface', 'frame — контейнер', 'group (ctrl', 'не обтинає вміст', 'назвами за замовчуванням', 'проєкт із файлом'] },
   { id: 'figma-prototype-ui', words: ['connection', 'interactions панель', 'prototype mode', 'navigate to', 'open overlay', 'swap overlay', 'close overlay', 'set variable', 'gesture triggers', 'interactive components'] },
+  { id: 'git-collab', words: ['pull request', 'система контролю версій', 'git-репозитор', 'github —'] },
+  { id: 'store-submission', words: ['app store review', 'google play console', 'app store (apple)', 'google play (android)'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -441,6 +443,31 @@ function BrowserMockup({ focus, alert }) {
         <rect x="142" y="46" width="38" height="160" rx="4" fill="#26262e" stroke="#3a3a44" />
         <rect x="150" y="56" width="22" height="6" rx="3" fill="#5a5a66" />
         <rect x="150" y="70" width="22" height="6" rx="3" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'git-collab') {
+    return (
+      <Frame>
+        <circle cx="50" cy="56" r="7" fill="#5a5a66" />
+        <circle cx="50" cy="146" r="7" fill="#5a5a66" />
+        <circle cx="130" cy="101" r="7" fill={accent} />
+        <path d="M 50 63 L 50 139" fill="none" stroke="#3a3a44" strokeWidth="2.5" />
+        <path d="M 50 95 C 50 101, 60 101, 130 101" fill="none" stroke={accent} strokeWidth="2.5" />
+        <rect x="104" y="60" width="64" height="24" rx="12" fill="#26262e" stroke={accent} strokeWidth="1.5" />
+        <rect x="114" y="68" width="44" height="8" rx="4" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'store-submission') {
+    return (
+      <Frame>
+        <rect x="68" y="42" width="64" height="118" rx="10" fill="#2a2a34" stroke="#3a3a44" strokeWidth="2" />
+        <rect x="80" y="54" width="40" height="40" rx="8" fill={accent} opacity="0.85" />
+        <rect x="80" y="104" width="40" height="7" rx="3.5" fill="#5a5a66" />
+        <rect x="80" y="117" width="26" height="6" rx="3" fill="#3a3a44" />
+        <circle cx="146" cy="56" r="20" fill="#1c1c22" stroke={accent} strokeWidth="2" />
+        <path d="M 137 56 L 144 63 L 157 48" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </Frame>
     )
   }
