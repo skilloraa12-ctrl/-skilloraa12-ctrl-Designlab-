@@ -77,6 +77,7 @@ import { LESSONS as informationArchitecture } from './lessons/information-archit
 import { LESSONS as navigationPatterns } from './lessons/navigation-patterns.js'
 import { LESSONS as dataTables } from './lessons/data-tables.js'
 import { LESSONS as searchFilters } from './lessons/search-filters.js'
+import { LESSONS as advancedForms } from './lessons/advanced-forms.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -135,6 +136,7 @@ export const MODULES = [
   ...navigationPatterns,
   ...dataTables,
   ...searchFilters,
+  ...advancedForms,
 ]
 
 export function getModule(id) {

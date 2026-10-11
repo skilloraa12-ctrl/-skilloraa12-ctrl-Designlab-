@@ -85,6 +85,10 @@ const FOCUS_RULES = [
   { id: 'table-responsive-card', words: ['responsive tables', 'card transformation', 'column priority'] },
   { id: 'faceted-search-counts', words: ['faceted search', 'фасетний пошук', 'лічильник доступних результатів', 'опцією фасету'] },
   { id: 'saved-filters-list', words: ['saved filters', 'збережені фільтри', 'збережений фільтр'] },
+  { id: 'conditional-field-toggle', words: ['conditional fields', 'умовні поля', 'умовне поле', 'умовного поля'] },
+  { id: 'autosave-indicator', words: ['autosave', 'автозбереження'] },
+  { id: 'error-recovery-message', words: ['error recovery', 'відновлення після помилки'] },
+  { id: 'inline-validation-state', words: ['inline validation', 'валідація на кожну'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -984,6 +988,46 @@ function BrowserMockup({ focus, alert }) {
         {[0, 1].map((i) => (
           <rect key={i} x="106" y={62 + i * 24} width="48" height="6" rx="3" fill="#5a5a66" />
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'conditional-field-toggle') {
+    return (
+      <Frame>
+        <rect x="40" y="56" width="120" height="24" rx="5" fill="#26262e" stroke="#3a3a44" />
+        <circle cx="140" cy="68" r="8" fill={accent} />
+        <path d="M 60 92 L 100 92" fill="none" stroke="#3a3a44" strokeWidth="2" strokeDasharray="4 3" />
+        <path d="M 92 86 L 100 92 L 92 98" fill="none" stroke="#3a3a44" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="40" y="104" width="120" height="24" rx="5" fill="#26262e" stroke={accent} strokeWidth="2" strokeDasharray="4 3" />
+      </Frame>
+    )
+  }
+  if (focus === 'autosave-indicator') {
+    return (
+      <Frame>
+        <path d="M 70 92 C 54 92, 50 76, 64 72 C 64 56, 90 54, 96 68 C 112 62, 124 74, 116 86 C 130 88, 128 102, 114 102 L 72 102 C 60 102, 58 94, 70 92 Z" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <path d="M 84 78 L 90 84 L 102 70" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="76" y="116" width="48" height="8" rx="4" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'error-recovery-message') {
+    return (
+      <Frame>
+        <path d="M 100 48 L 140 118 L 60 118 Z" fill="none" stroke={accent} strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="M 100 72 L 100 94" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+        <circle cx="100" cy="105" r="2.5" fill={accent} />
+        <path d="M 130 128 C 130 120, 138 116, 144 120 M 144 120 L 144 114 M 144 120 L 150 120" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'inline-validation-state') {
+    return (
+      <Frame>
+        <rect x="40" y="62" width="56" height="24" rx="5" fill="#26262e" stroke="#e5484d" strokeWidth="2" />
+        <path d="M 48 70 L 56 78 M 56 70 L 48 78" fill="none" stroke="#e5484d" strokeWidth="2" strokeLinecap="round" />
+        <rect x="104" y="62" width="56" height="24" rx="5" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <path d="M 112 74 L 117 79 L 126 68" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       </Frame>
     )
   }
