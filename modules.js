@@ -93,6 +93,7 @@ import { LESSONS as designSystemsScale } from './lessons/design-systems-scale.js
 import { LESSONS as usabilityTesting } from './lessons/usability-testing.js'
 import { LESSONS as uiDesignProcessPortfolio } from './lessons/ui-design-process-portfolio.js'
 import { LESSONS as uiFinalProject } from './lessons/ui-final-project.js'
+import { LESSONS as gameDesignBasics } from './lessons/game-design-basics.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -167,6 +168,7 @@ export const MODULES = [
   ...usabilityTesting,
   ...uiDesignProcessPortfolio,
   ...uiFinalProject,
+  ...gameDesignBasics,
 ]
 
 export function getModule(id) {

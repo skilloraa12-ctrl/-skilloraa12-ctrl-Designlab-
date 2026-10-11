@@ -167,6 +167,11 @@ const FOCUS_RULES = [
   { id: 'capstone-design-system-scope', words: ['ui-орієнтованої дизайн-системи', 'композитний віджет'] },
   { id: 'capstone-full-integration', words: ['усіх 24 підкатегорій', 'обов’язкова структура:'] },
   { id: 'capstone-disjointed-screens', words: ['неузгоджених екранів'] },
+  { id: 'game-design-discipline', words: ['дисципліна проєктування правил', 'проєктує правила, механіки', 'інший предмет роботи, ніж', 'ототожнюють game design виключно'] },
+  { id: 'game-roles-split', words: ['узагальнена назва ролі', 'level designer проєктує конкретний простір', 'компонують рівень інтуїтивно'] },
+  { id: 'game-toy-puzzle-game', words: ['три терміни часто плутають', 'toy — система без заданої мети', 'puzzle має фіксовану мету', 'називають «грою» будь-яку інтерактивну'] },
+  { id: 'game-key-questions', words: ['перш ніж малювати рівень чи писати документ', 'перше питання завжди про гравця', 'центральна дія гри (ядро) має бути цікавою'] },
+  { id: 'game-design-vs-dev', words: ['суміжні, але окремі дисципліни', 'технічна реалізація (програмування, рушій', 'вважають, що game designer обов’язково має вміти'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -185,8 +190,11 @@ function detectFocus(text, level) {
   }
   // Запасний варіант теж має відповідати напрямку: загальний макет сайту
   // доречний лише для Web Design, для App Design — нейтральна картинка
-  // екрана застосунку (status bar + контент + таб-бар), а не сайт.
-  return level === 'app-design' ? 'app-shell' : 'site'
+  // екрана застосунку (status bar + контент + таб-бар), для Game Design —
+  // ігровий вʼюпорт з HUD, а не сайт чи застосунок.
+  if (level === 'app-design') return 'app-shell'
+  if (level === 'game-design') return 'game-hud'
+  return 'site'
 }
 
 // Короткий (~15с) анімований огляд уроку — БЕЗ жодного платного відео-API.
@@ -2025,6 +2033,83 @@ function BrowserMockup({ focus, alert }) {
         <rect x="105" y="126" width="75" height="44" rx="4" fill="#2a2a34" />
         <rect x="20" y="178" width="160" height="22" rx="6" fill="#26262e" />
         {[44, 100, 156].map((x) => <circle key={x} cx={x} cy="189" r="5" fill="#3a3a44" />)}
+      </Frame>
+    )
+  }
+  if (focus === 'game-hud') {
+    return (
+      <Frame>
+        <rect x="20" y="40" width="160" height="90" rx="8" fill="#1b2230" />
+        <rect x="30" y="50" width="54" height="8" rx="4" fill={accent} opacity="0.85" />
+        <rect x="30" y="62" width="70" height="7" rx="3" fill="#3a3a44" />
+        <circle cx="152" cy="64" r="16" fill="none" stroke="#4a4a56" strokeWidth="2" />
+        <path d="M 92 85 L 92 95 M 86 90 L 98 90" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+        <rect x="30" y="108" width="50" height="10" rx="5" fill="#2a2a34" />
+        <rect x="32" y="110" width="35" height="6" rx="3" fill={accent} />
+        <rect x="128" y="108" width="40" height="10" rx="5" fill="#2a2a34" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-design-discipline') {
+    return (
+      <Frame>
+        <rect x="46" y="38" width="108" height="96" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <path d="M 46 58 L 154 58" stroke="#3a3a44" strokeWidth="2" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="60" y={70 + i * 18} width="80" height="8" rx="3" fill="#5a5a66" />
+        ))}
+        <circle cx="100" cy="46" r="5" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-roles-split') {
+    return (
+      <Frame>
+        {[36, 100, 164].map((cx, i) => (
+          <g key={cx}>
+            <circle cx={cx} cy="62" r="16" fill="none" stroke={i === 1 ? accent : '#5a5a66'} strokeWidth="2.5" />
+            <path d={`M ${cx} 56 L ${cx} 62 M ${cx - 5} 58 L ${cx + 5} 58`} stroke={i === 1 ? accent : '#5a5a66'} strokeWidth="2" strokeLinecap="round" />
+            <rect x={cx - 20} y="88" width="40" height="34" rx="4" fill="#26262e" stroke="#3a3a44" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-toy-puzzle-game') {
+    return (
+      <Frame>
+        <circle cx="42" cy="76" r="20" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 34 76 L 50 76 M 42 68 L 42 84" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+        <rect x="80" y="56" width="40" height="40" rx="8" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="120" cy="76" r="7" fill={accent} />
+        <path d="M 150 60 L 170 60 L 170 92 L 150 92 Z" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 150 76 L 136 76 L 136 68" fill="none" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-key-questions') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <circle cx="46" cy={48 + i * 28} r="11" fill="none" stroke={i === 0 ? accent : '#5a5a66'} strokeWidth="2.5" />
+            <text x="46" y={53 + i * 28} textAnchor="middle" fontSize="13" fill={i === 0 ? accent : '#5a5a66'} fontWeight="700">?</text>
+            <rect x="66" y={40 + i * 28} width="108" height="16" rx="4" fill="#26262e" stroke="#3a3a44" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-design-vs-dev') {
+    return (
+      <Frame>
+        <rect x="30" y="40" width="60" height="78" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="40" y={56 + i * 16} width="40" height="7" rx="2" fill="#5a5a66" />
+        ))}
+        <path d="M 100 79 L 118 79" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        <rect x="124" y="40" width="46" height="78" rx="6" fill="#1b1b22" stroke="#3a3a44" strokeWidth="2" />
+        <text x="147" y="72" textAnchor="middle" fontSize="16" fill="#5a5a66" fontFamily="monospace">{'</>'}</text>
       </Frame>
     )
   }
