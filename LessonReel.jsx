@@ -61,6 +61,9 @@ const FOCUS_RULES = [
   { id: 'gestalt-continuity', words: ['continuity', 'вирівняної осі', 'уявній осі'] },
   { id: 'gestalt-proximity', words: ['proximity'] },
   { id: 'gestalt-perceptual-hierarchy', words: ['perceptual hierarchy', 'перцептивна ієрархія', 'перцептивної ієрархії'] },
+  { id: 'cognitive-load-types', words: ['cognitive load', 'intrinsic', 'extraneous'] },
+  { id: 'cognitive-bias-ui', words: ['cognitive bias', 'когнітивні викривлення', 'якірний ефект', 'anchoring'] },
+  { id: 'peak-end-rule', words: ['peak-end', 'правило піку'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -678,6 +681,36 @@ function BrowserMockup({ focus, alert }) {
         <circle cx="156" cy="70" r="10" fill={accent} opacity="0.25" />
         <circle cx="54" cy="148" r="9" fill={accent} opacity="0.2" />
         <circle cx="152" cy="144" r="8" fill={accent} opacity="0.15" />
+      </Frame>
+    )
+  }
+  if (focus === 'cognitive-load-types') {
+    return (
+      <Frame>
+        <path d="M 100 48 C 70 48, 50 72, 50 100 C 50 118, 58 134, 72 144 L 128 144 C 142 134, 150 118, 150 100 C 150 72, 130 48, 100 48 Z" fill="#26262e" stroke="#3a3a44" strokeWidth="2" />
+        <path d="M 60 118 A 40 40 0 0 1 140 118" fill="none" stroke="#3a3a44" strokeWidth="6" strokeLinecap="round" />
+        <path d="M 60 118 A 40 40 0 0 1 128 90" fill="none" stroke={accent} strokeWidth="6" strokeLinecap="round" />
+        <path d="M 100 118 L 118 94" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+        <circle cx="100" cy="118" r="5" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'cognitive-bias-ui') {
+    return (
+      <Frame>
+        <rect x="56" y="64" width="88" height="56" rx="8" fill="#26262e" stroke="#3a3a44" strokeWidth="2" />
+        <rect x="72" y="78" width="40" height="10" rx="3" fill="#5a5a66" opacity="0.6" />
+        <path d="M 70 83 L 114 83" fill="none" stroke="#8a8a94" strokeWidth="2" />
+        <rect x="72" y="98" width="56" height="14" rx="4" fill={accent} opacity="0.9" />
+      </Frame>
+    )
+  }
+  if (focus === 'peak-end-rule') {
+    return (
+      <Frame>
+        <path d="M 30 140 C 55 136, 65 70, 90 68 C 110 66, 115 128, 140 108 C 155 96, 160 60, 172 50" fill="none" stroke="#3a3a44" strokeWidth="2.5" />
+        <circle cx="90" cy="68" r="6" fill={accent} opacity="0.7" />
+        <circle cx="172" cy="50" r="7" fill={accent} />
       </Frame>
     )
   }
