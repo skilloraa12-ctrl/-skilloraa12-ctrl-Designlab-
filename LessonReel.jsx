@@ -121,6 +121,12 @@ const FOCUS_RULES = [
   { id: 'hidden-costs-checkout', words: ['hidden costs', 'базову» ціну товару'] },
   { id: 'ethical-design-balance', words: ['етичний ui design', 'friction symmetry'] },
   { id: 'plain-explanation-test', words: ['тест прямого пояснення', 'plain explanation test'] },
+  { id: 'microcopy-word-choice', words: ['мікрокопі'] },
+  { id: 'button-text-verb-first', words: ['verb-first'] },
+  { id: 'error-tone-neutral', words: ['звинувачувальний тон', 'системний жаргон напряму'] },
+  { id: 'voice-tone-shift', words: ['voice (базова особистість бренду)', 'голос не зникає, тон зсувається'] },
+  { id: 'onboarding-benefit-first', words: ['технічний механізм функції замість'] },
+  { id: 'confirmation-copy-specific', words: ['узагальнене «підтвердити» на кнопці дії'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1434,6 +1440,68 @@ function BrowserMockup({ focus, alert }) {
         <rect x="68" y="56" width="80" height="7" rx="3" fill="#5a5a66" />
         <rect x="68" y="68" width="60" height="6" rx="3" fill="#3a3a44" />
         <path d="M 100 96 L 92 110 L 108 110 Z" fill="#26262e" stroke={accent} strokeWidth="1.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'microcopy-word-choice') {
+    return (
+      <Frame>
+        <rect x="40" y="56" width="120" height="24" rx="5" fill="#26262e" stroke="#3a3a44" />
+        <rect x="40" y="88" width="90" height="8" rx="3" fill={accent} opacity="0.3" />
+        <rect x="40" y="88" width="34" height="8" rx="3" fill={accent} opacity="0.9" />
+        <path d="M 150 60 L 158 68 M 158 60 L 150 68" fill="none" stroke="#5a5a66" strokeWidth="1.5" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'button-text-verb-first') {
+    return (
+      <Frame>
+        <rect x="42" y="58" width="56" height="26" rx="6" fill={accent} opacity="0.9" />
+        <rect x="54" y="68" width="32" height="7" rx="3" fill="#ffffff" opacity="0.85" />
+        <rect x="112" y="58" width="56" height="26" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <rect x="120" y="68" width="18" height="7" rx="3" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'error-tone-neutral') {
+    return (
+      <Frame>
+        <rect x="36" y="48" width="128" height="48" rx="8" fill="#26262e" stroke="#e5484d" strokeWidth="1.5" opacity="0.7" />
+        <rect x="50" y="60" width="90" height="7" rx="3" fill="#5a5a66" />
+        <rect x="50" y="72" width="60" height="6" rx="3" fill="#3a3a44" />
+        <path d="M 50 110 Q 100 98 150 110" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'voice-tone-shift') {
+    return (
+      <Frame>
+        <rect x="34" y="48" width="58" height="34" rx="8" fill={accent} opacity="0.85" />
+        <circle cx="48" cy="60" r="3" fill="#ffffff" />
+        <circle cx="58" cy="60" r="3" fill="#ffffff" />
+        <rect x="46" y="68" width="28" height="6" rx="3" fill="#ffffff" opacity="0.7" />
+        <rect x="108" y="48" width="58" height="34" rx="8" fill={accent} opacity="0.55" />
+        <rect x="118" y="60" width="16" height="4" rx="2" fill="#ffffff" opacity="0.8" />
+        <rect x="120" y="68" width="28" height="6" rx="3" fill="#ffffff" opacity="0.7" />
+      </Frame>
+    )
+  }
+  if (focus === 'onboarding-benefit-first') {
+    return (
+      <Frame>
+        <path d="M 60 100 L 100 54 L 140 100" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="100" cy="54" r="7" fill={accent} />
+        <rect x="56" y="108" width="88" height="8" rx="4" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'confirmation-copy-specific') {
+    return (
+      <Frame>
+        <rect x="38" y="46" width="124" height="20" rx="5" fill="#26262e" stroke="#3a3a44" opacity="0.5" />
+        <path d="M 95 56 L 105 56" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="2 2" />
+        <rect x="38" y="78" width="124" height="28" rx="6" fill="#26262e" stroke="#e5484d" strokeWidth="2" />
+        <rect x="50" y="88" width="100" height="8" rx="3" fill="#5a5a66" />
       </Frame>
     )
   }

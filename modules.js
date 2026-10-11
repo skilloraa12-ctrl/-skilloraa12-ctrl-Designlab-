@@ -83,6 +83,7 @@ import { LESSONS as notificationsFeedback } from './lessons/notifications-feedba
 import { LESSONS as onboardingAdoption } from './lessons/onboarding-adoption.js'
 import { LESSONS as enterpriseSaasUi } from './lessons/enterprise-saas-ui.js'
 import { LESSONS as darkPatternsEthics } from './lessons/dark-patterns-ethics.js'
+import { LESSONS as uxWritingMicrocopy } from './lessons/ux-writing-microcopy.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -147,6 +148,7 @@ export const MODULES = [
   ...onboardingAdoption,
   ...enterpriseSaasUi,
   ...darkPatternsEthics,
+  ...uxWritingMicrocopy,
 ]
 
 export function getModule(id) {
