@@ -257,6 +257,135 @@ export const SUBCATEGORIES = [
     desc: 'Структура портфоліо, case study, презентація процесу та фінальний проєкт',
     topics: ['Структура портфоліо', 'Case Study', 'Presentation', 'Design Process', 'Figma Presentation', 'Project Description', 'Developer Handoff', 'Final Project'],
   },
+  // UI Design: третій напрямок, 24 підкатегорії. Не дублює Web/App Design
+  // (ті вже покривають візуальний дизайн, компоненти й Figma для вебу й
+  // мобільних застосунків) — натомість це поглиблена, платформо-незалежна
+  // дисципліна інтерфейсів: interaction design, психологія сприйняття,
+  // складні UI-патерни (таблиці, фільтри, дашборди, enterprise UI),
+  // мікрокопірайтинг, евристики, крос-платформна консистентність,
+  // доступність складних компонентів і юзабіліті-тестування. Id уроків —
+  // зсув +10000 (10000 + order*100 + n), щоб гарантовано не перетинатись
+  // з Web Design (order*100) і App Design (5000 + order*100).
+  {
+    id: 'ui-foundations', level: 'ui-design', order: 1, emoji: '🧭', title: 'Основи UI Design',
+    desc: 'Що таке UI Design, різниця з UX і Visual Design, роль UI дизайнера',
+    topics: ['Що таке UI Design', 'UI vs UX', 'UI vs Visual Design', 'UI Designer: роль і завдання', 'UI Design на перетині Web і App Design', 'Інструменти UI дизайнера', 'Мова інтерфейсу', 'Де закінчується UI і починається UX'],
+  },
+  {
+    id: 'interaction-design', level: 'ui-design', order: 2, emoji: '🕹️', title: 'Interaction Design',
+    desc: 'Принципи взаємодії: affordance, feedback, закони Фіттса й Хіка, пряма маніпуляція',
+    topics: ['Affordance', 'Signifiers', 'Feedback', 'Mapping', "Fitts's Law", "Hick's Law", 'Direct Manipulation', 'Constraints', 'Discoverability'],
+  },
+  {
+    id: 'perception-gestalt', level: 'ui-design', order: 3, emoji: '👁️', title: 'Сприйняття та Gestalt у глибину',
+    desc: 'Принципи гештальт-психології та візуального сприйняття на рівні складних інтерфейсів',
+    topics: ['Figure/Ground', 'Closure', 'Common Fate', 'Continuity', 'Similarity', 'Proximity (поглиблено)', 'Visual Weight', 'Perceptual Hierarchy'],
+  },
+  {
+    id: 'cognitive-psychology-ui', level: 'ui-design', order: 4, emoji: '🧠', title: 'Когнітивна психологія для UI',
+    desc: 'Робоча пам’ять, когнітивне навантаження, ментальні моделі та когнітивні викривлення в UI',
+    topics: ['Working Memory', 'Cognitive Load', 'Mental Models', 'Recognition vs Recall', 'Progressive Disclosure', 'Choice Overload', 'Cognitive Biases в UI', 'Peak-End Rule'],
+  },
+  {
+    id: 'information-architecture', level: 'ui-design', order: 5, emoji: '🗂️', title: 'Information Architecture',
+    desc: 'Навігаційні моделі, таксономія, card sorting і findability',
+    topics: ['Що таке IA', 'Navigation Models', 'Taxonomy', 'Card Sorting', 'Findability', 'Site Maps', 'Labeling Systems', 'Ментальні моделі в IA'],
+  },
+  {
+    id: 'navigation-patterns', level: 'ui-design', order: 6, emoji: '🗺️', title: 'Складні навігаційні патерни',
+    desc: 'Mega menu, командна палітра, глобальний пошук і складні випадки навігації',
+    topics: ['Mega Menu', 'Command Palette', 'Global Search', 'Breadcrumbs (поглиблено)', 'Sidebar Navigation', 'Складні Tab-навігації', 'Contextual Navigation', 'Navigation Hierarchy'],
+  },
+  {
+    id: 'data-tables', level: 'ui-design', order: 7, emoji: '📊', title: 'Таблиці даних',
+    desc: 'Сортування, фільтрація, масові дії, inline-редагування та адаптивні таблиці',
+    topics: ['Table Anatomy', 'Sorting', 'Filtering в таблиці', 'Bulk Actions', 'Inline Editing', 'Pagination vs Infinite Scroll', 'Responsive Tables', 'Sticky Headers/Columns'],
+  },
+  {
+    id: 'search-filters', level: 'ui-design', order: 8, emoji: '🔍', title: 'Пошук і фільтри',
+    desc: 'Autocomplete, faceted search, розширені фільтри й порожні результати пошуку',
+    topics: ['Search UI', 'Autocomplete', 'Faceted Search', 'Advanced Filters', 'Search Results', 'Порожні результати пошуку', 'Search-as-you-type', 'Saved Filters'],
+  },
+  {
+    id: 'advanced-forms', level: 'ui-design', order: 9, emoji: '📝', title: 'Складні форми',
+    desc: 'Багатокрокові форми, умовні поля, валідація, автозбереження та wizards',
+    topics: ['Multi-step Forms', 'Conditional Fields', 'Inline Validation', 'Form Wizards', 'Складні типи полів', 'Error Recovery', 'Autosave', 'Form Progress'],
+  },
+  {
+    id: 'dashboards-dataviz', level: 'ui-design', order: 10, emoji: '📈', title: 'Дашборди та Data Viz в UI',
+    desc: 'Layout дашбордів, KPI-віджети, вибір типу графіка та щільність даних',
+    topics: ['Dashboard Layout', 'KPI Widgets', 'Вибір типу графіка', 'Data Density', 'Dashboard Hierarchy', 'Customizable Dashboards', 'Real-time Data в UI'],
+  },
+  {
+    id: 'notifications-feedback', level: 'ui-design', order: 11, emoji: '🔔', title: 'Сповіщення та системний фідбек',
+    desc: 'Toasts, банери, ієрархія алертів, і поглиблені empty/error/loading стани',
+    topics: ['Toasts', 'Banners', 'Alerts Hierarchy', 'Badges', 'Empty States (поглиблено)', 'Error States (поглиблено)', 'Loading States (поглиблено)', 'Confirmation Patterns'],
+  },
+  {
+    id: 'onboarding-adoption', level: 'ui-design', order: 12, emoji: '🎯', title: 'Онбординг і адопція фіч',
+    desc: 'Coachmarks, tooltips, progressive disclosure і feature discovery',
+    topics: ['Coachmarks', 'Tooltips', 'Progressive Disclosure в онбордингу', 'Empty States як навчання', 'Feature Discovery', 'Checklist Onboarding', 'Product Tours'],
+  },
+  {
+    id: 'enterprise-saas-ui', level: 'ui-design', order: 13, emoji: '🏢', title: 'Enterprise & SaaS UI',
+    desc: 'Permissions UI, архітектура налаштувань, адмін-панелі й multi-tenant інтерфейси',
+    topics: ['Permissions UI', 'Roles & Access', 'Settings Architecture', 'Admin Panels', 'Multi-tenant UI', 'Bulk Operations UI', 'Enterprise Data Density'],
+  },
+  {
+    id: 'dark-patterns-ethics', level: 'ui-design', order: 14, emoji: '⚖️', title: 'Dark Patterns та етика UI',
+    desc: 'Маніпулятивні патерни, як їх розпізнати й уникнути, етичний дизайн',
+    topics: ['Що таке Dark Pattern', 'Roach Motel', 'Confirmshaming', 'Forced Continuity', 'Hidden Costs', 'Етичний UI Design', 'Як розпізнати і уникнути'],
+  },
+  {
+    id: 'ux-writing-microcopy', level: 'ui-design', order: 15, emoji: '✍️', title: 'UX Writing і мікрокопірайтинг',
+    desc: 'Текст кнопок, повідомлення про помилки, тон голосу й копірайтинг в інтерфейсі',
+    topics: ['Microcopy', 'Button Text', 'Error Messages', 'Empty State Copy', 'Tone of Voice', 'Onboarding Copy', 'Confirmation Copy', 'Локалізація тексту UI'],
+  },
+  {
+    id: 'heuristics-critique', level: 'ui-design', order: 16, emoji: '🧪', title: 'Евристики та дизайн-критика',
+    desc: '10 евристик Нільсена, евристична оцінка й фреймворки фідбеку',
+    topics: ["Nielsen's 10 Heuristics", 'Heuristic Evaluation', 'Design Critique', 'Feedback Frameworks', 'Self-review Checklist', 'Peer Review'],
+  },
+  {
+    id: 'cross-platform-consistency', level: 'ui-design', order: 17, emoji: '🔗', title: 'Крос-платформна консистентність',
+    desc: 'Платформні конвенції, бренд проти платформи, токени крос-платформно',
+    topics: ['Platform Conventions', 'iOS vs Android vs Web патерни', 'Brand vs Platform', 'Design Tokens крос-платформно', 'Responsive vs Adaptive vs Native'],
+  },
+  {
+    id: 'desktop-software-ui', level: 'ui-design', order: 18, emoji: '🖥️', title: 'UI для десктопного ПЗ',
+    desc: 'Menu bar, тулбари, багатовіконний UI, контекстні меню й клавіатурні шорткати',
+    topics: ['Menu Bar', 'Toolbars', 'Multi-window UI', 'Context Menus', 'Keyboard Shortcuts', 'Desktop vs Web конвенції', 'Native Controls'],
+  },
+  {
+    id: 'emerging-platforms-ui', level: 'ui-design', order: 19, emoji: '📡', title: 'UI для нових платформ',
+    desc: 'TV/10-foot UI, voice UI, wearables, кіоски та великі екрани',
+    topics: ['TV / 10-foot UI', 'Voice UI', 'Wearables UI', 'Kiosk UI', 'Large Display UI', 'Cross-device Continuity'],
+  },
+  {
+    id: 'accessible-complex-ui', level: 'ui-design', order: 20, emoji: '♿', title: 'Доступність складних UI-компонентів',
+    desc: 'ARIA-патерни, керування фокусом і скрінрідери для таблиць, модалок і data viz',
+    topics: ['ARIA Patterns', 'Focus Management', 'Screen Reader для таблиць', 'Screen Reader для модалок', 'Keyboard Traps', 'Accessible Data Viz'],
+  },
+  {
+    id: 'design-systems-scale', level: 'ui-design', order: 21, emoji: '🏛️', title: 'Дизайн-системи в масштабі',
+    desc: 'Governance, крос-платформні токени, contribution model і документація',
+    topics: ['Design System Governance', 'Токени крос-платформно', 'Contribution Model', 'Versioning', 'Documentation', 'Adoption Metrics'],
+  },
+  {
+    id: 'usability-testing', level: 'ui-design', order: 22, emoji: '🧰', title: 'Юзабіліті-тестування для UI дизайнера',
+    desc: '5-Second Test, first-click test, сценарії тестування й синтез результатів',
+    topics: ['5-Second Test', 'First-Click Test', 'Usability Test Script', 'Moderated vs Unmoderated', 'Synthesizing Findings', 'Основи A/B-тестування'],
+  },
+  {
+    id: 'ui-design-process-portfolio', level: 'ui-design', order: 23, emoji: '💼', title: 'Процес і портфоліо UI Designer',
+    desc: 'Процес роботи UI дизайнера, складні UI-кейси в портфоліо та їх подача',
+    topics: ['UI Design Process', 'Case Study для складного UI', 'Enterprise/SaaS кейс у портфоліо', 'Presentation складного UI-проєкту'],
+  },
+  {
+    id: 'ui-final-project', level: 'ui-design', order: 24, emoji: '🚀', title: 'Фінальний UI проєкт',
+    desc: 'Dashboard Project, Design System Project і повний UI Design Project',
+    topics: ['Складна таблиця/дашборд з нуля', 'Dashboard Project', 'Design System Project', 'Повний UI Design Project'],
+  },
 ]
 
 export function getSubcategoriesByLevel(level) {
