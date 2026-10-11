@@ -37,6 +37,9 @@ const FOCUS_RULES = [
   { id: 'bottom-sheet', words: ['bottom sheet', 'нижня панель', 'drag-to-dismiss'] },
   { id: 'ui-states-screen', words: ['ui states', 'стани інтерфейсу', 'skeleton screen', 'offline-стан', 'success-стан', 'offline стани'] },
   { id: 'design-system-component', words: ['майстер-компонент', 'майстер-елемент', 'master component', 'variant', 'component library', 'бібліотека компонентів', 'sub-layers', 'component anatomy', 'анатомія компонента', 'component properties', 'властивості компонента'] },
+  { id: 'motion-transition', words: ['motion design', 'моушн-дизайн', 'animation principles', 'принципи анімації', 'easing', 'anticipation', 'screen transitions', 'переходи між екранами', 'push/pop', 'modal presentation'] },
+  { id: 'haptic-feedback', words: ['haptic', 'тактильний відгук', 'light impact', 'heavy impact', 'notification feedback'] },
+  { id: 'microinteraction-motion', words: ['microinteraction', 'мікровзаємод', 'pull-to-refresh', 'gesture animation', 'анімації жестів', 'scroll animation', 'parallax', 'sticky header'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -374,6 +377,40 @@ function BrowserMockup({ focus, alert }) {
             <text x={x - 20} y="127" fontFamily="sans-serif" fontSize="7" fill="#8a8a9a">Instance</text>
           </g>
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'motion-transition') {
+    return (
+      <Frame>
+        <rect x="18" y="60" width="64" height="100" rx="6" fill="#2a2a34" opacity="0.5" />
+        <rect x="118" y="60" width="64" height="100" rx="6" fill="#2a2a34" stroke={accent} strokeWidth="2" />
+        <path d="M 86 110 L 112 110" stroke={accent} strokeWidth="2.5" strokeDasharray="4 3" />
+        <path d="M 104 102 L 114 110 L 104 118" fill="none" stroke={accent} strokeWidth="2.5" />
+        <rect x="128" y="76" width="44" height="8" rx="4" fill="#8a8a9a" />
+        <rect x="128" y="92" width="30" height="8" rx="4" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'haptic-feedback') {
+    return (
+      <Frame>
+        <rect x="76" y="50" width="48" height="90" rx="10" fill="#2a2a34" stroke="#3a3a44" strokeWidth="2" />
+        <circle cx="100" cy="122" r="4" fill="#5a5a66" />
+        <path d="M 60 70 Q 50 95 60 120" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M 46 62 Q 30 95 46 128" fill="none" stroke={accent} strokeWidth="2" opacity="0.6" strokeLinecap="round" />
+        <path d="M 140 70 Q 150 95 140 120" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M 154 62 Q 170 95 154 128" fill="none" stroke={accent} strokeWidth="2" opacity="0.6" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'microinteraction-motion') {
+    return (
+      <Frame>
+        <circle cx="100" cy="100" r="34" fill="none" stroke="#3a3a44" strokeWidth="2" strokeDasharray="5 4" />
+        <path d="M 100 66 A 34 34 0 1 1 72 118" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+        <path d="M 64 112 L 72 118 L 80 110" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 93 93 L 100 100 L 107 86" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </Frame>
     )
   }
