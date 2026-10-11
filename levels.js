@@ -4,6 +4,8 @@
 export const LEVELS = {
   'web-design': { title: 'Web Design', ua: 'Сайти та вебсторінки' },
   'app-design': { title: 'App Design', ua: 'Мобільні застосунки' },
+  'ui-design': { title: 'UI Design', ua: 'Інтерфейси цифрових продуктів' },
+  'game-design': { title: 'Game Design', ua: 'Правила та механіки гри' },
 }
 
-export const LEVEL_ORDER = ['web-design', 'app-design']
+export const LEVEL_ORDER = ['web-design', 'app-design', 'ui-design', 'game-design']

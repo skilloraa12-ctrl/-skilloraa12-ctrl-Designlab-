@@ -386,6 +386,133 @@ export const SUBCATEGORIES = [
     desc: 'Dashboard Project, Design System Project і повний UI Design Project',
     topics: ['Складна таблиця/дашборд з нуля', 'Dashboard Project', 'Design System Project', 'Повний UI Design Project'],
   },
+
+  // Напрямок Game Design (level: 'game-design'). Окремий від App/UI Design —
+  // тут предмет дизайну не екран чи інтерфейс, а правила, механіки й досвід
+  // гри; UI-специфічні підкатегорії (hud-ingame-ui, game-menus-navigation)
+  // свідомо беруть інший кут, ніж web-components.js/app-components.js, і
+  // практичні завдання спираються на окремий Game Design Lab, а не на
+  // загальний SketchPad.
+  {
+    id: 'game-design-basics', level: 'game-design', order: 1, emoji: '🎮', title: 'Основи Game Design',
+    desc: 'Що таке Game Design, ролі в команді, гра проти іграшки й головоломки',
+    topics: ['Що таке Game Design', 'Game Designer vs Level Designer vs Systems Designer', 'Game vs Toy vs Puzzle', 'Ключові питання дизайнера', 'Game Design vs Game Development'],
+  },
+  {
+    id: 'game-design-process', level: 'game-design', order: 2, emoji: '🔄', title: 'Процес Game Design',
+    desc: 'Ідея → прототип → плейтест → ітерація, пітчинг і скоуп проєкту',
+    topics: ['Ideation', 'Прототипування', 'Плейтестинг', 'Ітерація', 'Пітч ідеї', 'Скоуп для джему vs студійного проєкту'],
+  },
+  {
+    id: 'core-loop-mechanics', level: 'game-design', order: 3, emoji: '🔁', title: 'Core Loop та механіки',
+    desc: 'Ядро гри, ігрові дієслова, механіки, правила, динаміки й естетика (MDA)',
+    topics: ['Core Gameplay Loop', 'Game Verbs', 'Mechanics', 'MDA Framework', 'Mechanics vs Dynamics vs Aesthetics', 'Мінімально життєздатний loop'],
+  },
+  {
+    id: 'rules-systems-design', level: 'game-design', order: 4, emoji: '⚙️', title: 'Правила та системний дизайн',
+    desc: 'Формальні правила, emergent-поведінка, петлі зворотного зв’язку, системне мислення',
+    topics: ['Формальні правила', 'Emergent Gameplay', 'Positive/Negative Feedback Loops', 'Системне мислення', 'Системи проти контенту'],
+  },
+  {
+    id: 'player-psychology', level: 'game-design', order: 5, emoji: '🧠', title: 'Психологія гравця та мотивація',
+    desc: 'Типи гравців за Бартлом, стан потоку, внутрішня й зовнішня мотивація',
+    topics: ['Bartle Player Types', 'Flow State', 'Внутрішня vs зовнішня мотивація', 'Self-Determination Theory', 'Автономія, компетентність, причетність'],
+  },
+  {
+    id: 'game-balance', level: 'game-design', order: 6, emoji: '⚖️', title: 'Баланс гри',
+    desc: 'Симетрія/асиметрія, транзитивні й інтранзитивні відношення, криві сили',
+    topics: ['Symmetry vs Asymmetry', 'Transitive/Intransitive Relationships', 'Rock-Paper-Scissors', 'Power Curves', 'Балансування через плейтести й дані', 'Dominant Strategy'],
+  },
+  {
+    id: 'difficulty-progression', level: 'game-design', order: 7, emoji: '📈', title: 'Складність та прогресія',
+    desc: 'Криві складності, темп, навчання механікам без текстових туторіалів',
+    topics: ['Difficulty Curve', 'Pacing', 'Навчання через дію, не текст', 'Skill-based vs Grind-based Progression', 'Опції складності'],
+  },
+  {
+    id: 'level-design-fundamentals', level: 'game-design', order: 8, emoji: '🗺️', title: 'Основи Level Design',
+    desc: 'Принципи рівня, темп і потік у просторі, орієнтири, навчання через layout',
+    topics: ['Принципи Level Design', 'Pacing і Flow у просторі', 'Landmarks і Wayfinding', 'Навчання механіці через розташування', 'Critical Path vs Дослідження'],
+  },
+  {
+    id: 'game-genres-conventions', level: 'game-design', order: 9, emoji: '🕹️', title: 'Жанри та їхні конвенції',
+    desc: 'Платформер, RPG, головоломка, шутер, стратегія — очікування гравця за жанром',
+    topics: ['Platformer', 'RPG', 'Puzzle', 'FPS/Shooter', 'Strategy', 'Roguelike', 'Коли порушувати конвенції жанру'],
+  },
+  {
+    id: 'narrative-design', level: 'game-design', order: 10, emoji: '📖', title: 'Наративний дизайн',
+    desc: 'Сторітелінг у грі, середовищний наратив, розгалужена історія, ludo-narrative dissonance',
+    topics: ['Сторітелінг у грі', 'Environmental Storytelling', 'Branching Narrative', 'Ludo-narrative Dissonance', 'Наратив у злагоді з механіками'],
+  },
+  {
+    id: 'game-economy', level: 'game-design', order: 11, emoji: '💰', title: 'Економіка гри',
+    desc: 'Валюти, sinks/faucets, крафтингові економіки, контроль інфляції',
+    topics: ['Валюти', 'Sinks та Faucets', 'Крафтингова економіка', 'Контроль інфляції', 'Soft vs Hard Currency'],
+  },
+  {
+    id: 'multiplayer-social-design', level: 'game-design', order: 12, emoji: '👥', title: 'Мультиплеєр і соціальний дизайн',
+    desc: 'Конкуренція проти кооперації, matchmaking, соціальні механіки, запобігання грифінгу',
+    topics: ['Competitive vs Cooperative Design', 'Matchmaking й skill rating', 'Соціальні механіки (гільдії, друзі, лідерборди)', 'Запобігання грифінгу'],
+  },
+  {
+    id: 'monetization-f2p', level: 'game-design', order: 13, emoji: '💳', title: 'Монетизація та F2P',
+    desc: 'IAP, battle pass, loot box і регуляція, етична монетизація проти dark patterns',
+    topics: ['Типи IAP', 'Battle Pass', 'Loot Box і регуляція', 'Етична монетизація vs dark patterns у грі'],
+  },
+  {
+    id: 'hud-ingame-ui', level: 'game-design', order: 14, emoji: '🎯', title: 'HUD та ігровий UI',
+    desc: 'Diegetic/non-diegetic/meta/spatial UI, мінімальний HUD, читабельність під час дії',
+    topics: ['Diegetic vs Non-diegetic vs Meta vs Spatial UI', 'Мінімальний HUD', 'Читабельність під час дії', 'Практика в Game Design Lab'],
+  },
+  {
+    id: 'game-menus-navigation', level: 'game-design', order: 15, emoji: '📋', title: 'Меню та навігація в грі',
+    desc: 'Головне меню, пауза, налаштування, інвентар, навігація контролером проти миші',
+    topics: ['Головне меню', 'Pause Menu', 'Налаштування', 'Інвентар/екіпірування', 'Навігація контролером (D-pad/focus order)'],
+  },
+  {
+    id: 'game-accessibility', level: 'game-design', order: 16, emoji: '♿', title: 'Доступність у іграх',
+    desc: 'Колірна сліпота, субтитри, опції складності, перепризначення керування, укачування',
+    topics: ['Colorblind Modes', 'Субтитри й підписи', 'Опції складності/асисту', 'Перепризначення керування', 'Motion Sickness'],
+  },
+  {
+    id: 'game-design-documentation', level: 'game-design', order: 17, emoji: '📄', title: 'Game Design Document',
+    desc: 'Структура GDD, one-pager, пітч-дек, живий документ проти фіксованого ТЗ',
+    topics: ['Структура GDD', 'One-pager', 'Пітч-дек', 'Живий документ vs upfront-специфікація'],
+  },
+  {
+    id: 'game-prototyping', level: 'game-design', order: 18, emoji: '🧪', title: 'Прототипування ігор',
+    desc: 'Паперовий прототип, цифровий/ігровий рушій, швидка ітерація механіки в ізоляції',
+    topics: ['Paper Prototyping', 'Цифрове/engine-прототипування', 'Швидка ітерація', 'Прототип механіки в ізоляції від контенту'],
+  },
+  {
+    id: 'playtesting-iteration', level: 'game-design', order: 19, emoji: '👀', title: 'Плейтестинг та ітерація',
+    desc: 'Методи плейтесту, що спостерігати проти що кажуть гравці, збір фідбеку',
+    topics: ['Методи плейтестингу', 'Silent Observation vs Think-aloud', 'Що гравці роблять vs що кажуть', 'Збір і синтез фідбеку', 'Цикл ітерації'],
+  },
+  {
+    id: 'game-feel-juice', level: 'game-design', order: 20, emoji: '✨', title: 'Game Feel та «соковитість»',
+    desc: 'Відчуття гри, петлі фідбеку, screen shake, частинки, hit-stop, чутливість вводу',
+    topics: ['Game Feel', 'Juiciness', 'Screen Shake', 'Частинки й VFX-фідбек', 'Hit-stop', 'Чутливість вводу'],
+  },
+  {
+    id: 'level-design-practice', level: 'game-design', order: 21, emoji: '🏗️', title: 'Level Design — практика',
+    desc: 'Практичні вправи з level design на рівні проєкту, а не окремого принципу',
+    topics: ['Практичний level design', 'Застосування принципів у масштабі', 'Ревʼю рівня'],
+  },
+  {
+    id: 'cross-platform-game-design', level: 'game-design', order: 22, emoji: '📱', title: 'Game Design на різних платформах',
+    desc: 'Консоль/ПК/мобільний/VR — різниця в методах вводу, довжині сесії, конвенціях',
+    topics: ['Консоль vs ПК vs Мобільний vs VR', 'Методи вводу', 'Довжина сесії', 'Розмір екрана', 'Платформні конвенції'],
+  },
+  {
+    id: 'game-designer-career', level: 'game-design', order: 23, emoji: '💼', title: 'Кар’єра Game Designer',
+    desc: 'Ролі в студії, вхід в індустрію, портфоліо з джемів і модів, інді проти студії',
+    topics: ['Ролі в студії', 'Вхід в індустрію', 'Портфоліо з джемів/модів', 'Інді vs студійний шлях'],
+  },
+  {
+    id: 'game-design-portfolio-final', level: 'game-design', order: 24, emoji: '🚀', title: 'Портфоліо та фінальний проєкт',
+    desc: 'Повна ігрова система — механіки, баланс, HUD — як кейс для портфоліо',
+    topics: ['Проєктування повної ігрової системи', 'Механіки + баланс + HUD разом', 'Пакування в кейс портфоліо'],
+  },
 ]
 
 export function getSubcategoriesByLevel(level) {

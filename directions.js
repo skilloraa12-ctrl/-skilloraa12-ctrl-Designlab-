@@ -1,8 +1,9 @@
 // Напрямки дизайну, показані на Головній. `id` збігається зі slug-ами
 // category в data/tools/tools.js та level у modules.js/levels.js для
 // консистентності між Інструменти й Академією. Уроки в Академії поки що
-// є лише для Web Design (id: 'web-design') — інші напрямки залишаються
-// декоративними картками, доки не отримають реальний вміст.
+// є лише для Web Design, App Design, UI Design і Game Design (id:
+// 'web-design'/'app-design'/'ui-design'/'game-design') — інші напрямки
+// залишаються декоративними картками, доки не отримають реальний вміст.
 export const DIRECTIONS = [
   { id: 'web-design', emoji: '🌐', name: 'Web Design', desc: 'Сайти та вебсторінки' },
   { id: 'app-design', emoji: '📱', name: 'App Design', desc: 'Мобільні застосунки' },
