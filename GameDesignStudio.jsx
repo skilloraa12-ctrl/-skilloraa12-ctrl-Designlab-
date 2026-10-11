@@ -210,7 +210,7 @@ export default function GameDesignStudio({ module, onClose }) {
   const [gameType, setGameType] = useState(null)
   const [goal, setGoal] = useState(null)
   const [difficulty, setDifficulty] = useState(null)
-  const [activeTab, setActiveTab] = useState('rules')
+  const [activeTab, setActiveTab] = useState(module?.studioTab || 'rules')
   const [objects, setObjects] = useState([])
   const [grid, setGrid] = useState(emptyGrid)
   const [activeTile, setActiveTile] = useState('ground')
