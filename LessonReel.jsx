@@ -192,6 +192,12 @@ const FOCUS_RULES = [
   { id: 'game-motivation-intrinsic-extrinsic', words: ['внутрішня мотивація — бажання робити щось заради самої діяльності, бо', 'внутрішня мотивація — бажання робити щось заради самої діяльності; зов', 'зовнішня мотивація ефективна короткостроково, але overjustification ef', 'додають зовнішню винагороду (очки, предмети) за дію, яка сама по собі'] },
   { id: 'game-sdt-needs-overlap', words: ['теорія самодетермінації (sdt) — психологічна модель, що пояснює, звідк', 'sdt — модель, за якою стійка внутрішня мотивація виникає, коли задовол', 'sdt протилежна простим моделям «стимул-реакція» — не сама винагорода', 'вважають, що сама кількість винагород чи контенту автоматично створює'] },
   { id: 'game-acr-pillars', words: ['три базові психологічні потреби за теорією самодетермінації конкретно', 'автономія — відчуття, що дії гравця є результатом власного вибору', 'компетентність — відчуття зростання майстерності; підтримується чітким', 'проєктують єдиний лінійний шлях без жодного вибору, не усвідомлюючи'] },
+  { id: 'game-symmetry-asymmetry', words: ['симетричний баланс — обидві сторони (гравці, фракції, персонажі) мають', 'симетричний баланс — обидві сторони мають ідентичні можливості; перемо', 'асиметричний баланс — сторони мають різні можливості, але сумарна «сил', 'роблять асиметричні сторони «на око», без перевірки даними'] },
+  { id: 'game-transitive-cycle', words: ['транзитивне відношення сили — якщо a сильніший за b, а b сильніший за', 'транзитивне відношення — прямий лінійний порядок сили', 'інтранзитивне відношення — циклічне (a > b, b > c, c > a', 'будують систему типів чи урону транзитивно, просто «сильніше-слабше»'] },
+  { id: 'game-rps-triangle', words: ['«камінь-ножиці-папір» — найвідоміший приклад інтранзитивної системи', 'rps — найвідоміший приклад інтранзитивної системи: три елементи', 'перевірка балансу rps-системи — статистика фактичних виборів'] },
+  { id: 'game-power-curve-graph', words: ['крива сили (power curve) — графік того, як росте «сила» гравця', 'лінійна крива проста для балансування, але часто відчувається монотонн'] },
+  { id: 'game-balance-data-cycle', words: ['баланс неможливо остаточно підтвердити лише розрахунками на папері', 'балансування через плейтести означає збір об’єктивних даних (winrate', 'балансують гру виключно за суб’єктивним відчуттям гравців «це здається'] },
+  { id: 'game-dominant-strategy-crown', words: ['домінантна стратегія — варіант дії чи вибір, що кращий або рівний за в', 'домінантна стратегія — варіант, кращий або рівний за всі інші в будь-я', 'наявність домінантної стратегії вбиває тактичне різноманіття', 'не перевіряють дані плейтестів на наявність варіанту, який обирають зн'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2363,6 +2369,72 @@ function BrowserMockup({ focus, alert }) {
             <text x={56 + i * 44} y="190" textAnchor="middle" fontSize="12" fontWeight="700" fill="#8a8a9a">{label}</text>
           </g>
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-symmetry-asymmetry') {
+    return (
+      <Frame>
+        <path d="M 36 60 L 36 130 L 66 95 Z" fill={accent} />
+        <path d="M 96 60 L 96 130 L 66 95 Z" fill={accent} opacity="0.5" />
+        <circle cx="132" cy="95" r="14" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <text x="150" y="100" fontSize="14" fill="#5a5a66">=</text>
+        <rect x="160" y="82" width="20" height="20" fill="none" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-transitive-cycle') {
+    return (
+      <Frame>
+        {[50, 100, 150].map((x, i) => (
+          <circle key={x} cx={x} cy="60" r="10" fill="#26262e" stroke={i === 0 ? accent : '#5a5a66'} strokeWidth="2" />
+        ))}
+        <path d="M 60 60 L 90 60 M 110 60 L 140 60" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="60" cy="150" r="10" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="140" cy="150" r="10" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="100" cy="190" r="10" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 70 150 L 130 150 M 134 159 L 104 188 M 96 188 L 66 159" stroke="#5a5a66" strokeWidth="2" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-rps-triangle') {
+    return (
+      <Frame>
+        <circle cx="100" cy="55" r="18" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="55" cy="140" r="18" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="145" cy="140" r="18" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 88 68 L 64 125 M 116 68 L 136 125 M 73 140 L 127 140" stroke="#5a5a66" strokeWidth="2" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-power-curve-graph') {
+    return (
+      <Frame>
+        <path d="M 40 170 L 40 50 M 40 170 L 170 170" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <path d="M 40 160 Q 90 150, 120 100 T 170 55" stroke={accent} strokeWidth="2.5" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-balance-data-cycle') {
+    return (
+      <Frame>
+        <rect x="40" y="110" width="18" height="40" fill="#5a5a66" />
+        <rect x="66" y="90" width="18" height="60" fill={accent} />
+        <rect x="92" y="130" width="18" height="20" fill="#5a5a66" />
+        <rect x="118" y="70" width="18" height="80" fill="#5a5a66" />
+        <path d="M 150 60 A 30 30 0 1 1 150 120" stroke={accent} strokeWidth="2" fill="none" strokeDasharray="3 2" />
+        <path d="M 144 114 L 150 120 L 158 112" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-dominant-strategy-crown') {
+    return (
+      <Frame>
+        <rect x="80" y="70" width="40" height="40" rx="6" fill={accent} />
+        <path d="M 84 66 L 92 56 L 100 66 L 108 56 L 116 66 Z" fill={accent} />
+        <rect x="30" y="130" width="32" height="32" rx="5" fill="#26262e" stroke="#5a5a66" strokeWidth="2" opacity="0.4" />
+        <rect x="84" y="130" width="32" height="32" rx="5" fill="#26262e" stroke="#5a5a66" strokeWidth="2" opacity="0.4" />
+        <rect x="138" y="130" width="32" height="32" rx="5" fill="#26262e" stroke="#5a5a66" strokeWidth="2" opacity="0.4" />
       </Frame>
     )
   }

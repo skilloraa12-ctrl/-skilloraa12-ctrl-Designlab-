@@ -98,6 +98,7 @@ import { LESSONS as gameDesignProcess } from './lessons/game-design-process.js'
 import { LESSONS as coreLoopMechanics } from './lessons/core-loop-mechanics.js'
 import { LESSONS as rulesSystemsDesign } from './lessons/rules-systems-design.js'
 import { LESSONS as playerPsychology } from './lessons/player-psychology.js'
+import { LESSONS as gameBalance } from './lessons/game-balance.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -177,6 +178,7 @@ export const MODULES = [
   ...coreLoopMechanics,
   ...rulesSystemsDesign,
   ...playerPsychology,
+  ...gameBalance,
 ]
 
 export function getModule(id) {
