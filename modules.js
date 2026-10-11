@@ -63,6 +63,7 @@ import { LESSONS as appFigmaBasics } from './lessons/app-figma-basics.js'
 import { LESSONS as appFigmaLayout } from './lessons/app-figma-layout.js'
 import { LESSONS as appFigmaDesignSystem } from './lessons/app-figma-design-system.js'
 import { LESSONS as appFigmaPrototype } from './lessons/app-figma-prototype.js'
+import { LESSONS as appFigmaAppDesign } from './lessons/app-figma-app-design.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -107,6 +108,7 @@ export const MODULES = [
   ...appFigmaLayout,
   ...appFigmaDesignSystem,
   ...appFigmaPrototype,
+  ...appFigmaAppDesign,
 ]
 
 export function getModule(id) {
