@@ -48,6 +48,9 @@ const FOCUS_RULES = [
   { id: 'content-carousel', words: ['горизонтальних каруселей', 'горизонтальну карусель', 'продовжити перегляд', 'resume'] },
   { id: 'streak-progress', words: ['streak', 'серію днів', 'прогрес-бар курсу', 'графік динаміки'] },
   { id: 'live-order-tracking', words: ['order tracking', 'відстеження замовлення', 'курʼєр'] },
+  { id: 'portfolio-device-frame', words: ['device frame', 'силует телефону', 'силуеті телефону'] },
+  { id: 'portfolio-file-prep', words: ['чернетковий простір', 'самостійна презентація', '«presentation»', '«overview»'] },
+  { id: 'handoff-showcase', words: ['навику developer handoff', 'навику handoff', 'акуратно названих шарів'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -510,6 +513,44 @@ function BrowserMockup({ focus, alert }) {
         <circle cx="32" cy="150" r="6" fill="#5a5a66" />
         <circle cx="168" cy="50" r="6" fill="#5a5a66" />
         <circle cx="100" cy="70" r="8" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'portfolio-device-frame') {
+    return (
+      <Frame>
+        <rect x="68" y="36" width="64" height="128" rx="14" fill="#1c1c22" stroke={accent} strokeWidth="2.5" />
+        <rect x="76" y="48" width="48" height="90" rx="4" fill="#2a2a34" />
+        <rect x="92" y="144" width="16" height="5" rx="2.5" fill="#5a5a66" />
+        <rect x="88" y="60" width="32" height="30" rx="4" fill={accent} opacity="0.75" />
+        <rect x="88" y="98" width="32" height="6" rx="3" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'portfolio-file-prep') {
+    return (
+      <Frame>
+        <rect x="24" y="48" width="152" height="104" rx="6" fill="#26262e" stroke="#3a3a44" strokeWidth="1.5" />
+        <rect x="24" y="48" width="152" height="20" rx="6" fill="#1c1c22" />
+        <circle cx="36" cy="58" r="4" fill={accent} />
+        <rect x="48" y="55" width="50" height="6" rx="3" fill="#5a5a66" />
+        <rect x="40" y="82" width="120" height="46" rx="4" fill="#1c1c22" stroke={accent} strokeWidth="1.5" strokeDasharray="3 3" />
+        <rect x="52" y="94" width="50" height="22" rx="3" fill={accent} opacity="0.6" />
+        <path d="M 142 98 L 148 104 L 158 90" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'handoff-showcase') {
+    return (
+      <Frame>
+        <rect x="30" y="50" width="140" height="100" rx="6" fill="#26262e" stroke="#3a3a44" />
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <rect x="42" y={66 + i * 26} width="90" height="14" rx="3" fill="#1c1c22" />
+            <rect x="48" y={70 + i * 26} width="60" height="6" rx="3" fill="#5a5a66" />
+            <path d={`M 150 ${70 + i * 26} L 154 ${74 + i * 26} L 162 ${64 + i * 26}`} fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+        ))}
       </Frame>
     )
   }
