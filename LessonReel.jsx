@@ -127,6 +127,11 @@ const FOCUS_RULES = [
   { id: 'voice-tone-shift', words: ['voice (базова особистість бренду)', 'голос не зникає, тон зсувається'] },
   { id: 'onboarding-benefit-first', words: ['технічний механізм функції замість'] },
   { id: 'confirmation-copy-specific', words: ['узагальнене «підтвердити» на кнопці дії'] },
+  { id: 'nielsen-heuristics-list', words: ['nielsen', 'евристик'] },
+  { id: 'independent-reviewers-severity', words: ['heuristic evaluation', 'рейтинг серйозності'] },
+  { id: 'feedback-sandwich-sbi', words: ['situation-behavior-impact', 'i like, i wish, what if'] },
+  { id: 'self-review-checklist-items', words: ['self-review checklist', 'сліпа зона автора'] },
+  { id: 'reviewer-rotation-gate', words: ['ротація рецензентів', 'peer review'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1502,6 +1507,68 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 95 56 L 105 56" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="2 2" />
         <rect x="38" y="78" width="124" height="28" rx="6" fill="#26262e" stroke="#e5484d" strokeWidth="2" />
         <rect x="50" y="88" width="100" height="8" rx="3" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'nielsen-heuristics-list') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].map((i) => (
+          <g key={i}>
+            <rect x="40" y={44 + i * 18} width="14" height="14" rx="4" fill="none" stroke={accent} strokeWidth="2" />
+            {i < 2 && <path d={`M 44 ${51 + i * 18} L 47 ${54 + i * 18} L 51 ${47 + i * 18}`} fill="none" stroke={accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />}
+            <rect x="62" y={46 + i * 18} width="110" height="10" rx="3" fill="#5a5a66" opacity={i < 2 ? 0.9 : 0.5} />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'independent-reviewers-severity') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((i) => (
+          <circle key={i} cx={56 + i * 36} cy="56" r="14" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        ))}
+        <rect x="40" y="90" width="120" height="14" rx="7" fill="#26262e" stroke="#3a3a44" />
+        <rect x="40" y="90" width="40" height="14" rx="7" fill="#e5484d" opacity="0.8" />
+        <rect x="80" y="90" width="40" height="14" fill="#e0a62c" opacity="0.8" />
+        <rect x="120" y="90" width="40" height="14" rx="7" fill="#4cb782" opacity="0.8" />
+      </Frame>
+    )
+  }
+  if (focus === 'feedback-sandwich-sbi') {
+    return (
+      <Frame>
+        <rect x="40" y="46" width="120" height="16" rx="6" fill={accent} opacity="0.3" />
+        <rect x="40" y="68" width="120" height="16" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <rect x="40" y="90" width="120" height="16" rx="6" fill={accent} opacity="0.3" />
+        <rect x="52" y="51" width="60" height="6" rx="3" fill={accent} />
+        <rect x="52" y="73" width="80" height="6" rx="3" fill="#5a5a66" />
+        <rect x="52" y="95" width="50" height="6" rx="3" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'self-review-checklist-items') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].map((i) => (
+          <g key={i}>
+            <rect x="46" y={48 + i * 18} width="12" height="12" rx="3" fill={i !== 2 ? accent : 'none'} stroke={accent} strokeWidth="1.5" opacity={i !== 2 ? 0.9 : 1} />
+            {i !== 2 && <path d={`M 48.5 ${54 + i * 18} L 51 ${57 + i * 18} L 55.5 ${50 + i * 18}`} fill="none" stroke="#1c1c22" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />}
+            <rect x="66" y={50 + i * 18} width="104" height="8" rx="3" fill={i === 2 ? '#e5484d' : '#5a5a66'} opacity={i === 2 ? 0.7 : 0.8} />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'reviewer-rotation-gate') {
+    return (
+      <Frame>
+        <circle cx="70" cy="60" r="16" fill="none" stroke={accent} strokeWidth="2.5" />
+        <circle cx="130" cy="60" r="16" fill="none" stroke="#5a5a66" strokeWidth="2" opacity="0.5" />
+        <path d="M 88 60 L 112 60" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" />
+        <path d="M 104 54 L 112 60 L 104 66" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="56" y="94" width="88" height="14" rx="6" fill="#26262e" stroke="#3a3a44" />
       </Frame>
     )
   }
