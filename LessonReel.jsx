@@ -182,6 +182,11 @@ const FOCUS_RULES = [
   { id: 'game-mda-layers', words: ['mda (mechanics-dynamics-aesthetics) — фреймворк', 'mda: mechanics (правила, які проєктує дизайнер)', 'дизайнер працює напряму лише з механіками; гравець відчуває лише естет', 'намагаються напряму «спроєктувати» естетику'] },
   { id: 'game-mda-classify', words: ['практичне застосування mda найчастіше провалюється', 'твердження «має бути цікаво чи напружено» — рівень aesthetics', 'твердження з конкретним числом чи правилом'] },
   { id: 'game-mvp-loop-minimal', words: ['мінімально життєздатна петля (за аналогією з mvp', 'mvp-петля — найменша версія core loop', 'мета mvp-петлі — перевірити найризикованіше припущення', 'будують петлю без чіткої умови завершення чи нагороди'] },
+  { id: 'game-rules-formal', words: ['формальні правила — точні, однозначні визначення того, що дозволено', 'точні, однозначні визначення дозволеного й забороненого', 'відрізняються від неявних соціальних правил (fair play)', 'залишають правило нечітким на словах'] },
+  { id: 'game-emergent-interaction', words: ['emergent gameplay — несподівана, незапланована дизайнером поведінка', 'emergent gameplay — незапланована поведінка чи стратегія', 'цінність — відчуття справжнього відкриття для гравця', 'намагаються напряму «спроєктувати» конкретний emergent-момент'] },
+  { id: 'game-feedback-loop-rubberband', words: ['negative loop послаблює лідера і підсилює відстаючого (rubber-banding)', 'додають positive-петлю (наприклад, економіку, що винагороджує лідера'] },
+  { id: 'game-systems-thinking-web', words: ['системне мислення — підхід, що розглядає гру як мережу взаємопов’язани', 'системне мислення розглядає гру як мережу взаємопов’язаних частин', 'перед додаванням нової механіки системний дизайнер питає', 'додають нову механіку ізольовано («фіча-туризм»)'] },
+  { id: 'game-systems-vs-content', words: ['дизайн «на основі систем» і дизайн «на основі контенту»', 'системний підхід інвестує в кілька глибоких правил', 'контентний підхід інвестує у велику кількість вручну зроблених частин', 'обирають чисто контентний підхід для проєкту з обмеженим часом'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2243,6 +2248,61 @@ function BrowserMockup({ focus, alert }) {
         <circle cx="150" cy="70" r="16" fill="#26262e" stroke={accent} strokeWidth="2.5" />
         <circle cx="105" cy="130" r="16" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" opacity="0.5" />
         <path d="M 92 120 L 118 140 M 118 120 L 92 140" stroke="#5a5a66" strokeWidth="2" opacity="0.6" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-rules-formal') {
+    return (
+      <Frame>
+        <rect x="50" y="40" width="100" height="130" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="64" y={58 + i * 22} width="72" height="8" rx="3" fill={i === 3 ? accent : '#5a5a66'} />
+        ))}
+        <circle cx="150" cy="150" r="14" fill="none" stroke={accent} strokeWidth="2.5" />
+        <path d="M 144 150 L 149 156 L 158 144" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-emergent-interaction') {
+    return (
+      <Frame>
+        <circle cx="66" cy="90" r="30" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="126" cy="90" r="30" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 96 76 L 101 90 L 96 104 L 91 90 Z" fill={accent} />
+        <path d="M 96 70 L 96 60 M 90 64 L 102 64" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-feedback-loop-rubberband') {
+    return (
+      <Frame>
+        <circle cx="46" cy="100" r="12" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="154" cy="70" r="12" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 58 100 C 90 100, 120 100, 142 76" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="4 3" />
+        <path d="M 40 112 L 46 100 L 52 112" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-systems-thinking-web') {
+    return (
+      <Frame>
+        {[[60, 56], [140, 56], [100, 100], [60, 144], [140, 144]].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={i === 2 ? 10 : 8} fill={i === 2 ? accent : '#26262e'} stroke={i === 2 ? accent : '#5a5a66'} strokeWidth="2" />
+        ))}
+        <path d="M 60 56 L 100 100 M 140 56 L 100 100 M 60 144 L 100 100 M 140 144 L 100 100 M 60 56 L 140 56 M 60 144 L 140 144" stroke="#5a5a66" strokeWidth="1.5" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-systems-vs-content') {
+    return (
+      <Frame>
+        <circle cx="56" cy="90" r="22" fill="none" stroke={accent} strokeWidth="2.5" />
+        {[0, 45, 90, 135].map((deg) => (
+          <line key={deg} x1="56" y1="90" x2={56 + 30 * Math.cos((deg * Math.PI) / 180)} y2={90 + 30 * Math.sin((deg * Math.PI) / 180)} stroke={accent} strokeWidth="2" opacity="0.5" />
+        ))}
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="126" y={54 + i * 26} width="48" height="20" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        ))}
       </Frame>
     )
   }
