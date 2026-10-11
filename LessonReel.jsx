@@ -18,6 +18,18 @@ function withTimeout(promise, ms = 6000) {
 // коли про колір — палітра; коли про домен/адресу — рядок браузера. Не
 // просто одна й та сама картинка сайту на всі сцени поспіль.
 const FOCUS_RULES = [
+  // Поняття, специфічні для App Design (мобільний дизайн), перевіряються
+  // ПЕРШИМИ — вони вужчі й конкретніші за старі вебо-орієнтовані слова
+  // нижче (напр. "навігаційна архітектура" не повинно впасти в "header"
+  // лише тому, що там теж є "навігац", а "cross-platform" не повинно
+  // впасти в "form" через те, що "платформа" містить підрядок "форм").
+  { id: 'api-client-server', words: ['api', 'client', 'клієнт (застосунок)', 'запит', 'response', 'офлайн-кеш', 'json'] },
+  { id: 'app-type', words: ['native app', 'cross-platform', 'hybrid app', 'pwa', 'нативний застосунок', 'типи застосунків'] },
+  { id: 'screen-type', words: ['onboarding', 'типи екранів', 'empty state', 'detail screen', 'login / sign up', 'profile / settings'] },
+  { id: 'navigation', words: ['tab-bar', 'таб-бар', 'навігаційна архітектура', 'navigation architecture', 'схеми навігації', 'stack-based', 'drawer navigation', 'modal flow'] },
+  { id: 'process-stages', words: ['етапи створення застосунку', 'app store submission', 'brief (бриф)', 'research (дослідження)'] },
+  { id: 'role-handoff', words: ['app designer: роль', 'ux designer', 'ios developer', 'android developer', 'cross-platform developer'] },
+  { id: 'dev-layers', words: ['ui layer', 'logic layer', 'data layer', 'swiftui', 'jetpack compose', 'react native', 'flutter'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -29,12 +41,15 @@ const FOCUS_RULES = [
   { id: 'wireframe', words: ['wireframe', 'прототип', 'скелет сторінки'] },
 ]
 
-function detectFocus(text) {
+function detectFocus(text, level) {
   const norm = (text || '').toLowerCase()
   for (const rule of FOCUS_RULES) {
     if (rule.words.some((w) => norm.includes(w))) return rule.id
   }
-  return 'site'
+  // Запасний варіант теж має відповідати напрямку: загальний макет сайту
+  // доречний лише для Web Design, для App Design — нейтральна картинка
+  // екрана застосунку (status bar + контент + таб-бар), а не сайт.
+  return level === 'app-design' ? 'app-shell' : 'site'
 }
 
 // Короткий (~15с) анімований огляд уроку — БЕЗ жодного платного відео-API.
@@ -48,12 +63,12 @@ function buildScenes(module) {
   const scenes = []
   const hook = (module.theory || '').match(/^.+?[.!?](?=\s|$)/)
   const hookText = hook ? hook[0].trim() : module.title
-  scenes.push({ kind: 'intro', caption: hookText, focus: detectFocus(hookText + ' ' + module.title) })
+  scenes.push({ kind: 'intro', caption: hookText, focus: detectFocus(hookText + ' ' + module.title, module.level) })
   for (const kp of (module.keyPoints || []).slice(0, 2)) {
-    scenes.push({ kind: 'point', caption: kp, focus: detectFocus(kp) })
+    scenes.push({ kind: 'point', caption: kp, focus: detectFocus(kp, module.level) })
   }
   if (module.mistakes && module.mistakes[0]) {
-    scenes.push({ kind: 'mistake', caption: module.mistakes[0], focus: detectFocus(module.mistakes[0]) })
+    scenes.push({ kind: 'mistake', caption: module.mistakes[0], focus: detectFocus(module.mistakes[0], module.level) })
   }
   return scenes
 }
@@ -171,7 +186,115 @@ function BrowserMockup({ focus, alert }) {
       </Frame>
     )
   }
-  // default: загальний макет сайту
+  if (focus === 'api-client-server') {
+    return (
+      <Frame>
+        <rect x="22" y="80" width="56" height="50" rx="6" fill="#2a2a34" stroke="#3a3a44" />
+        <text x="30" y="109" fontFamily="sans-serif" fontSize="9" fill="#e8e8ec">Client</text>
+        <rect x="122" y="80" width="56" height="50" rx="6" fill="#2a2a34" stroke="#3a3a44" />
+        <text x="130" y="109" fontFamily="sans-serif" fontSize="9" fill="#e8e8ec">Server</text>
+        <path d="M 80 96 L 120 96" stroke={accent} strokeWidth="2.5" />
+        <path d="M 114 90 L 122 96 L 114 102" fill="none" stroke={accent} strokeWidth="2.5" />
+        <text x="84" y="92" fontFamily="sans-serif" fontSize="7" fill={accent}>request</text>
+        <path d="M 120 118 L 80 118" stroke="#8a8a9a" strokeWidth="2" />
+        <path d="M 86 112 L 80 118 L 86 124" fill="none" stroke="#8a8a9a" strokeWidth="2" />
+        <text x="84" y="134" fontFamily="sans-serif" fontSize="7" fill="#8a8a9a">response: JSON</text>
+      </Frame>
+    )
+  }
+  if (focus === 'app-type') {
+    return (
+      <Frame>
+        {['Native', 'Cross-platform', 'Hybrid', 'PWA'].map((label, i) => (
+          <g key={label}>
+            <rect x={20 + (i % 2) * 80} y={50 + Math.floor(i / 2) * 70} width="70" height="56" rx="6" fill="#2a2a34" stroke={i === 0 ? accent : '#3a3a44'} strokeWidth={i === 0 ? 2 : 1.5} />
+            <text x={28 + (i % 2) * 80} y={78 + Math.floor(i / 2) * 70} fontFamily="sans-serif" fontSize="8" fontWeight="bold" fill="#e8e8ec">{label}</text>
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'screen-type') {
+    return (
+      <Frame>
+        <rect x="20" y="50" width="70" height="50" rx="6" fill="#2a2a34" />
+        <text x="28" y="79" fontFamily="sans-serif" fontSize="8" fill="#8a8a9a">Onboarding</text>
+        <rect x="100" y="50" width="70" height="50" rx="6" fill="#2a2a34" />
+        <text x="110" y="79" fontFamily="sans-serif" fontSize="8" fill="#8a8a9a">Home</text>
+        <rect x="20" y="112" width="70" height="50" rx="6" fill="#2a2a34" />
+        <text x="28" y="141" fontFamily="sans-serif" fontSize="8" fill="#8a8a9a">Detail</text>
+        <rect x="100" y="112" width="70" height="50" rx="6" fill="#2a2a34" opacity="0.5" />
+        <text x="110" y="141" fontFamily="sans-serif" fontSize="8" fill="#8a8a9a">Empty</text>
+      </Frame>
+    )
+  }
+  if (focus === 'navigation') {
+    return (
+      <Frame>
+        <rect x="20" y="46" width="160" height="110" rx="4" fill="#2a2a34" opacity="0.6" />
+        <rect x="20" y="166" width="160" height="34" rx="6" fill="#26262e" />
+        {[44, 100, 156].map((x, i) => (
+          <g key={x}>
+            <circle cx={x} cy="183" r="7" fill={i === 0 ? accent : '#3a3a44'} />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'process-stages') {
+    return (
+      <Frame>
+        {['Brief', 'Research', 'Design', 'Dev', 'Launch'].map((label, i) => (
+          <g key={label}>
+            <circle cx={36 + i * 32} cy="100" r="12" fill={i === 4 ? accent : '#2a2a34'} stroke="#3a3a44" />
+            {i < 4 && <path d={`M ${48 + i * 32} 100 L ${56 + i * 32} 100`} stroke="#5a5a66" strokeWidth="2" />}
+            <text x={16 + i * 32} y="128" fontFamily="sans-serif" fontSize="6.5" fill="#8a8a9a">{label}</text>
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'role-handoff') {
+    return (
+      <Frame>
+        <rect x="20" y="92" width="48" height="40" rx="6" fill="#2a2a34" stroke="#3a3a44" />
+        <text x="26" y="115" fontFamily="sans-serif" fontSize="7" fill="#e8e8ec">UX</text>
+        <path d="M 68 112 L 78 112" stroke={accent} strokeWidth="2" />
+        <rect x="80" y="92" width="48" height="40" rx="6" fill="#2a2a34" stroke={accent} strokeWidth="2" />
+        <text x="86" y="115" fontFamily="sans-serif" fontSize="7" fill="#e8e8ec">App Design</text>
+        <path d="M 128 112 L 138 112" stroke={accent} strokeWidth="2" />
+        <rect x="140" y="92" width="40" height="40" rx="6" fill="#2a2a34" stroke="#3a3a44" />
+        <text x="144" y="115" fontFamily="sans-serif" fontSize="7" fill="#e8e8ec">iOS/Android</text>
+      </Frame>
+    )
+  }
+  if (focus === 'dev-layers') {
+    return (
+      <Frame>
+        {['UI Layer', 'Logic Layer', 'Data Layer', 'Backend + DB'].map((label, i) => (
+          <g key={label}>
+            <rect x="24" y={52 + i * 34} width="152" height="26" rx="5" fill="#2a2a34" stroke={i === 0 ? accent : '#3a3a44'} />
+            <text x="32" y={69 + i * 34} fontFamily="sans-serif" fontSize="8" fill="#e8e8ec">{label}</text>
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'app-shell') {
+    return (
+      <Frame>
+        <rect x="26" y="44" width="148" height="10" rx="5" fill="#3a3a44" />
+        <rect x="20" y="62" width="160" height="56" rx="6" fill={accent} opacity="0.85" />
+        <rect x="32" y="78" width="100" height="10" rx="5" fill="#17171a" opacity="0.7" />
+        <rect x="32" y="94" width="70" height="8" rx="4" fill="#17171a" opacity="0.5" />
+        <rect x="20" y="126" width="75" height="44" rx="4" fill="#2a2a34" />
+        <rect x="105" y="126" width="75" height="44" rx="4" fill="#2a2a34" />
+        <rect x="20" y="178" width="160" height="22" rx="6" fill="#26262e" />
+        {[44, 100, 156].map((x) => <circle key={x} cx={x} cy="189" r="5" fill="#3a3a44" />)}
+      </Frame>
+    )
+  }
+  // default: загальний макет сайту (лише для Web Design)
   return (
     <Frame>
       <rect x="20" y="46" width="160" height="22" rx="4" fill={accent} opacity="0.85" />
