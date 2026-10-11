@@ -40,6 +40,7 @@ const FOCUS_RULES = [
   { id: 'motion-transition', words: ['motion design', 'моушн-дизайн', 'animation principles', 'принципи анімації', 'easing', 'anticipation', 'screen transitions', 'переходи між екранами', 'push/pop', 'modal presentation'] },
   { id: 'haptic-feedback', words: ['haptic', 'тактильний відгук', 'light impact', 'heavy impact', 'notification feedback'] },
   { id: 'microinteraction-motion', words: ['microinteraction', 'мікровзаємод', 'pull-to-refresh', 'gesture animation', 'анімації жестів', 'scroll animation', 'parallax', 'sticky header'] },
+  { id: 'figma-tool-ui', words: ['layers panel', 'design panel', 'assets panel', 'export panel', 'canvas', 'main component', 'toolbar', 'figma interface', 'frame — контейнер', 'group (ctrl', 'не обтинає вміст', 'назвами за замовчуванням', 'проєкт із файлом'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -411,6 +412,21 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 100 66 A 34 34 0 1 1 72 118" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
         <path d="M 64 112 L 72 118 L 80 110" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M 93 93 L 100 100 L 107 86" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'figma-tool-ui') {
+    return (
+      <Frame>
+        <rect x="20" y="46" width="42" height="160" rx="4" fill="#26262e" stroke="#3a3a44" />
+        <rect x="28" y="56" width="26" height="6" rx="3" fill="#5a5a66" />
+        <rect x="28" y="70" width="26" height="6" rx="3" fill={accent} opacity="0.8" />
+        <rect x="28" y="84" width="26" height="6" rx="3" fill="#5a5a66" />
+        <rect x="68" y="46" width="68" height="160" rx="4" fill="#1c1c22" stroke="#3a3a44" strokeDasharray="3 3" />
+        <rect x="86" y="100" width="32" height="40" rx="3" fill="#2a2a34" stroke={accent} />
+        <rect x="142" y="46" width="38" height="160" rx="4" fill="#26262e" stroke="#3a3a44" />
+        <rect x="150" y="56" width="22" height="6" rx="3" fill="#5a5a66" />
+        <rect x="150" y="70" width="22" height="6" rx="3" fill="#5a5a66" />
       </Frame>
     )
   }
