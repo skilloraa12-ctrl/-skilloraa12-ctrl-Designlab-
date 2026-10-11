@@ -158,6 +158,10 @@ const FOCUS_RULES = [
   { id: 'moderated-live-session', words: ['критичний компроміс moderated', 'обирають moderated-тестування'] },
   { id: 'affinity-theme-clusters', words: ['synthesizing findings —', 'універсальний патерн (проблема в кількох'] },
   { id: 'ab-test-split-traffic', words: ['a/b-тестування принципово', 'a/b-тест випадково розподіляє', 'a/b-тест відповідає на', 'завершують a/b-тест занадто рано'] },
+  { id: 'ui-process-audit', words: ['процес роботи над складним ui', 'без попереднього аудиту реаль'] },
+  { id: 'edge-case-demo', words: ['граничних випадків (10 000 записів'] },
+  { id: 'enterprise-case-audience', words: ['enterprise/saas-кейс у портфоліо', 'рецензент enterprise/saas-кейсу', 'релевантні метрики enterprise-кейсу'] },
+  { id: 'complex-ui-walkthrough', words: ['презентація складного ui вимагає', 'рецензент складного ui-кейсу', 'представляють складний ui-проєкт як простий лінійний наратив'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1887,6 +1891,58 @@ function BrowserMockup({ focus, alert }) {
         <rect x="86" y="92" width="56" height="28" rx="6" fill="#26262e" stroke="#3a3a44" strokeWidth="2" />
         <rect x="152" y="44" width="20" height="12" rx="3" fill={accent} />
         <rect x="152" y="100" width="12" height="12" rx="3" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'ui-process-audit') {
+    return (
+      <Frame>
+        <rect x="34" y="40" width="58" height="72" rx="6" fill="#26262e" stroke="#3a3a44" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="44" y={54 + i * 16} width="38" height="8" rx="3" fill="#5a5a66" />
+        ))}
+        <path d="M 100 76 L 128 76" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="4 3" />
+        <path d="M 120 68 L 128 76 L 120 84" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="138" y="44" width="42" height="64" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="146" y="56" width="26" height="6" rx="2" fill={accent} opacity="0.8" />
+      </Frame>
+    )
+  }
+  if (focus === 'edge-case-demo') {
+    return (
+      <Frame>
+        <rect x="30" y="42" width="60" height="68" rx="6" fill="#26262e" stroke="#3a3a44" />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="38" y={52 + i * 14} width="44" height="7" rx="2" fill="#5a5a66" opacity={0.9 - i * 0.1} />
+        ))}
+        <rect x="104" y="42" width="60" height="68" rx="6" fill="#26262e" stroke="#e5484d" strokeWidth="2" strokeDasharray="4 3" />
+        <circle cx="134" cy="76" r="14" fill="none" stroke="#e5484d" strokeWidth="2" />
+        <path d="M 134 70 L 134 76 M 134 82 L 134 83" fill="none" stroke="#e5484d" strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'enterprise-case-audience') {
+    return (
+      <Frame>
+        <circle cx="70" cy="60" r="18" fill="none" stroke={accent} strokeWidth="2.5" />
+        <path d="M 70 52 L 70 68 M 62 60 L 78 60" fill="none" stroke={accent} strokeWidth="2" />
+        {[0, 1].map((i) => (
+          <rect key={i} x="110" y={40 + i * 36} width="60" height="26" rx="6" fill="#26262e" stroke="#3a3a44" />
+        ))}
+        <path d="M 88 60 L 108 60" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+      </Frame>
+    )
+  }
+  if (focus === 'complex-ui-walkthrough') {
+    return (
+      <Frame>
+        <rect x="34" y="40" width="132" height="68" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="46" y="50" width="108" height="10" rx="3" fill="#5a5a66" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x="46" y={66 + i * 13} width={100 - i * 18} height="7" rx="2" fill="#3a3a44" />
+        ))}
+        <circle cx="150" cy="96" r="12" fill={accent} opacity="0.85" />
+        <path d="M 146 96 L 150 100 L 156 90" fill="none" stroke="#1c1c22" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </Frame>
     )
   }

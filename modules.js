@@ -91,6 +91,7 @@ import { LESSONS as emergingPlatformsUi } from './lessons/emerging-platforms-ui.
 import { LESSONS as accessibleComplexUi } from './lessons/accessible-complex-ui.js'
 import { LESSONS as designSystemsScale } from './lessons/design-systems-scale.js'
 import { LESSONS as usabilityTesting } from './lessons/usability-testing.js'
+import { LESSONS as uiDesignProcessPortfolio } from './lessons/ui-design-process-portfolio.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -163,6 +164,7 @@ export const MODULES = [
   ...accessibleComplexUi,
   ...designSystemsScale,
   ...usabilityTesting,
+  ...uiDesignProcessPortfolio,
 ]
 
 export function getModule(id) {
