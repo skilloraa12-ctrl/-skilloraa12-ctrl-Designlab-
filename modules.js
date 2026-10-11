@@ -73,6 +73,7 @@ import { LESSONS as uiFoundations } from './lessons/ui-foundations.js'
 import { LESSONS as interactionDesign } from './lessons/interaction-design.js'
 import { LESSONS as perceptionGestalt } from './lessons/perception-gestalt.js'
 import { LESSONS as cognitivePsychologyUi } from './lessons/cognitive-psychology-ui.js'
+import { LESSONS as informationArchitecture } from './lessons/information-architecture.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -127,6 +128,7 @@ export const MODULES = [
   ...interactionDesign,
   ...perceptionGestalt,
   ...cognitivePsychologyUi,
+  ...informationArchitecture,
 ]
 
 export function getModule(id) {

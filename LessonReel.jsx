@@ -64,6 +64,13 @@ const FOCUS_RULES = [
   { id: 'cognitive-load-types', words: ['cognitive load', 'intrinsic', 'extraneous'] },
   { id: 'cognitive-bias-ui', words: ['cognitive bias', 'когнітивні викривлення', 'якірний ефект', 'anchoring'] },
   { id: 'peak-end-rule', words: ['peak-end', 'правило піку'] },
+  { id: 'ia-structure-tree', words: ['information architecture', 'ia передує', 'категорії, ієрархія'] },
+  { id: 'nav-model-diagram', words: ['ієрархічна модель', 'матрична модель', 'лінійна модель', 'мережева модель', 'navigation model'] },
+  { id: 'taxonomy-tags', words: ['taxonomy', 'таксономі'] },
+  { id: 'card-sorting-grouping', words: ['card sorting'] },
+  { id: 'findability-search', words: ['findability', 'знаходжуваність'] },
+  { id: 'sitemap-diagram', words: ['site map', 'карта сайту', 'карта продукту'] },
+  { id: 'labeling-tag', words: ['labeling system', 'системи найменування'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -711,6 +718,82 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 30 140 C 55 136, 65 70, 90 68 C 110 66, 115 128, 140 108 C 155 96, 160 60, 172 50" fill="none" stroke="#3a3a44" strokeWidth="2.5" />
         <circle cx="90" cy="68" r="6" fill={accent} opacity="0.7" />
         <circle cx="172" cy="50" r="7" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'ia-structure-tree') {
+    return (
+      <Frame>
+        <circle cx="100" cy="52" r="10" fill={accent} />
+        <path d="M 100 62 L 100 80 M 100 80 L 56 100 M 100 80 L 100 100 M 100 80 L 144 100" fill="none" stroke="#3a3a44" strokeWidth="2" />
+        <circle cx="56" cy="108" r="8" fill="#5a5a66" />
+        <circle cx="100" cy="108" r="8" fill="#5a5a66" />
+        <circle cx="144" cy="108" r="8" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'nav-model-diagram') {
+    return (
+      <Frame>
+        <circle cx="66" cy="70" r="7" fill={accent} />
+        <circle cx="134" cy="70" r="7" fill={accent} opacity="0.7" />
+        <circle cx="100" cy="118" r="7" fill={accent} opacity="0.5" />
+        <circle cx="50" cy="128" r="7" fill={accent} opacity="0.4" />
+        <circle cx="150" cy="128" r="7" fill={accent} opacity="0.4" />
+        <path d="M 66 70 L 134 70 M 66 70 L 100 118 M 134 70 L 100 118 M 100 118 L 50 128 M 100 118 L 150 128" fill="none" stroke="#3a3a44" strokeWidth="1.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'taxonomy-tags') {
+    return (
+      <Frame>
+        <rect x="40" y="62" width="58" height="24" rx="12" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="70" y="86" width="58" height="24" rx="12" fill="#26262e" stroke={accent} strokeWidth="2" opacity="0.85" />
+        <rect x="102" y="110" width="58" height="24" rx="12" fill="#26262e" stroke={accent} strokeWidth="2" opacity="0.7" />
+        <rect x="52" y="70" width="34" height="8" rx="4" fill="#5a5a66" />
+        <rect x="82" y="94" width="34" height="8" rx="4" fill="#5a5a66" />
+        <rect x="114" y="118" width="34" height="8" rx="4" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'card-sorting-grouping') {
+    return (
+      <Frame>
+        <rect x="26" y="60" width="66" height="78" rx="6" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="4 3" />
+        <rect x="38" y="70" width="42" height="18" rx="3" fill="#26262e" stroke="#3a3a44" />
+        <rect x="38" y="94" width="42" height="18" rx="3" fill="#26262e" stroke="#3a3a44" />
+        <rect x="108" y="46" width="66" height="60" rx="6" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" />
+        <rect x="120" y="56" width="42" height="18" rx="3" fill="#26262e" stroke="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'findability-search') {
+    return (
+      <Frame>
+        <rect x="52" y="56" width="70" height="52" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <path d="M 62 70 L 112 70 M 62 82 L 100 82 M 62 94 L 108 94" fill="none" stroke="#5a5a66" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="130" cy="118" r="18" fill="none" stroke={accent} strokeWidth="3" />
+        <path d="M 142 130 L 156 144" fill="none" stroke={accent} strokeWidth="3.5" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'sitemap-diagram') {
+    return (
+      <Frame>
+        <rect x="80" y="44" width="40" height="22" rx="4" fill={accent} opacity="0.9" />
+        <path d="M 100 66 L 100 82 M 100 82 L 48 100 M 100 82 L 100 100 M 100 82 L 152 100" fill="none" stroke="#3a3a44" strokeWidth="2" />
+        <rect x="30" y="100" width="36" height="20" rx="4" fill="#26262e" stroke="#3a3a44" />
+        <rect x="82" y="100" width="36" height="20" rx="4" fill="#26262e" stroke="#3a3a44" />
+        <rect x="134" y="100" width="36" height="20" rx="4" fill="#26262e" stroke="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'labeling-tag') {
+    return (
+      <Frame>
+        <path d="M 54 70 L 110 70 L 140 100 L 110 130 L 54 130 Z" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="76" cy="100" r="6" fill={accent} />
+        <rect x="92" y="94" width="34" height="12" rx="4" fill="#5a5a66" />
       </Frame>
     )
   }
