@@ -102,6 +102,13 @@ const FOCUS_RULES = [
   { id: 'error-message-specificity', words: ['якісне повідомлення про помилку', 'щось пішло не так'] },
   { id: 'perceived-performance-loading', words: ['perceived performance', 'сприйнята швидкість', 'flash of loading state'] },
   { id: 'confirmation-dialog-pattern', words: ['confirmation pattern', 'клацати двічі', 'confirmation fatigue'] },
+  { id: 'coachmark-spotlight-overlay', words: ['coachmark', 'spotlight/dimming'] },
+  { id: 'onboarding-tooltip-badge', words: ['навчальний tooltip', 'educational tooltip'] },
+  { id: 'progressive-disclosure-tiers', words: ['progressive disclosure в онбордингу', 'front-loading'] },
+  { id: 'demo-content-preview', words: ['демонстраційна картка'] },
+  { id: 'feature-discovery-badge', words: ['feature discovery', 'new» badge'] },
+  { id: 'checklist-progress-steps', words: ['ефект зейгарник'] },
+  { id: 'product-tour-steps', words: ['product tour', 'пропустити тур'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1190,6 +1197,86 @@ function BrowserMockup({ focus, alert }) {
         <rect x="58" y="56" width="84" height="8" rx="3" fill="#5a5a66" />
         <rect x="58" y="70" width="36" height="16" rx="5" fill="none" stroke="#5a5a66" strokeWidth="1.5" />
         <rect x="100" y="70" width="42" height="16" rx="5" fill="#e5484d" opacity="0.85" />
+      </Frame>
+    )
+  }
+  if (focus === 'coachmark-spotlight-overlay') {
+    return (
+      <Frame>
+        <rect x="16" y="18" width="168" height="94" rx="8" fill="#1c1c22" opacity="0.55" />
+        <circle cx="100" cy="64" r="22" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="100" cy="64" r="22" fill="none" stroke={accent} strokeWidth="1" opacity="0.4" />
+        <path d="M 100 92 L 92 106 L 108 106 Z" fill={accent} />
+        <rect x="62" y="112" width="76" height="8" rx="4" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'onboarding-tooltip-badge') {
+    return (
+      <Frame>
+        <rect x="48" y="78" width="44" height="30" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <circle cx="110" cy="70" r="5" fill={accent} />
+        <path d="M 100 60 L 110 64 L 150 50" fill="none" stroke={accent} strokeWidth="1.5" strokeDasharray="2 2" />
+        <rect x="112" y="40" width="68" height="26" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="120" y="48" width="48" height="6" rx="3" fill="#5a5a66" />
+        <rect x="120" y="56" width="32" height="6" rx="3" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'progressive-disclosure-tiers') {
+    return (
+      <Frame>
+        <rect x="30" y="92" width="50" height="22" rx="5" fill={accent} opacity="0.9" />
+        <rect x="88" y="70" width="50" height="22" rx="5" fill={accent} opacity="0.55" />
+        <rect x="146" y="48" width="36" height="22" rx="5" fill={accent} opacity="0.3" />
+        <path d="M 30 44 L 182 44" fill="none" stroke="#3a3a44" strokeWidth="2" strokeDasharray="3 3" />
+      </Frame>
+    )
+  }
+  if (focus === 'demo-content-preview') {
+    return (
+      <Frame>
+        <rect x="40" y="46" width="120" height="48" rx="8" fill="#26262e" stroke={accent} strokeWidth="2" strokeDasharray="4 3" opacity="0.8" />
+        <circle cx="60" cy="62" r="8" fill="#5a5a66" />
+        <rect x="76" y="56" width="64" height="7" rx="3" fill="#5a5a66" />
+        <rect x="76" y="68" width="44" height="6" rx="3" fill="#3a3a44" />
+        <rect x="60" y="106" width="80" height="14" rx="6" fill={accent} opacity="0.85" />
+      </Frame>
+    )
+  }
+  if (focus === 'feature-discovery-badge') {
+    return (
+      <Frame>
+        <rect x="46" y="52" width="108" height="20" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <rect x="58" y="59" width="60" height="6" rx="3" fill="#5a5a66" />
+        <rect x="128" y="56" width="26" height="14" rx="7" fill={accent} />
+        <rect x="46" y="84" width="108" height="20" rx="6" fill="#26262e" stroke="#3a3a44" opacity="0.5" />
+        <rect x="58" y="91" width="60" height="6" rx="3" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'checklist-progress-steps') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <circle cx="52" cy={48 + i * 24} r="9" fill={i < 2 ? accent : 'none'} stroke={accent} strokeWidth="2" />
+            {i < 2 && <path d={`M 48 ${48 + i * 24} L 51 ${51 + i * 24} L 57 ${44 + i * 24}`} fill="none" stroke="#1c1c22" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />}
+            <rect x="70" y={43 + i * 24} width="100" height="10" rx="4" fill={i < 2 ? '#3a3a44' : '#5a5a66'} />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'product-tour-steps') {
+    return (
+      <Frame>
+        <rect x="30" y="50" width="140" height="44" rx="8" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="44" y="62" width="100" height="8" rx="3" fill="#5a5a66" />
+        <rect x="44" y="76" width="70" height="6" rx="3" fill="#3a3a44" />
+        {[0, 1, 2, 3].map((i) => (
+          <circle key={i} cx={82 + i * 12} r="3.5" cy="112" fill={i === 1 ? accent : '#3a3a44'} />
+        ))}
       </Frame>
     )
   }

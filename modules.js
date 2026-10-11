@@ -80,6 +80,7 @@ import { LESSONS as searchFilters } from './lessons/search-filters.js'
 import { LESSONS as advancedForms } from './lessons/advanced-forms.js'
 import { LESSONS as dashboardsDataviz } from './lessons/dashboards-dataviz.js'
 import { LESSONS as notificationsFeedback } from './lessons/notifications-feedback.js'
+import { LESSONS as onboardingAdoption } from './lessons/onboarding-adoption.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -141,6 +142,7 @@ export const MODULES = [
   ...advancedForms,
   ...dashboardsDataviz,
   ...notificationsFeedback,
+  ...onboardingAdoption,
 ]
 
 export function getModule(id) {
