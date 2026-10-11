@@ -236,6 +236,8 @@ const FOCUS_RULES = [
   { id: 'game-hud-minimalism', words: ['кожен зайвий елемент hud займає увагу', 'показують усі можливі елементи hud постійно'] },
   { id: 'game-hud-readability-action', words: ['hud читають не в спокійній обстановці', 'читабельність hud оцінюють в умовах динамічної дії', 'проєктують hud, перевіряючи читабельність лише на спокійному статичном'] },
   { id: 'game-hud-lab-capstone', words: ['фінальна практика підкатегорії обʼєднує diegetic/non-diegetic/meta/spa', 'реальна збірка hud йде в порядку: спочатку мінімалізм', 'lab матеріалізує цей процес у готовий html/css/react-код'] },
+  { id: 'game-menu-settings-categories', words: ['екран налаштувань у грі часто містить десятки окремих опцій', 'екран налаштувань групує десятки опцій за категоріями', 'типовий паттерн усередині категорії — рядок: підпис зліва', 'роблять єдиний плаский список усіх налаштувань без категоризації'] },
+  { id: 'game-menu-controller-focus-order', words: ['прості одноколонкові меню природно мають лінійний порядок фокусу', 'контролер переміщує фокус дискретно в заздалегідь визначеному порядку'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2869,6 +2871,32 @@ function BrowserMockup({ focus, alert }) {
         <rect x="28" y="140" width="36" height="10" rx="5" fill="#8a8a9a" />
         <rect x="136" y="140" width="36" height="10" rx="5" fill={accent} opacity="0.8" />
         <text x="100" y="105" textAnchor="middle" fontSize="20" fontWeight="700" fill={accent}>{'</>'}</text>
+      </Frame>
+    )
+  }
+  if (focus === 'game-menu-settings-categories') {
+    return (
+      <Frame>
+        <rect x="26" y="50" width="46" height="8" rx="4" fill={accent} />
+        <rect x="78" y="50" width="46" height="8" rx="4" fill="#5a5a66" />
+        <rect x="130" y="50" width="46" height="8" rx="4" fill="#5a5a66" />
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <rect x="20" y={72 + i * 26} width="90" height="10" rx="5" fill="#8a8a9a" />
+            <rect x="120" y={72 + i * 26} width="60" height="10" rx="5" fill="#3a3a44" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-menu-controller-focus-order') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x="50" y={60 + i * 30} width="100" height="20" rx="6" fill={i === 1 ? accent : '#2a2a34'} stroke={i === 1 ? accent : '#3a3a44'} strokeWidth="2" />
+        ))}
+        <path d="M100 95 L100 115" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M94 109 L100 115 L106 109" stroke="#5a5a66" strokeWidth="2" fill="none" />
       </Frame>
     )
   }
