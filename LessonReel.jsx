@@ -41,6 +41,7 @@ const FOCUS_RULES = [
   { id: 'haptic-feedback', words: ['haptic', 'тактильний відгук', 'light impact', 'heavy impact', 'notification feedback'] },
   { id: 'microinteraction-motion', words: ['microinteraction', 'мікровзаємод', 'pull-to-refresh', 'gesture animation', 'анімації жестів', 'scroll animation', 'parallax', 'sticky header'] },
   { id: 'figma-tool-ui', words: ['layers panel', 'design panel', 'assets panel', 'export panel', 'canvas', 'main component', 'toolbar', 'figma interface', 'frame — контейнер', 'group (ctrl', 'не обтинає вміст', 'назвами за замовчуванням', 'проєкт із файлом'] },
+  { id: 'figma-prototype-ui', words: ['connection', 'interactions панель', 'prototype mode', 'navigate to', 'open overlay', 'swap overlay', 'close overlay', 'set variable', 'gesture triggers', 'interactive components'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -412,6 +413,19 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 100 66 A 34 34 0 1 1 72 118" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
         <path d="M 64 112 L 72 118 L 80 110" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M 93 93 L 100 100 L 107 86" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'figma-prototype-ui') {
+    return (
+      <Frame>
+        <rect x="18" y="58" width="56" height="90" rx="4" fill="#2a2a34" stroke="#3a3a44" />
+        <circle cx="74" cy="103" r="5" fill={accent} />
+        <rect x="126" y="58" width="56" height="90" rx="4" fill="#1c1c22" stroke={accent} strokeWidth="2" strokeDasharray="3 3" />
+        <path d="M 79 103 C 100 103, 100 103, 121 103" fill="none" stroke={accent} strokeWidth="2.5" />
+        <path d="M 112 95 L 123 103 L 112 111" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="28" y="70" width="36" height="8" rx="4" fill="#5a5a66" />
+        <rect x="136" y="70" width="36" height="8" rx="4" fill="#3a3a44" />
       </Frame>
     )
   }
