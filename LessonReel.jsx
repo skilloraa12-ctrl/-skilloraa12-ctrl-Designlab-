@@ -89,6 +89,12 @@ const FOCUS_RULES = [
   { id: 'autosave-indicator', words: ['autosave', 'автозбереження'] },
   { id: 'error-recovery-message', words: ['error recovery', 'відновлення після помилки'] },
   { id: 'inline-validation-state', words: ['inline validation', 'валідація на кожну'] },
+  { id: 'chart-type-selector', words: ['тип графіка', 'типу графіка', 'line chart', 'bar chart'] },
+  { id: 'hero-metric-emphasis', words: ['hero metric', 'головна метрика', 'найважливіша метрика', 'найважливішу метрику'] },
+  { id: 'kpi-trend-comparison', words: ['без порівняння з попереднім періодом'] },
+  { id: 'data-ink-chartjunk', words: ['chartjunk', 'data-ink'] },
+  { id: 'dashboard-empty-canvas', words: ['порожній дашборд', 'drag-and-drop rearrangement'] },
+  { id: 'realtime-live-indicator', words: ['real-time data', 'timestamp'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1028,6 +1034,71 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 48 70 L 56 78 M 56 70 L 48 78" fill="none" stroke="#e5484d" strokeWidth="2" strokeLinecap="round" />
         <rect x="104" y="62" width="56" height="24" rx="5" fill="#26262e" stroke={accent} strokeWidth="2" />
         <path d="M 112 74 L 117 79 L 126 68" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'chart-type-selector') {
+    return (
+      <Frame>
+        <path d="M 40 110 L 60 80 L 80 96 L 100 58" fill="none" stroke="#5a5a66" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        {[0, 1, 2].map((i) => (
+          <rect key={i} x={116 + i * 16} y={94 - i * 18} width="10" height={18 + i * 18} fill="#5a5a66" />
+        ))}
+        <circle cx="166" cy="70" r="16" fill="none" stroke={accent} strokeWidth="3" />
+        <path d="M 166 70 L 166 54 A 16 16 0 0 1 180 78 Z" fill={accent} />
+        <rect x="40" y="128" width="140" height="2" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'hero-metric-emphasis') {
+    return (
+      <Frame>
+        <rect x="40" y="52" width="80" height="60" rx="8" fill={accent} opacity="0.9" />
+        <rect x="56" y="68" width="48" height="12" rx="4" fill="#ffffff" opacity="0.85" />
+        <rect x="128" y="52" width="48" height="26" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <rect x="128" y="86" width="48" height="26" rx="6" fill="#26262e" stroke="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'kpi-trend-comparison') {
+    return (
+      <Frame>
+        <rect x="46" y="54" width="108" height="48" rx="8" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="60" y="66" width="52" height="14" rx="4" fill="#5a5a66" />
+        <path d="M 124 80 L 132 68 L 140 76 L 148 62" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 142 62 L 148 62 L 148 68" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="60" y="112" width="80" height="6" rx="3" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'data-ink-chartjunk') {
+    return (
+      <Frame>
+        <g opacity="0.4">
+          <rect x="34" y="46" width="60" height="70" rx="6" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+          <path d="M 42 100 L 52 82 L 62 92 L 74 60 L 86 76" fill="none" stroke="#5a5a66" strokeWidth="3" />
+        </g>
+        <path d="M 112 106 L 124 70 L 138 88 L 156 52" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'dashboard-empty-canvas') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x={40 + (i % 2) * 72} y={52 + Math.floor(i / 2) * 36} width="60" height="28" rx="6" fill="none" stroke="#3a3a44" strokeWidth="2" strokeDasharray="4 3" />
+        ))}
+        <path d="M 150 60 L 150 100 M 134 80 L 166 80" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'realtime-live-indicator') {
+    return (
+      <Frame>
+        <circle cx="54" cy="58" r="6" fill={accent} opacity="0.9" />
+        <circle cx="54" cy="58" r="11" fill="none" stroke={accent} strokeWidth="1.5" opacity="0.5" />
+        <rect x="72" y="52" width="68" height="12" rx="4" fill="#5a5a66" />
+        <path d="M 46 108 L 66 86 L 84 98 L 108 70 L 134 92" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       </Frame>
     )
   }

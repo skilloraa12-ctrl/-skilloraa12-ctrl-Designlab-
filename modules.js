@@ -78,6 +78,7 @@ import { LESSONS as navigationPatterns } from './lessons/navigation-patterns.js'
 import { LESSONS as dataTables } from './lessons/data-tables.js'
 import { LESSONS as searchFilters } from './lessons/search-filters.js'
 import { LESSONS as advancedForms } from './lessons/advanced-forms.js'
+import { LESSONS as dashboardsDataviz } from './lessons/dashboards-dataviz.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -137,6 +138,7 @@ export const MODULES = [
   ...dataTables,
   ...searchFilters,
   ...advancedForms,
+  ...dashboardsDataviz,
 ]
 
 export function getModule(id) {
