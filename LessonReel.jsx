@@ -51,6 +51,12 @@ const FOCUS_RULES = [
   { id: 'portfolio-device-frame', words: ['device frame', 'силует телефону', 'силуеті телефону'] },
   { id: 'portfolio-file-prep', words: ['чернетковий простір', 'самостійна презентація', '«presentation»', '«overview»'] },
   { id: 'handoff-showcase', words: ['навику developer handoff', 'навику handoff', 'акуратно названих шарів'] },
+  { id: 'ui-signifier', words: ['signifier', 'сигніфікатор'] },
+  { id: 'ui-feedback', words: ['feedback'] },
+  { id: 'ui-mapping', words: ['mapping', 'напрямком дії', 'напрямку руху контролу'] },
+  { id: 'fitts-law', words: ['fitts', 'закон фіттса', 'закону фіттса'] },
+  { id: 'hicks-law', words: ['hick', 'закон хіка', 'закону хіка'] },
+  { id: 'ui-discoverability', words: ['discoverability', 'здатність до виявлення'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -551,6 +557,72 @@ function BrowserMockup({ focus, alert }) {
             <path d={`M 150 ${70 + i * 26} L 154 ${74 + i * 26} L 162 ${64 + i * 26}`} fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </g>
         ))}
+      </Frame>
+    )
+  }
+  if (focus === 'ui-signifier') {
+    return (
+      <Frame>
+        <circle cx="130" cy="100" r="22" fill="none" stroke={accent} strokeWidth="2.5" strokeDasharray="4 4" />
+        <path d="M 56 100 L 98 100" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+        <path d="M 88 90 L 98 100 L 88 110" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="130" cy="100" r="6" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'ui-feedback') {
+    return (
+      <Frame>
+        <circle cx="100" cy="100" r="10" fill={accent} />
+        <circle cx="100" cy="100" r="24" fill="none" stroke={accent} strokeWidth="2" opacity="0.6" />
+        <circle cx="100" cy="100" r="38" fill="none" stroke={accent} strokeWidth="2" opacity="0.35" />
+        <circle cx="100" cy="100" r="52" fill="none" stroke={accent} strokeWidth="2" opacity="0.15" />
+      </Frame>
+    )
+  }
+  if (focus === 'ui-mapping') {
+    return (
+      <Frame>
+        <rect x="40" y="96" width="120" height="8" rx="4" fill="#2a2a34" />
+        <circle cx="128" cy="100" r="10" fill={accent} />
+        <path d="M 142 100 L 158 100" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M 150 92 L 158 100 L 150 108" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="128" y="56" width="10" height="28" rx="3" fill={accent} opacity="0.85" />
+        <rect x="108" y="64" width="10" height="20" rx="3" fill="#3a3a44" />
+        <rect x="88" y="70" width="10" height="14" rx="3" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'fitts-law') {
+    return (
+      <Frame>
+        <circle cx="48" cy="100" r="6" fill="#5a5a66" />
+        <circle cx="140" cy="100" r="26" fill="none" stroke={accent} strokeWidth="2.5" strokeDasharray="4 3" />
+        <path d="M 54 100 L 112 100" fill="none" stroke="#3a3a44" strokeWidth="2" strokeDasharray="3 3" />
+        <circle cx="140" cy="100" r="5" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'hicks-law') {
+    return (
+      <Frame>
+        <circle cx="46" cy="100" r="6" fill={accent} />
+        {[-40, -14, 12, 38].map((dy, i) => (
+          <g key={dy}>
+            <path d={`M 52 100 L 150 ${100 + dy}`} fill="none" stroke="#3a3a44" strokeWidth="2" />
+            <circle cx="152" cy={100 + dy} r="7" fill={i === 1 ? accent : '#5a5a66'} opacity={i === 1 ? 1 : 0.6} />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'ui-discoverability') {
+    return (
+      <Frame>
+        <rect x="56" y="70" width="88" height="60" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <rect x="76" y="92" width="24" height="24" rx="4" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="3 3" />
+        <circle cx="128" cy="100" r="16" fill="none" stroke={accent} strokeWidth="2.5" />
+        <path d="M 139 111 L 150 122" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
       </Frame>
     )
   }
