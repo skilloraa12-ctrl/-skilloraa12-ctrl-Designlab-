@@ -44,6 +44,10 @@ const FOCUS_RULES = [
   { id: 'figma-prototype-ui', words: ['connection', 'interactions панель', 'prototype mode', 'navigate to', 'open overlay', 'swap overlay', 'close overlay', 'set variable', 'gesture triggers', 'interactive components'] },
   { id: 'git-collab', words: ['pull request', 'система контролю версій', 'git-репозитор', 'github —'] },
   { id: 'store-submission', words: ['app store review', 'google play console', 'app store (apple)', 'google play (android)'] },
+  { id: 'trust-verification', words: ['ставкою довіри', 'kyc', 'грошову транзакцію', 'грошова транзакці', 'біометричн'] },
+  { id: 'content-carousel', words: ['горизонтальних каруселей', 'горизонтальну карусель', 'продовжити перегляд', 'resume'] },
+  { id: 'streak-progress', words: ['streak', 'серію днів', 'прогрес-бар курсу', 'графік динаміки'] },
+  { id: 'live-order-tracking', words: ['order tracking', 'відстеження замовлення', 'курʼєр'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -468,6 +472,44 @@ function BrowserMockup({ focus, alert }) {
         <rect x="80" y="117" width="26" height="6" rx="3" fill="#3a3a44" />
         <circle cx="146" cy="56" r="20" fill="#1c1c22" stroke={accent} strokeWidth="2" />
         <path d="M 137 56 L 144 63 L 157 48" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'trust-verification') {
+    return (
+      <Frame>
+        <path d="M 100 38 L 142 52 L 142 100 C 142 128, 124 148, 100 158 C 76 148, 58 128, 58 100 L 58 52 Z" fill="#2a2a34" stroke={accent} strokeWidth="2.5" />
+        <path d="M 82 98 L 95 112 L 120 82" fill="none" stroke={accent} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'content-carousel') {
+    return (
+      <Frame>
+        <rect x="18" y="66" width="48" height="68" rx="6" fill="#26262e" opacity="0.6" />
+        <rect x="76" y="58" width="56" height="84" rx="6" fill={accent} opacity="0.9" />
+        <rect x="142" y="66" width="40" height="68" rx="6" fill="#26262e" opacity="0.6" />
+        <path d="M 10 100 L 2 100" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+        <path d="M 190 100 L 198 100" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'streak-progress') {
+    return (
+      <Frame>
+        <rect x="28" y="96" width="144" height="12" rx="6" fill="#2a2a34" />
+        <rect x="28" y="96" width="98" height="12" rx="6" fill={accent} />
+        <path d="M 150 140 C 142 128, 148 116, 158 110 C 156 120, 162 122, 166 116 C 170 128, 164 138, 154 142 Z" fill={accent} opacity="0.85" />
+      </Frame>
+    )
+  }
+  if (focus === 'live-order-tracking') {
+    return (
+      <Frame>
+        <path d="M 32 150 C 70 150, 60 70, 100 70 C 140 70, 130 50, 168 50" fill="none" stroke="#3a3a44" strokeWidth="3" strokeDasharray="6 5" />
+        <circle cx="32" cy="150" r="6" fill="#5a5a66" />
+        <circle cx="168" cy="50" r="6" fill="#5a5a66" />
+        <circle cx="100" cy="70" r="8" fill={accent} />
       </Frame>
     )
   }
