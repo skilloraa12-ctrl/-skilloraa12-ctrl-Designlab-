@@ -262,6 +262,10 @@ const FOCUS_RULES = [
   { id: 'game-level-practice-process', words: ['ця підкатегорія переходить від окремих принципів level design (прой', 'практичний level design застосовує кілька принципів разом на одному з'] },
   { id: 'game-level-scale-conflict', words: ['окремі принципи level design (landmarks, pacing, critical path, чита', 'на масштабі повного рівня окремі принципи (landmarks, pacing, critical', 'приклад конфлікту: багато унікальних landmarks покращує впізнаваність', 'перевіряють масштабний рівень лише з висоти пташиного польоту (карта)'] },
   { id: 'game-level-review', words: ['ревʼю рівня — структурований процес критичного аналізу завершеного', 'ревʼю рівня фокусується на дизайнерських рішеннях і їхньому обґрунтува'] },
+  { id: 'game-platform-console-pc', words: ['консоль: геймпад з відстані, великий екран, довші сесії, можливий спіл', 'пк: точність миші й клавіатури, гнучкість налаштувань, різноманітність'] },
+  { id: 'game-platform-input-methods', words: ['метод вводу визначає не лише взаємодію, а й які механіки взагалі можли', 'миша дає точність прицілювання, недосяжну для стіка; дотик не має фізи', 'переносять механіку, що залежить від точності миші (швидке прицілюванн'] },
+  { id: 'game-platform-session-length', words: ['мобільні сесії короткі й можуть перериватись будь-якої миті — потрібне'] },
+  { id: 'game-platform-screen-size', words: ['мобільний (20-30 см) дозволяє дрібні деталі зблизька; телевізор (2-3 м'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -3187,6 +3191,45 @@ function BrowserMockup({ focus, alert }) {
         <rect x="50" y="70" width="70" height="70" rx="6" fill="#2a2a34" stroke="#5a5a66" strokeWidth="2" />
         <circle cx="130" cy="140" r="22" fill="none" stroke={accent} strokeWidth="3" />
         <path d="M146 156 L162 172" stroke={accent} strokeWidth="4" strokeLinecap="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-platform-console-pc') {
+    return (
+      <Frame>
+        <ellipse cx="60" cy="110" rx="30" ry="18" fill="none" stroke={accent} strokeWidth="3" />
+        <circle cx="48" cy="110" r="4" fill={accent} />
+        <circle cx="72" cy="110" r="4" fill={accent} />
+        <rect x="120" y="95" width="18" height="28" rx="8" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <rect x="145" y="120" width="30" height="14" rx="3" fill="none" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-platform-input-methods') {
+    return (
+      <Frame>
+        <circle cx="55" cy="110" r="12" fill="none" stroke={accent} strokeWidth="3" />
+        <circle cx="55" cy="110" r="4" fill={accent} />
+        <path d="M95 95 L110 130 L100 125 L92 140 Z" fill="#5a5a66" />
+        <circle cx="150" cy="110" r="14" fill={accent} opacity="0.35" />
+        <circle cx="150" cy="110" r="5" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-platform-session-length') {
+    return (
+      <Frame>
+        <circle cx="70" cy="115" r="30" fill="none" stroke="#5a5a66" strokeWidth="3" strokeDasharray="6 6" />
+        <path d="M70 85 L70 115 L90 125" stroke={accent} strokeWidth="3" strokeLinecap="round" fill="none" />
+        <circle cx="150" cy="115" r="30" fill="none" stroke={accent} strokeWidth="3" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-platform-screen-size') {
+    return (
+      <Frame>
+        <rect x="30" y="90" width="24" height="44" rx="4" fill="none" stroke={accent} strokeWidth="2" />
+        <rect x="110" y="75" width="70" height="45" rx="4" fill="none" stroke="#5a5a66" strokeWidth="2" />
       </Frame>
     )
   }
