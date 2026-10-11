@@ -176,6 +176,12 @@ const FOCUS_RULES = [
   { id: 'game-playtest-silent', words: ['плейтест — перевірка на людях, які не автор гри', 'головне правило — мовчати під час сесії', 'підказують гравцю під час сесії замість того'] },
   { id: 'game-pitch-hook', words: ['пітч відповідає: що гравець робить (ядро)', 'починають пітч з опису сетингу чи сюжету'] },
   { id: 'game-scope-jam-studio', words: ['на джемі одна доведена механіка завжди краще', 'планують на джем кілька механік одночасно'] },
+  { id: 'game-core-loop-cycle', words: ['core gameplay loop — найменший замкнений цикл дій', 'core loop — найменший замкнений цикл дій (дія → відгук', 'якщо сама повторювана дія не приносить задоволення', 'проєктують цікавий сюжет чи контент навколо нудної базової дії'] },
+  { id: 'game-verb-combo', words: ['game verbs (ігрові дієслова) — конкретний', 'game verbs — конкретний набір дій, які гравець фізично', 'хороший дизайн обирає невеликий набір дієслів', 'додають нове дієслово під кожну нову ідею'] },
+  { id: 'game-mechanic-rule-pair', words: ['дієслово відповідає «що гравець робить», механіка', 'описують дієслово без жодного механічного обмеження'] },
+  { id: 'game-mda-layers', words: ['mda (mechanics-dynamics-aesthetics) — фреймворк', 'mda: mechanics (правила, які проєктує дизайнер)', 'дизайнер працює напряму лише з механіками; гравець відчуває лише естет', 'намагаються напряму «спроєктувати» естетику'] },
+  { id: 'game-mda-classify', words: ['практичне застосування mda найчастіше провалюється', 'твердження «має бути цікаво чи напружено» — рівень aesthetics', 'твердження з конкретним числом чи правилом'] },
+  { id: 'game-mvp-loop-minimal', words: ['мінімально життєздатна петля (за аналогією з mvp', 'mvp-петля — найменша версія core loop', 'мета mvp-петлі — перевірити найризикованіше припущення', 'будують петлю без чіткої умови завершення чи нагороди'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2164,6 +2170,79 @@ function BrowserMockup({ focus, alert }) {
           <rect key={i} x="112" y={54 + i * 18} width="56" height="8" rx="3" fill="#5a5a66" />
         ))}
         <text x="140" y="140" textAnchor="middle" fontSize="9" fill="#8a8a9a">студія</text>
+      </Frame>
+    )
+  }
+  if (focus === 'game-core-loop-cycle') {
+    return (
+      <Frame>
+        <circle cx="100" cy="56" r="16" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="146" cy="120" r="16" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="54" cy="120" r="16" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 112 68 L 136 106" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 130 120 L 70 120" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 64 106 L 88 68" stroke={accent} strokeWidth="2.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-verb-combo') {
+    return (
+      <Frame>
+        <rect x="36" y="78" width="28" height="28" rx="6" fill={accent} opacity="0.9" />
+        <path d="M 64 92 L 150 50 M 64 92 L 150 92 M 64 92 L 150 134" stroke="#5a5a66" strokeWidth="1.8" fill="none" />
+        {[50, 92, 134].map((y, i) => (
+          <rect key={y} x="150" y={y - 12} width="24" height="24" rx="4" fill="#26262e" stroke={i === 1 ? accent : '#3a3a44'} strokeWidth="2" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-mechanic-rule-pair') {
+    return (
+      <Frame>
+        <rect x="30" y="56" width="56" height="40" rx="6" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 90 76 L 118 76" stroke={accent} strokeWidth="2.5" />
+        <path d="M 110 68 L 118 76 L 110 84" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" />
+        <rect x="122" y="56" width="56" height="40" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <circle cx="104" cy="114" r="12" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 104 108 L 104 114 L 109 118" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-mda-layers') {
+    return (
+      <Frame>
+        {['M', 'D', 'A'].map((label, i) => (
+          <g key={label}>
+            <rect x="40" y={40 + i * 40} width="120" height="26" rx="5" fill={i === 0 ? accent : '#26262e'} stroke={i === 0 ? accent : '#5a5a66'} strokeWidth="2" />
+            <text x="100" y={40 + i * 40 + 18} textAnchor="middle" fontSize="13" fontWeight="700" fill={i === 0 ? '#17171a' : '#8a8a9a'}>{label}</text>
+          </g>
+        ))}
+        <path d="M 100 66 L 100 80 M 100 106 L 100 120" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-mda-classify') {
+    return (
+      <Frame>
+        <rect x="86" y="42" width="28" height="20" rx="4" fill={accent} />
+        <path d="M 100 64 L 100 86" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        {['M', 'D', 'A'].map((label, i) => (
+          <g key={label}>
+            <rect x={30 + i * 50} y="96" width="40" height="80" rx="6" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+            <text x={50 + i * 50} y="192" textAnchor="middle" fontSize="12" fontWeight="700" fill="#8a8a9a">{label}</text>
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-mvp-loop-minimal') {
+    return (
+      <Frame>
+        <circle cx="60" cy="70" r="16" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <path d="M 76 70 L 134 70" stroke={accent} strokeWidth="2.5" />
+        <circle cx="150" cy="70" r="16" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="105" cy="130" r="16" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" opacity="0.5" />
+        <path d="M 92 120 L 118 140 M 118 120 L 92 140" stroke="#5a5a66" strokeWidth="2" opacity="0.6" />
       </Frame>
     )
   }

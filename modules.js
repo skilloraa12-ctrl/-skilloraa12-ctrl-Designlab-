@@ -95,6 +95,7 @@ import { LESSONS as uiDesignProcessPortfolio } from './lessons/ui-design-process
 import { LESSONS as uiFinalProject } from './lessons/ui-final-project.js'
 import { LESSONS as gameDesignBasics } from './lessons/game-design-basics.js'
 import { LESSONS as gameDesignProcess } from './lessons/game-design-process.js'
+import { LESSONS as coreLoopMechanics } from './lessons/core-loop-mechanics.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -171,6 +172,7 @@ export const MODULES = [
   ...uiFinalProject,
   ...gameDesignBasics,
   ...gameDesignProcess,
+  ...coreLoopMechanics,
 ]
 
 export function getModule(id) {
