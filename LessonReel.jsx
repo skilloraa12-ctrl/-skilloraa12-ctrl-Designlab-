@@ -83,6 +83,8 @@ const FOCUS_RULES = [
   { id: 'table-inline-edit', words: ['inline editing'] },
   { id: 'table-pagination', words: ['pagination', 'infinite scroll'] },
   { id: 'table-responsive-card', words: ['responsive tables', 'card transformation', 'column priority'] },
+  { id: 'faceted-search-counts', words: ['faceted search', 'фасетний пошук', 'лічильник доступних результатів', 'опцією фасету'] },
+  { id: 'saved-filters-list', words: ['saved filters', 'збережені фільтри', 'збережений фільтр'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -955,6 +957,33 @@ function BrowserMockup({ focus, alert }) {
         <rect x="144" y="70" width="24" height="8" rx="3" fill={accent} opacity="0.8" />
         <rect x="144" y="86" width="24" height="6" rx="3" fill="#3a3a44" />
         <rect x="144" y="98" width="24" height="6" rx="3" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'faceted-search-counts') {
+    return (
+      <Frame>
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <rect x="40" y={58 + i * 26} width="14" height="14" rx="3" fill="#26262e" stroke={accent} strokeWidth="2" />
+            <rect x="62" y={61 + i * 26} width="54" height="8" rx="3" fill="#5a5a66" />
+            <rect x="140" y={60 + i * 26} width="28" height="12" rx="6" fill="#26262e" stroke="#3a3a44" />
+            <rect x="148" y={64 + i * 26} width="12" height="4" rx="2" fill={accent} opacity="0.8" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'saved-filters-list') {
+    return (
+      <Frame>
+        <path d="M 46 48 L 74 48 L 74 100 L 60 88 L 46 100 Z" fill={accent} opacity="0.85" />
+        {[0, 1].map((i) => (
+          <rect key={i} x="94" y={56 + i * 24} width="80" height="18" rx="9" fill="#26262e" stroke={accent} strokeWidth="1.5" />
+        ))}
+        {[0, 1].map((i) => (
+          <rect key={i} x="106" y={62 + i * 24} width="48" height="6" rx="3" fill="#5a5a66" />
+        ))}
       </Frame>
     )
   }
