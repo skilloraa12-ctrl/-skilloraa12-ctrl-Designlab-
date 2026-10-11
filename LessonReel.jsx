@@ -137,6 +137,10 @@ const FOCUS_RULES = [
   { id: 'sacred-shortcuts-lock', words: ['священні» скорочення', 'священне» скорочення'] },
   { id: 'unsaved-changes-indicator', words: ['незбережених змін'] },
   { id: 'native-vs-custom-control', words: ['native control —', 'native controls'] },
+  { id: 'voice-ui-conversation', words: ['voice ui'] },
+  { id: 'kiosk-public-terminal', words: ['kiosk ui', 'auto-reset to idle'] },
+  { id: 'tabletop-orientation', words: ['large display ui', 'інтерактивний стіл'] },
+  { id: 'continue-where-left-off', words: ['продовжити з того місця', 'continue where you left off'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1627,6 +1631,56 @@ function BrowserMockup({ focus, alert }) {
         <rect x="46" y="60" width="40" height="6" rx="3" fill="#5a5a66" />
         <rect x="106" y="52" width="56" height="22" rx="11" fill={accent} opacity="0.85" />
         <circle cx="152" cy="63" r="8" fill="#ffffff" opacity="0.9" />
+      </Frame>
+    )
+  }
+  if (focus === 'voice-ui-conversation') {
+    return (
+      <Frame>
+        <circle cx="70" cy="76" r="22" fill={accent} opacity="0.85" />
+        <rect x="62" y="68" width="4" height="16" rx="2" fill="#ffffff" opacity="0.8" />
+        <rect x="68" y="62" width="4" height="28" rx="2" fill="#ffffff" opacity="0.8" />
+        <rect x="74" y="70" width="4" height="12" rx="2" fill="#ffffff" opacity="0.8" />
+        <path d="M 102 70 Q 118 70 118 82 Q 118 94 100 94 L 100 100 L 108 94" fill="#26262e" stroke="#3a3a44" strokeWidth="1.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'kiosk-public-terminal') {
+    return (
+      <Frame>
+        <rect x="56" y="30" width="88" height="88" rx="8" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <rect x="68" y="42" width="64" height="12" rx="3" fill="#5a5a66" />
+        {[0, 1].map((i) => (
+          <rect key={i} x={68 + i * 34} y="62" width="28" height="28" rx="6" fill="#1c1c22" stroke="#3a3a44" />
+        ))}
+        <path d="M 150 50 A 20 20 0 1 1 150 98" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" />
+        <path d="M 144 92 L 150 98 L 156 92" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'tabletop-orientation') {
+    return (
+      <Frame>
+        <circle cx="100" cy="76" r="40" fill="none" stroke="#3a3a44" strokeWidth="2" strokeDasharray="3 2" />
+        {[0, 90, 180, 270].map((deg, i) => (
+          <g key={i} transform={`rotate(${deg} 100 76)`}>
+            <rect x="92" y="38" width="16" height="10" rx="3" fill={accent} opacity="0.8" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'continue-where-left-off') {
+    return (
+      <Frame>
+        <rect x="34" y="50" width="70" height="46" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="42" y="80" width="54" height="5" rx="2" fill="#3a3a44" />
+        <rect x="42" y="80" width="32" height="5" rx="2" fill={accent} />
+        <path d="M 112 72 L 136 72" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+        <path d="M 128 65 L 136 72 L 128 79" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="146" y="46" width="40" height="54" rx="6" fill="#26262e" stroke="#3a3a44" />
+        <rect x="152" y="76" width="28" height="5" rx="2" fill="#3a3a44" />
+        <rect x="152" y="76" width="16" height="5" rx="2" fill={accent} />
       </Frame>
     )
   }

@@ -87,6 +87,7 @@ import { LESSONS as uxWritingMicrocopy } from './lessons/ux-writing-microcopy.js
 import { LESSONS as heuristicsCritique } from './lessons/heuristics-critique.js'
 import { LESSONS as crossPlatformConsistency } from './lessons/cross-platform-consistency.js'
 import { LESSONS as desktopSoftwareUi } from './lessons/desktop-software-ui.js'
+import { LESSONS as emergingPlatformsUi } from './lessons/emerging-platforms-ui.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -155,6 +156,7 @@ export const MODULES = [
   ...heuristicsCritique,
   ...crossPlatformConsistency,
   ...desktopSoftwareUi,
+  ...emergingPlatformsUi,
 ]
 
 export function getModule(id) {
