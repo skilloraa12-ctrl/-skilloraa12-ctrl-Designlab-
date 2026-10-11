@@ -71,6 +71,12 @@ const FOCUS_RULES = [
   { id: 'findability-search', words: ['findability', 'знаходжуваність'] },
   { id: 'sitemap-diagram', words: ['site map', 'карта сайту', 'карта продукту'] },
   { id: 'labeling-tag', words: ['labeling system', 'системи найменування'] },
+  { id: 'mega-menu-columns', words: ['mega menu', 'мега-меню'] },
+  { id: 'command-palette-search', words: ['command palette', 'командна палітра', 'fuzzy search'] },
+  { id: 'global-search-results', words: ['global search', 'глобальний пошук'] },
+  { id: 'breadcrumb-attribute', words: ['attribute-based', 'location-based'] },
+  { id: 'scrollable-tabs', words: ['scrollable tabs', 'активна вкладка'] },
+  { id: 'nav-hierarchy-levels', words: ['primary navigation', 'secondary navigation', 'tertiary navigation', 'navigation hierarchy'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -794,6 +800,80 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 54 70 L 110 70 L 140 100 L 110 130 L 54 130 Z" fill="#26262e" stroke={accent} strokeWidth="2.5" />
         <circle cx="76" cy="100" r="6" fill={accent} />
         <rect x="92" y="94" width="34" height="12" rx="4" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'mega-menu-columns') {
+    return (
+      <Frame>
+        <rect x="24" y="52" width="152" height="96" rx="6" fill="#26262e" stroke="#3a3a44" />
+        {[36, 90, 144].map((x) => (
+          <g key={x}>
+            <rect x={x} y="64" width="40" height="8" rx="3" fill={accent} opacity="0.85" />
+            {[0, 1, 2].map((i) => (
+              <rect key={i} x={x} y={80 + i * 16} width="34" height="7" rx="3" fill="#5a5a66" />
+            ))}
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'command-palette-search') {
+    return (
+      <Frame>
+        <rect x="36" y="64" width="128" height="34" rx="8" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <circle cx="54" cy="81" r="6" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 59 86 L 64 91" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+        <rect x="74" y="77" width="56" height="8" rx="3" fill="#5a5a66" />
+        <rect x="140" y="72" width="18" height="18" rx="4" fill="#1c1c22" stroke="#5a5a66" strokeWidth="1.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'global-search-results') {
+    return (
+      <Frame>
+        <rect x="46" y="44" width="108" height="22" rx="6" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <circle cx="60" cy="55" r="5" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        {[0, 1, 2].map((i) => (
+          <g key={i}>
+            <rect x="46" y={78 + i * 24} width="30" height="7" rx="3" fill={accent} opacity="0.7" />
+            <rect x="46" y={88 + i * 24} width="108" height="6" rx="3" fill="#3a3a44" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'breadcrumb-attribute') {
+    return (
+      <Frame>
+        {[{ x: 30, w: 36 }, { x: 74, w: 46 }, { x: 128, w: 44 }].map((c, i) => (
+          <g key={i}>
+            <rect x={c.x} y="92" width={c.w} height="22" rx="11" fill="#26262e" stroke={accent} strokeWidth="1.5" opacity={1 - i * 0.15} />
+            <rect x={c.x + 10} y="99" width={c.w - 26} height="7" rx="3" fill="#5a5a66" />
+            <circle cx={c.x + c.w - 10} cy="103" r="5" fill="none" stroke="#5a5a66" strokeWidth="1.5" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'scrollable-tabs') {
+    return (
+      <Frame>
+        <rect x="20" y="88" width="160" height="28" rx="4" fill="#1c1c22" />
+        {[30, 66, 102].map((x, i) => (
+          <rect key={x} x={x} y="94" width="30" height="16" rx="4" fill={i === 1 ? accent : '#3a3a44'} opacity={i === 1 ? 1 : 0.7} />
+        ))}
+        <path d="M 150 102 L 172 102" fill="none" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 3" />
+        <path d="M 165 96 L 172 102 L 165 108" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'nav-hierarchy-levels') {
+    return (
+      <Frame>
+        <rect x="30" y="48" width="140" height="20" rx="4" fill={accent} opacity="0.9" />
+        <rect x="50" y="78" width="100" height="16" rx="4" fill={accent} opacity="0.55" />
+        <rect x="70" y="104" width="60" height="13" rx="4" fill={accent} opacity="0.3" />
       </Frame>
     )
   }
