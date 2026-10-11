@@ -270,6 +270,9 @@ const FOCUS_RULES = [
   { id: 'game-career-industry-entry', words: ['вхід у професію game designer рідко відбувається напряму на позицію', 'вхід у професію рідко відбувається напряму — типові шляхи використову', 'qa-тестування дає погляд на реальний процес розробки зблизька', 'чекають «ідеальної» першої вакансії дизайнера без будь-якого видимого'] },
   { id: 'game-career-jam-portfolio', words: ['проєкти з game jam і модів особливо цінні для портфоліо початківця', 'проєкти джемів/модів цінні тим, що завершені — демонструють здатність', 'постмортем (post-mortem) пояснює не лише що вийшло', 'показують у портфоліо готову гру чи мод без жодного постмортему'] },
   { id: 'game-career-indie-vs-studio', words: ['незалежна (інді) розробка і робота в студії пропонують принципово різ', 'інді-шлях дає повний творчий контроль, але покладає всі ролі', 'студійний шлях дає стабільність і спеціалізацію на дизайні', 'обирають інді-шлях лише через романтизоване уявлення про «свободу»'] },
+  { id: 'game-capstone-full-system', words: ['фінальний проєкт напрямку game design об’єднує всі окремі теми курсу', 'фінальний проєкт об’єднує всі теми курсу в одну узгоджену систему', 'проєктують кожну систему (механіки, баланс, hud) окремо без явного зв'] },
+  { id: 'game-capstone-mbh-together', words: ['три шари фінального проєкту (механіки, баланс, hud) мають демонструват', 'рецензент портфоліо оцінює цілісність дизайнерського мислення через вз'] },
+  { id: 'game-capstone-case-packaging', words: ['фінальний крок — перетворення завершеного проєкту й усіх напрацьовани', 'хороший кейс game design: one-pager на початку', 'кейс має явно показувати ітерацію (ранні версії поруч із фінальною)', 'показують у кейсі лише фінальний полірований результат без жодного сло'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -3275,6 +3278,37 @@ function BrowserMockup({ focus, alert }) {
         <path d="M60 90 L140 90" stroke="#5a5a66" strokeWidth="2" />
         <circle cx="60" cy="105" r="16" fill="none" stroke={accent} strokeWidth="2.5" />
         <circle cx="140" cy="100" r="12" fill="none" stroke="#5a5a66" strokeWidth="2.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-capstone-full-system') {
+    return (
+      <Frame>
+        <circle cx="60" cy="90" r="14" fill="none" stroke={accent} strokeWidth="2.5" />
+        <circle cx="140" cy="90" r="14" fill="none" stroke="#5a5a66" strokeWidth="2.5" />
+        <circle cx="100" cy="140" r="14" fill="none" stroke="#5a5a66" strokeWidth="2.5" />
+        <path d="M72 97 L128 97 M72 97 L92 130 M128 97 L108 130" stroke={accent} strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-capstone-mbh-together') {
+    return (
+      <Frame>
+        <rect x="35" y="95" width="24" height="24" rx="4" fill="none" stroke={accent} strokeWidth="2.5" />
+        <path d="M63 107 L85 107" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M79 101 L85 107 L79 113" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <path d="M90 95 L114 119 L90 119 Z" fill="none" stroke="#5a5a66" strokeWidth="2.5" />
+        <path d="M118 107 L140 107" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M134 101 L140 107 L134 113" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <rect x="145" y="99" width="20" height="16" rx="3" fill={accent} opacity="0.6" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-capstone-case-packaging') {
+    return (
+      <Frame>
+        <path d="M40 90 L80 90 L88 100 L160 100 L160 150 L40 150 Z" fill="none" stroke={accent} strokeWidth="2.5" />
+        <path d="M100 115 L105 127 L118 127 L108 134 L112 147 L100 139 L88 147 L92 134 L82 127 L95 127 Z" fill={accent} opacity="0.8" />
       </Frame>
     )
   }
