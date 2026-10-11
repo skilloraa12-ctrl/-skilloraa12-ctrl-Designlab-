@@ -187,6 +187,11 @@ const FOCUS_RULES = [
   { id: 'game-feedback-loop-rubberband', words: ['negative loop послаблює лідера і підсилює відстаючого (rubber-banding)', 'додають positive-петлю (наприклад, економіку, що винагороджує лідера'] },
   { id: 'game-systems-thinking-web', words: ['системне мислення — підхід, що розглядає гру як мережу взаємопов’язани', 'системне мислення розглядає гру як мережу взаємопов’язаних частин', 'перед додаванням нової механіки системний дизайнер питає', 'додають нову механіку ізольовано («фіча-туризм»)'] },
   { id: 'game-systems-vs-content', words: ['дизайн «на основі систем» і дизайн «на основі контенту»', 'системний підхід інвестує в кілька глибоких правил', 'контентний підхід інвестує у велику кількість вручну зроблених частин', 'обирають чисто контентний підхід для проєкту з обмеженим часом'] },
+  { id: 'game-bartle-quadrant', words: ['жодна гра не обслуговує лише один тип — хороший дизайн свідомо продуму', 'проєктують механіку без усвідомлення, якому архетипу гравця за бартлом'] },
+  { id: 'game-flow-channel', words: ['стан потоку (flow) — психологічний стан повного занурення в діяльність', 'flow — стан повного занурення, коли складність точно відповідає навичц', 'коридор потоку не статичний — навичка гравця зростає з практикою', 'тримають складність статичною протягом усієї гри'] },
+  { id: 'game-motivation-intrinsic-extrinsic', words: ['внутрішня мотивація — бажання робити щось заради самої діяльності, бо', 'внутрішня мотивація — бажання робити щось заради самої діяльності; зов', 'зовнішня мотивація ефективна короткостроково, але overjustification ef', 'додають зовнішню винагороду (очки, предмети) за дію, яка сама по собі'] },
+  { id: 'game-sdt-needs-overlap', words: ['теорія самодетермінації (sdt) — психологічна модель, що пояснює, звідк', 'sdt — модель, за якою стійка внутрішня мотивація виникає, коли задовол', 'sdt протилежна простим моделям «стимул-реакція» — не сама винагорода', 'вважають, що сама кількість винагород чи контенту автоматично створює'] },
+  { id: 'game-acr-pillars', words: ['три базові психологічні потреби за теорією самодетермінації конкретно', 'автономія — відчуття, що дії гравця є результатом власного вибору', 'компетентність — відчуття зростання майстерності; підтримується чітким', 'проєктують єдиний лінійний шлях без жодного вибору, не усвідомлюючи'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2302,6 +2307,61 @@ function BrowserMockup({ focus, alert }) {
         ))}
         {[0, 1, 2].map((i) => (
           <rect key={i} x="126" y={54 + i * 26} width="48" height="20" rx="4" fill="#26262e" stroke="#5a5a66" strokeWidth="2" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-bartle-quadrant') {
+    return (
+      <Frame>
+        <path d="M 100 40 L 100 170 M 40 105 L 170 105" stroke="#5a5a66" strokeWidth="2" />
+        {[[70, 72, 'A', accent], [135, 72, 'E', '#5a5a66'], [70, 138, 'S', '#5a5a66'], [135, 138, 'K', '#5a5a66']].map(([x, y, label, color]) => (
+          <g key={label}>
+            <circle cx={x} cy={y} r="16" fill="#26262e" stroke={color} strokeWidth="2.5" />
+            <text x={x} y={y + 5} textAnchor="middle" fontSize="13" fontWeight="700" fill={color}>{label}</text>
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-flow-channel') {
+    return (
+      <Frame>
+        <path d="M 35 150 L 165 45" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" fill="none" />
+        <path d="M 35 115 L 165 95" stroke="#5a5a66" strokeWidth="2" strokeDasharray="4 3" fill="none" />
+        <circle cx="100" cy="92" r="10" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-motivation-intrinsic-extrinsic') {
+    return (
+      <Frame>
+        <circle cx="80" cy="95" r="34" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <path d="M 80 80 L 86 94 L 100 94 L 89 103 L 93 117 L 80 108 L 67 117 L 71 103 L 60 94 L 74 94 Z" fill={accent} />
+        <circle cx="158" cy="95" r="14" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <text x="158" y="100" textAnchor="middle" fontSize="13" fontWeight="700" fill="#5a5a66">$</text>
+        <path d="M 144 95 L 118 95" stroke="#5a5a66" strokeWidth="2" strokeDasharray="3 2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-sdt-needs-overlap') {
+    return (
+      <Frame>
+        <circle cx="80" cy="80" r="34" fill={accent} opacity="0.25" stroke={accent} strokeWidth="2" />
+        <circle cx="120" cy="80" r="34" fill={accent} opacity="0.25" stroke={accent} strokeWidth="2" />
+        <circle cx="100" cy="112" r="34" fill={accent} opacity="0.25" stroke={accent} strokeWidth="2" />
+        <circle cx="100" cy="90" r="6" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-acr-pillars') {
+    return (
+      <Frame>
+        {['A', 'C', 'R'].map((label, i) => (
+          <g key={label}>
+            <rect x={40 + i * 44} y="60" width="32" height="100" rx="6" fill="#26262e" stroke={i === 0 ? accent : '#5a5a66'} strokeWidth="2" />
+            <text x={56 + i * 44} y="190" textAnchor="middle" fontSize="12" fontWeight="700" fill="#8a8a9a">{label}</text>
+          </g>
         ))}
       </Frame>
     )
