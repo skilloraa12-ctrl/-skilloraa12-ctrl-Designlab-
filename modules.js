@@ -55,6 +55,7 @@ import { LESSONS as appScreensStructure } from './lessons/app-screens-structure.
 import { LESSONS as appComponents } from './lessons/app-components.js'
 import { LESSONS as appAdaptiveDesign } from './lessons/app-adaptive-design.js'
 import { LESSONS as appDesignSystems } from './lessons/app-design-systems.js'
+import { LESSONS as appWireframing } from './lessons/app-wireframing.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -91,6 +92,7 @@ export const MODULES = [
   ...appComponents,
   ...appAdaptiveDesign,
   ...appDesignSystems,
+  ...appWireframing,
 ]
 
 export function getModule(id) {
