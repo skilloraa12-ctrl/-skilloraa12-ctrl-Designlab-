@@ -32,6 +32,10 @@ const FOCUS_RULES = [
   { id: 'dev-layers', words: ['ui layer', 'logic layer', 'data layer', 'swiftui', 'jetpack compose', 'react native', 'flutter'] },
   { id: 'safe-area', words: ['safe area', 'безпечна зона', 'виїмка камери', 'dynamic island', 'home indicator', 'заокруглені кути корпусу'] },
   { id: 'screen-structure', words: ['screen structure', 'структура екрана', 'ієрархію екранів', 'рівня навігації', 'своя власна версія app bar'] },
+  { id: 'checkbox-radio', words: ['checkbox', 'чекбокс', 'radio button', 'радіокнопка', 'indeterminate'] },
+  { id: 'picker', words: ['picker', 'пікер', 'scroll wheel', 'колесо прокрутки'] },
+  { id: 'bottom-sheet', words: ['bottom sheet', 'нижня панель', 'drag-to-dismiss'] },
+  { id: 'ui-states-screen', words: ['ui states', 'стани інтерфейсу', 'skeleton screen', 'offline-стан', 'success-стан', 'offline стани'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -303,6 +307,57 @@ function BrowserMockup({ focus, alert }) {
         <rect x="40" y="100" width="120" height="22" rx="4" fill="#26262e" opacity="0.7" />
         <text x="48" y="115" fontFamily="sans-serif" fontSize="7" fill="#8a8a9a">Екран 1 (попередній)</text>
         <rect x="20" y="138" width="160" height="40" rx="4" fill="#2a2a34" opacity="0.5" />
+      </Frame>
+    )
+  }
+  if (focus === 'checkbox-radio') {
+    return (
+      <Frame>
+        <rect x="30" y="60" width="26" height="26" rx="5" fill={accent} />
+        <path d="M 37 73 L 43 80 L 56 64" fill="none" stroke="#17171a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="80" y="60" width="90" height="10" rx="5" fill="#3a3a44" />
+        <circle cx="43" cy="130" r="13" fill="none" stroke={accent} strokeWidth="3" />
+        <circle cx="43" cy="130" r="6" fill={accent} />
+        <rect x="80" y="124" width="90" height="10" rx="5" fill="#3a3a44" />
+        <circle cx="43" cy="170" r="13" fill="none" stroke="#3a3a44" strokeWidth="3" />
+        <rect x="80" y="164" width="70" height="10" rx="5" fill="#2a2a34" />
+      </Frame>
+    )
+  }
+  if (focus === 'picker') {
+    return (
+      <Frame>
+        <rect x="55" y="92" width="90" height="36" rx="6" fill={accent} opacity="0.25" />
+        <rect x="20" y="54" width="160" height="1.5" fill="#3a3a44" />
+        <rect x="20" y="186" width="160" height="1.5" fill="#3a3a44" />
+        <text x="72" y="72" fontFamily="sans-serif" fontSize="11" fill="#5a5a66">11</text>
+        <text x="68" y="114" fontFamily="sans-serif" fontSize="15" fontWeight="bold" fill="#e8e8ec">12</text>
+        <text x="72" y="156" fontFamily="sans-serif" fontSize="11" fill="#5a5a66">13</text>
+        <text x="72" y="180" fontFamily="sans-serif" fontSize="9" fill="#3a3a44">14</text>
+      </Frame>
+    )
+  }
+  if (focus === 'bottom-sheet') {
+    return (
+      <Frame>
+        <rect x="20" y="46" width="160" height="200" rx="4" fill="#2a2a34" opacity="0.35" />
+        <rect x="20" y="118" width="160" height="128" rx="14" fill="#26262e" stroke={accent} strokeWidth="1.5" />
+        <rect x="80" y="130" width="40" height="5" rx="2.5" fill="#5a5a66" />
+        <rect x="36" y="150" width="128" height="10" rx="5" fill="#3a3a44" />
+        <rect x="36" y="170" width="90" height="8" rx="4" fill="#3a3a44" />
+        <rect x="36" y="200" width="128" height="30" rx="8" fill={accent} opacity="0.85" />
+      </Frame>
+    )
+  }
+  if (focus === 'ui-states-screen') {
+    return (
+      <Frame>
+        {['Loading', 'Error', 'Empty', 'Offline'].map((label, i) => (
+          <g key={label}>
+            <rect x={20 + (i % 2) * 80} y={50 + Math.floor(i / 2) * 70} width="70" height="56" rx="6" fill="#2a2a34" stroke={i === 1 ? accent : '#3a3a44'} strokeWidth={i === 1 ? 2 : 1.5} />
+            <text x={28 + (i % 2) * 80} y={78 + Math.floor(i / 2) * 70} fontFamily="sans-serif" fontSize="8" fontWeight="bold" fill="#e8e8ec">{label}</text>
+          </g>
+        ))}
       </Frame>
     )
   }
