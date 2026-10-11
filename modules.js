@@ -67,6 +67,7 @@ import { LESSONS as appFigmaAppDesign } from './lessons/app-figma-app-design.js'
 import { LESSONS as appTechMinimum } from './lessons/app-tech-minimum.js'
 import { LESSONS as appDesignToDevelopment } from './lessons/app-design-to-development.js'
 import { LESSONS as appTypesPractice } from './lessons/app-types-practice.js'
+import { LESSONS as appRealProjects } from './lessons/app-real-projects.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -115,6 +116,7 @@ export const MODULES = [
   ...appTechMinimum,
   ...appDesignToDevelopment,
   ...appTypesPractice,
+  ...appRealProjects,
 ]
 
 export function getModule(id) {
