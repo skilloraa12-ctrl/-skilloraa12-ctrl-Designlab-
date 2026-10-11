@@ -95,6 +95,13 @@ const FOCUS_RULES = [
   { id: 'data-ink-chartjunk', words: ['chartjunk', 'data-ink'] },
   { id: 'dashboard-empty-canvas', words: ['порожній дашборд', 'drag-and-drop rearrangement'] },
   { id: 'realtime-live-indicator', words: ['real-time data', 'timestamp'] },
+  { id: 'toast-notification', words: ['toast —', 'toast-сповіщення'] },
+  { id: 'banner-persistent', words: ['banner —', 'кілька banner одночасно'] },
+  { id: 'alerts-severity-levels', words: ['alerts hierarchy', 'не кричати вовк'] },
+  { id: 'badge-count-indicator', words: ['badge —', 'number badge', 'не прибирають чи не оновлюють badge'] },
+  { id: 'error-message-specificity', words: ['якісне повідомлення про помилку', 'щось пішло не так'] },
+  { id: 'perceived-performance-loading', words: ['perceived performance', 'сприйнята швидкість', 'flash of loading state'] },
+  { id: 'confirmation-dialog-pattern', words: ['confirmation pattern', 'клацати двічі', 'confirmation fatigue'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -1099,6 +1106,90 @@ function BrowserMockup({ focus, alert }) {
         <circle cx="54" cy="58" r="11" fill="none" stroke={accent} strokeWidth="1.5" opacity="0.5" />
         <rect x="72" y="52" width="68" height="12" rx="4" fill="#5a5a66" />
         <path d="M 46 108 L 66 86 L 84 98 L 108 70 L 134 92" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </Frame>
+    )
+  }
+  if (focus === 'toast-notification') {
+    return (
+      <Frame>
+        <rect x="18" y="20" width="164" height="90" rx="8" fill="#1c1c22" opacity="0.3" />
+        <rect x="44" y="96" width="112" height="28" rx="8" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <circle cx="60" cy="110" r="7" fill={accent} />
+        <path d="M 56 110 L 59 113 L 65 106" fill="none" stroke="#1c1c22" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="76" y="105" width="60" height="10" rx="3" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'banner-persistent') {
+    return (
+      <Frame>
+        <rect x="18" y="32" width="164" height="30" rx="4" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <circle cx="34" cy="47" r="6" fill={accent} />
+        <rect x="48" y="42" width="90" height="10" rx="3" fill="#5a5a66" />
+        <path d="M 160 42 L 168 50 M 168 42 L 160 50" fill="none" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" />
+        {[0, 1].map((i) => (
+          <rect key={i} x="30" y={78 + i * 22} width="140" height="14" rx="4" fill="#26262e" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'alerts-severity-levels') {
+    return (
+      <Frame>
+        {[
+          { y: 36, c: '#5b8def' },
+          { y: 60, c: '#4cb782' },
+          { y: 84, c: '#e0a62c' },
+          { y: 108, c: '#e5484d' },
+        ].map((row, i) => (
+          <g key={i}>
+            <circle cx="36" cy={row.y} r="8" fill={row.c} />
+            <rect x="54" y={row.y - 5} width="110" height="10" rx="3" fill="#5a5a66" />
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'badge-count-indicator') {
+    return (
+      <Frame>
+        <circle cx="90" cy="76" r="26" fill="none" stroke="#5a5a66" strokeWidth="3" />
+        <circle cx="112" cy="56" r="13" fill={accent} />
+        <rect x="104" y="51" width="16" height="10" rx="5" fill="#ffffff" opacity="0.9" />
+        <rect x="60" y="116" width="60" height="8" rx="4" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'error-message-specificity') {
+    return (
+      <Frame>
+        <rect x="32" y="40" width="136" height="68" rx="8" fill="#26262e" stroke="#e5484d" strokeWidth="2" />
+        <circle cx="54" cy="58" r="8" fill="#e5484d" />
+        <path d="M 50 58 L 58 58 M 54 54 L 54 62" fill="none" stroke="#1c1c22" strokeWidth="2" strokeLinecap="round" />
+        <rect x="70" y="52" width="86" height="8" rx="3" fill="#5a5a66" />
+        <rect x="70" y="66" width="70" height="6" rx="3" fill="#3a3a44" />
+        <rect x="54" y="86" width="60" height="14" rx="5" fill={accent} opacity="0.85" />
+      </Frame>
+    )
+  }
+  if (focus === 'perceived-performance-loading') {
+    return (
+      <Frame>
+        <circle cx="100" cy="76" r="22" fill="none" stroke="#3a3a44" strokeWidth="6" />
+        <path d="M 100 54 A 22 22 0 0 1 122 76" fill="none" stroke={accent} strokeWidth="6" strokeLinecap="round" />
+        <rect x="44" y="110" width="30" height="8" rx="4" fill="#5a5a66" />
+        <rect x="128" y="110" width="30" height="8" rx="4" fill="#5a5a66" opacity="0.4" />
+      </Frame>
+    )
+  }
+  if (focus === 'confirmation-dialog-pattern') {
+    return (
+      <Frame>
+        <rect x="16" y="18" width="168" height="94" rx="8" fill="#1c1c22" opacity="0.25" />
+        <rect x="46" y="44" width="108" height="56" rx="8" fill="#26262e" stroke={accent} strokeWidth="2" />
+        <rect x="58" y="56" width="84" height="8" rx="3" fill="#5a5a66" />
+        <rect x="58" y="70" width="36" height="16" rx="5" fill="none" stroke="#5a5a66" strokeWidth="1.5" />
+        <rect x="100" y="70" width="42" height="16" rx="5" fill="#e5484d" opacity="0.85" />
       </Frame>
     )
   }
