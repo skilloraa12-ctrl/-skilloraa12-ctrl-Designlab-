@@ -232,6 +232,10 @@ const FOCUS_RULES = [
   { id: 'game-monetization-battlepass', words: ['battle pass — сезонна структура монетизації, де гравець одноразово пла', 'battle pass — сезонна структура монетизації: одноразова оплата за сері', 'роблять темп нагород занадто швидким, через що весь battle pass розбло'] },
   { id: 'game-monetization-lootbox', words: ['loot box — механіка, де гравець платить, гроші чи ігрову валюту, за не', 'loot box — механіка оплати за непрозорий контейнер з випадковим, невід', 'структурна схожість з азартними іграми (випадковість за гроші без гара', 'приховують ймовірності (drop rates) loot box від гравця, хоча деякі юр'] },
   { id: 'game-monetization-ethics', words: ['етична монетизація узгоджує інтереси студії (прибуток) з інтересами гр', 'етична монетизація узгоджує прибуток студії з чесною цінністю й контро', 'класичні dark patterns монетизації: фальшиві таймери терміновості, при', 'використовують фальшиві таймери терміновості, що оновлюються після зак'] },
+  { id: 'game-hud-diegetic-categories', words: ['diegetic vs non-diegetic vs meta vs spatial ui', 'diegetic ui існує всередині світу гри й видимий самому персонажу', 'non-diegetic ui — плаский hud поверх екрана, невидимий персонажу', 'плутають spatial ui з diegetic'] },
+  { id: 'game-hud-minimalism', words: ['кожен зайвий елемент hud займає увагу', 'показують усі можливі елементи hud постійно'] },
+  { id: 'game-hud-readability-action', words: ['hud читають не в спокійній обстановці', 'читабельність hud оцінюють в умовах динамічної дії', 'проєктують hud, перевіряючи читабельність лише на спокійному статичном'] },
+  { id: 'game-hud-lab-capstone', words: ['фінальна практика підкатегорії обʼєднує diegetic/non-diegetic/meta/spa', 'реальна збірка hud йде в порядку: спочатку мінімалізм', 'lab матеріалізує цей процес у готовий html/css/react-код'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2814,6 +2818,57 @@ function BrowserMockup({ focus, alert }) {
         <path d="M 120 75 L 120 115 M 100 95 L 140 95" stroke={accent} strokeWidth="2.5" />
         <path d="M 100 95 L 92 108 L 108 108 Z" fill="none" stroke={accent} strokeWidth="2" />
         <path d="M 140 95 L 132 108 L 148 108 Z" fill="none" stroke={accent} strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-hud-diegetic-categories') {
+    return (
+      <Frame>
+        <rect x="20" y="46" width="160" height="150" rx="6" fill="#15151c" stroke="#3a3a44" />
+        <rect x="130" y="56" width="40" height="12" rx="6" fill="#8a8a9a" opacity="0.85" />
+        <rect x="30" y="170" width="14" height="14" rx="3" fill="none" stroke={accent} strokeWidth="2" />
+        <rect x="48" y="174" width="30" height="6" rx="3" fill={accent} />
+        <path d="M20 46 L50 46 L20 76 Z" fill={accent} opacity="0.3" />
+        <circle cx="150" cy="180" r="4" fill="#5a5a66" />
+        <line x1="150" y1="170" x2="150" y2="156" stroke={accent} strokeWidth="2" />
+        <circle cx="150" cy="150" r="6" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-hud-minimalism') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <rect key={i} x="28" y={56 + i * 22} width="30" height="14" rx="3" fill="#3a3a44" opacity="0.5" />
+        ))}
+        <line x1="24" y1="50" x2="70" y2="160" stroke="#e0523e" strokeWidth="2" opacity="0.6" />
+        <path d="M90 110 L120 110" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M114 104 L120 110 L114 116" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <rect x="135" y="90" width="34" height="14" rx="3" fill={accent} />
+        <rect x="135" y="116" width="34" height="14" rx="3" fill={accent} opacity="0.7" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-hud-readability-action') {
+    return (
+      <Frame>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <line key={i} x1={20 + i * 10} y1="46" x2={10 + i * 10} y2="200" stroke="#3a3a44" strokeWidth="2" opacity="0.4" />
+        ))}
+        <rect x="30" y="170" width="70" height="16" rx="8" fill="#000" opacity="0.5" />
+        <rect x="34" y="174" width="50" height="8" rx="4" fill={accent} />
+      </Frame>
+    )
+  }
+  if (focus === 'game-hud-lab-capstone') {
+    return (
+      <Frame>
+        <rect x="20" y="46" width="160" height="110" rx="6" fill="#15151c" stroke="#3a3a44" />
+        <rect x="28" y="54" width="36" height="10" rx="5" fill={accent} />
+        <rect x="136" y="54" width="36" height="10" rx="5" fill="#8a8a9a" />
+        <rect x="28" y="140" width="36" height="10" rx="5" fill="#8a8a9a" />
+        <rect x="136" y="140" width="36" height="10" rx="5" fill={accent} opacity="0.8" />
+        <text x="100" y="105" textAnchor="middle" fontSize="20" fontWeight="700" fill={accent}>{'</>'}</text>
       </Frame>
     )
   }

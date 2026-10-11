@@ -14,6 +14,11 @@ import LessonVideo from './LessonVideo.jsx'
 import LessonReel from './LessonReel.jsx'
 import { getPracticeTools } from './practiceTools.js'
 
+// Ці 2 підкатегорії Game Design свідомо спираються на окремий Game
+// Design Lab (/labs/game, HUD/меню-білдер), а не на загальний Game
+// Design Studio — так само, як прокоментовано в subcategories.js.
+const GAME_LAB_SUBCATS = ['hud-ingame-ui', 'game-menus-navigation']
+
 export default function Module() {
   const { id } = useParams()
   const module = getModule(id)
@@ -26,6 +31,7 @@ export default function Module() {
 
   const done = !!completed[module.id]
   const testDone = !!quizPassed[module.id]
+  const usesGameLab = module.level === 'game-design' && GAME_LAB_SUBCATS.includes(module.subcategory)
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -172,9 +178,15 @@ export default function Module() {
           )}
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
-            <button className="complete-btn" onClick={() => setSketchOpen(true)}>
-              {module.level === 'game-design' ? '🖊 Відкрити «Game Design Studio»' : '🖊 Створити ескіз у застосунку'}
-            </button>
+            {usesGameLab ? (
+              <Link to="/labs/game" className="complete-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
+                🎯 Відкрити «Game Design Lab»
+              </Link>
+            ) : (
+              <button className="complete-btn" onClick={() => setSketchOpen(true)}>
+                {module.level === 'game-design' ? '🖊 Відкрити «Game Design Studio»' : '🖊 Створити ескіз у застосунку'}
+              </button>
+            )}
             <button className="mentor-cta" onClick={() => setMentorOpen(true)}>
               <span className="mentor-cta-icon">💬<span className="dot" /></span>
               <span>
@@ -196,7 +208,7 @@ export default function Module() {
             <LessonMentor module={module} prev={prev} next={next} onClose={() => setMentorOpen(false)} />
           )}
 
-          {sketchOpen && module.level === 'game-design' && (
+          {sketchOpen && module.level === 'game-design' && !usesGameLab && (
             <GameDesignStudio module={module} onClose={() => setSketchOpen(false)} />
           )}
 
