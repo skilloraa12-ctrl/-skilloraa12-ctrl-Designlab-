@@ -69,6 +69,7 @@ import { LESSONS as appDesignToDevelopment } from './lessons/app-design-to-devel
 import { LESSONS as appTypesPractice } from './lessons/app-types-practice.js'
 import { LESSONS as appRealProjects } from './lessons/app-real-projects.js'
 import { LESSONS as appDesignerPortfolio } from './lessons/app-designer-portfolio.js'
+import { LESSONS as uiFoundations } from './lessons/ui-foundations.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -119,6 +120,7 @@ export const MODULES = [
   ...appTypesPractice,
   ...appRealProjects,
   ...appDesignerPortfolio,
+  ...uiFoundations,
 ]
 
 export function getModule(id) {
