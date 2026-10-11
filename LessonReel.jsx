@@ -266,6 +266,10 @@ const FOCUS_RULES = [
   { id: 'game-platform-input-methods', words: ['метод вводу визначає не лише взаємодію, а й які механіки взагалі можли', 'миша дає точність прицілювання, недосяжну для стіка; дотик не має фізи', 'переносять механіку, що залежить від точності миші (швидке прицілюванн'] },
   { id: 'game-platform-session-length', words: ['мобільні сесії короткі й можуть перериватись будь-якої миті — потрібне'] },
   { id: 'game-platform-screen-size', words: ['мобільний (20-30 см) дозволяє дрібні деталі зблизька; телевізор (2-3 м'] },
+  { id: 'game-career-studio-roles', words: ['назва «game designer» у реальній індустрії охоплює цілий спектр спец', 'у маленькій команді один «game designer» відповідає за все', 'у великій студії ролі спеціалізуються: level designer, systems design', 'шукають роботу під узагальненим «game designer», не усвідомлюючи'] },
+  { id: 'game-career-industry-entry', words: ['вхід у професію game designer рідко відбувається напряму на позицію', 'вхід у професію рідко відбувається напряму — типові шляхи використову', 'qa-тестування дає погляд на реальний процес розробки зблизька', 'чекають «ідеальної» першої вакансії дизайнера без будь-якого видимого'] },
+  { id: 'game-career-jam-portfolio', words: ['проєкти з game jam і модів особливо цінні для портфоліо початківця', 'проєкти джемів/модів цінні тим, що завершені — демонструють здатність', 'постмортем (post-mortem) пояснює не лише що вийшло', 'показують у портфоліо готову гру чи мод без жодного постмортему'] },
+  { id: 'game-career-indie-vs-studio', words: ['незалежна (інді) розробка і робота в студії пропонують принципово різ', 'інді-шлях дає повний творчий контроль, але покладає всі ролі', 'студійний шлях дає стабільність і спеціалізацію на дизайні', 'обирають інді-шлях лише через романтизоване уявлення про «свободу»'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -3230,6 +3234,47 @@ function BrowserMockup({ focus, alert }) {
       <Frame>
         <rect x="30" y="90" width="24" height="44" rx="4" fill="none" stroke={accent} strokeWidth="2" />
         <rect x="110" y="75" width="70" height="45" rx="4" fill="none" stroke="#5a5a66" strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-career-studio-roles') {
+    return (
+      <Frame>
+        <rect x="85" y="60" width="30" height="18" rx="4" fill={accent} />
+        <path d="M100 78 L100 95 M100 95 L60 95 M100 95 L140 95 M60 95 L60 110 M140 95 L140 110" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <rect x="45" y="110" width="30" height="16" rx="3" fill="#3a3a44" />
+        <rect x="85" y="110" width="30" height="16" rx="3" fill="#3a3a44" />
+        <rect x="125" y="110" width="30" height="16" rx="3" fill="#3a3a44" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-career-industry-entry') {
+    return (
+      <Frame>
+        <rect x="120" y="70" width="40" height="70" rx="4" fill="none" stroke={accent} strokeWidth="3" />
+        <circle cx="150" cy="105" r="3" fill={accent} />
+        <path d="M40 105 L110 105" stroke="#5a5a66" strokeWidth="3" strokeDasharray="8 6" />
+        <path d="M100 98 L110 105 L100 112" stroke="#5a5a66" strokeWidth="3" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-career-jam-portfolio') {
+    return (
+      <Frame>
+        <path d="M80 70 L120 70 L116 110 Q100 120 84 110 Z" fill="none" stroke={accent} strokeWidth="3" />
+        <path d="M80 75 Q65 75 65 90 Q65 100 80 98" stroke={accent} strokeWidth="2" fill="none" />
+        <path d="M120 75 Q135 75 135 90 Q135 100 120 98" stroke={accent} strokeWidth="2" fill="none" />
+        <rect x="90" y="120" width="20" height="10" fill="#5a5a66" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-career-indie-vs-studio') {
+    return (
+      <Frame>
+        <path d="M100 70 L100 130" stroke="#5a5a66" strokeWidth="3" />
+        <path d="M60 90 L140 90" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="60" cy="105" r="16" fill="none" stroke={accent} strokeWidth="2.5" />
+        <circle cx="140" cy="100" r="12" fill="none" stroke="#5a5a66" strokeWidth="2.5" />
       </Frame>
     )
   }

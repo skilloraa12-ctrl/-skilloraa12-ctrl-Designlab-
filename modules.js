@@ -115,6 +115,7 @@ import { LESSONS as playtestingIteration } from './lessons/playtesting-iteration
 import { LESSONS as gameFeelJuice } from './lessons/game-feel-juice.js'
 import { LESSONS as levelDesignPractice } from './lessons/level-design-practice.js'
 import { LESSONS as crossPlatformGameDesign } from './lessons/cross-platform-game-design.js'
+import { LESSONS as gameDesignerCareer } from './lessons/game-designer-career.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -211,6 +212,7 @@ export const MODULES = [
   ...gameFeelJuice,
   ...levelDesignPractice,
   ...crossPlatformGameDesign,
+  ...gameDesignerCareer,
 ]
 
 export function getModule(id) {
