@@ -259,6 +259,9 @@ const FOCUS_RULES = [
   { id: 'game-feel-particles', words: ['частинки (particle effects) — дрібні візуальні елементи (спалахи, іск', 'частинки надають діям фізичної переконливості — видиме «щось відбуваєт', 'використовують однакові частинки для всіх типів подій, незалежно від м'] },
   { id: 'game-feel-hitstop', words: ['hit-stop (чи «freeze frame») — техніка короткочасної паузи всієї гри', 'hit-stop — короткочасна пауза гри на кілька кадрів у момент удару, що', 'психологічний механізм: мозок інтерпретує раптову зупинку руху як сигн', 'роблять hit-stop занадто довгим, через що гравець відчуває'] },
   { id: 'game-feel-sensitivity', words: ['чутливість вводу — налаштування того, наскільки малий фізичний рух (р', 'чутливість вводу визначає, наскільки малий фізичний рух перетворюється', 'занадто низька чутливість відчувається «важкою» і втомлює', 'фіксують єдине значення чутливості без можливості ручного налаштування'] },
+  { id: 'game-level-practice-process', words: ['ця підкатегорія переходить від окремих принципів level design (прой', 'практичний level design застосовує кілька принципів разом на одному з'] },
+  { id: 'game-level-scale-conflict', words: ['окремі принципи level design (landmarks, pacing, critical path, чита', 'на масштабі повного рівня окремі принципи (landmarks, pacing, critical', 'приклад конфлікту: багато унікальних landmarks покращує впізнаваність', 'перевіряють масштабний рівень лише з висоти пташиного польоту (карта)'] },
+  { id: 'game-level-review', words: ['ревʼю рівня — структурований процес критичного аналізу завершеного', 'ревʼю рівня фокусується на дизайнерських рішеннях і їхньому обґрунтува'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -3154,6 +3157,36 @@ function BrowserMockup({ focus, alert }) {
         <path d="M40 160 L40 70" stroke="#5a5a66" strokeWidth="2" />
         <path d="M40 160 L160 160" stroke="#5a5a66" strokeWidth="2" />
         <path d="M40 160 Q70 155 90 130 T160 75" stroke={accent} strokeWidth="3" fill="none" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-level-practice-process') {
+    return (
+      <Frame>
+        <circle cx="45" cy="115" r="10" fill={accent} />
+        <path d="M58 115 L85 115" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M79 109 L85 115 L79 121" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <circle cx="100" cy="115" r="10" fill="#3a3a44" />
+        <path d="M113 115 L140 115" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M134 109 L140 115 L134 121" stroke="#5a5a66" strokeWidth="2" fill="none" />
+        <circle cx="155" cy="115" r="10" fill="#2a2a34" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-level-scale-conflict') {
+    return (
+      <Frame>
+        <circle cx="80" cy="115" r="40" fill={accent} opacity="0.35" />
+        <circle cx="120" cy="115" r="40" fill="#5a5a66" opacity="0.35" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-level-review') {
+    return (
+      <Frame>
+        <rect x="50" y="70" width="70" height="70" rx="6" fill="#2a2a34" stroke="#5a5a66" strokeWidth="2" />
+        <circle cx="130" cy="140" r="22" fill="none" stroke={accent} strokeWidth="3" />
+        <path d="M146 156 L162 172" stroke={accent} strokeWidth="4" strokeLinecap="round" />
       </Frame>
     )
   }
