@@ -105,6 +105,7 @@ import { LESSONS as gameGenresConventions } from './lessons/game-genres-conventi
 import { LESSONS as narrativeDesign } from './lessons/narrative-design.js'
 import { LESSONS as gameEconomy } from './lessons/game-economy.js'
 import { LESSONS as multiplayerSocialDesign } from './lessons/multiplayer-social-design.js'
+import { LESSONS as monetizationF2p } from './lessons/monetization-f2p.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -191,6 +192,7 @@ export const MODULES = [
   ...narrativeDesign,
   ...gameEconomy,
   ...multiplayerSocialDesign,
+  ...monetizationF2p,
 ]
 
 export function getModule(id) {

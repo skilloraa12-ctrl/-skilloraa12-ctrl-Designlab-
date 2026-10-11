@@ -228,6 +228,10 @@ const FOCUS_RULES = [
   { id: 'game-matchmaking-rating', words: ['matchmaking — система, що зводить гравців у матчі чи сесії один з одни', 'matchmaking зводить гравців у матчі, прагнучи справедливого, цікавого', 'skill rating (наприклад elo) — числове представлення навички, що оновл', 'роблять межі допустимої різниці рейтингу занадто вузькими, що призводи'] },
   { id: 'game-social-mechanics', words: ['соціальні механіки — системи, що підтримують причетність, relatedness', 'соціальні механіки підтримують причетність через структуровану взаємод', 'гільдії дають постійну групову структуру, спільні довгострокові цілі й', 'показують у лідерборді лише глобальний топ, недосяжний для більшості'] },
   { id: 'game-griefing-prevention', words: ['грифінг — поведінка гравця, спрямована на навмисне псування досвіду ін', 'грифінг — навмисне псування досвіду інших гравців заради власного задо', 'структурні обмеження механік (а не лише правила поведінки) запобігають'] },
+  { id: 'game-monetization-iap-types', words: ['in-app purchase (iap) — будь-яка покупка всередині гри за реальні грош', 'iap (in-app purchase) — будь-яка покупка всередині гри за реальні грош', 'косметичні iap не впливають на баланс взагалі — найбільш етично нейтра', 'не розрізняють типи iap за впливом на баланс, змішуючи косметику з фун'] },
+  { id: 'game-monetization-battlepass', words: ['battle pass — сезонна структура монетизації, де гравець одноразово пла', 'battle pass — сезонна структура монетизації: одноразова оплата за сері', 'роблять темп нагород занадто швидким, через що весь battle pass розбло'] },
+  { id: 'game-monetization-lootbox', words: ['loot box — механіка, де гравець платить, гроші чи ігрову валюту, за не', 'loot box — механіка оплати за непрозорий контейнер з випадковим, невід', 'структурна схожість з азартними іграми (випадковість за гроші без гара', 'приховують ймовірності (drop rates) loot box від гравця, хоча деякі юр'] },
+  { id: 'game-monetization-ethics', words: ['етична монетизація узгоджує інтереси студії (прибуток) з інтересами гр', 'етична монетизація узгоджує прибуток студії з чесною цінністю й контро', 'класичні dark patterns монетизації: фальшиві таймери терміновості, при', 'використовують фальшиві таймери терміновості, що оновлюються після зак'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -2770,6 +2774,46 @@ function BrowserMockup({ focus, alert }) {
         <rect x="140" y="70" width="18" height="60" fill="#5a5a66" />
         <circle cx="99" cy="100" r="14" fill="none" stroke={accent} strokeWidth="2.5" strokeDasharray="4 3" />
         <path d="M 90 100 L 108 100" stroke={accent} strokeWidth="2" />
+      </Frame>
+    )
+  }
+  if (focus === 'game-monetization-iap-types') {
+    return (
+      <Frame>
+        {[{ fill: 'none', opacity: 1, stroke: '#5a5a66' }, { fill: accent, opacity: 0.4, stroke: accent }, { fill: accent, opacity: 0.9, stroke: accent }].map((s, i) => (
+          <rect key={i} x={40 + i * 44} y="70" width="30" height="60" rx="6" fill={s.fill} opacity={s.opacity} stroke={s.stroke} strokeWidth="2" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-monetization-battlepass') {
+    return (
+      <Frame>
+        <path d="M 35 100 L 165 100" stroke="#5a5a66" strokeWidth="3" />
+        {[35, 75, 115, 155].map((x, i) => (
+          <circle key={x} cx={x} cy="100" r="9" fill={i < 2 ? accent : '#26262e'} stroke={i < 2 ? accent : '#5a5a66'} strokeWidth="2" />
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'game-monetization-lootbox') {
+    return (
+      <Frame>
+        <rect x="70" y="70" width="60" height="50" rx="6" fill="#26262e" stroke={accent} strokeWidth="2.5" />
+        <path d="M 70 85 L 130 85" stroke={accent} strokeWidth="2" />
+        <text x="100" y="105" textAnchor="middle" fontSize="18" fontWeight="700" fill={accent}>?</text>
+      </Frame>
+    )
+  }
+  if (focus === 'game-monetization-ethics') {
+    return (
+      <Frame>
+        <circle cx="60" cy="95" r="22" fill="none" stroke="#5a5a66" strokeWidth="2" />
+        <path d="M 60 82 L 60 95 L 70 100" stroke="#5a5a66" strokeWidth="2" strokeLinecap="round" fill="none" />
+        <path d="M 44 79 L 76 111 M 76 79 L 44 111" stroke={accent} strokeWidth="2" opacity="0.7" />
+        <path d="M 120 75 L 120 115 M 100 95 L 140 95" stroke={accent} strokeWidth="2.5" />
+        <path d="M 100 95 L 92 108 L 108 108 Z" fill="none" stroke={accent} strokeWidth="2" />
+        <path d="M 140 95 L 132 108 L 148 108 Z" fill="none" stroke={accent} strokeWidth="2" />
       </Frame>
     )
   }
