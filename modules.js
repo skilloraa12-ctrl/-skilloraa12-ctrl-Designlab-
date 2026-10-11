@@ -50,6 +50,7 @@ import { LESSONS as appVisualDesignBasics } from './lessons/app-visual-design-ba
 import { LESSONS as appCompositionLayout } from './lessons/app-composition-layout.js'
 import { LESSONS as appColor } from './lessons/app-color.js'
 import { LESSONS as appTypography } from './lessons/app-typography.js'
+import { LESSONS as appVisualAssets } from './lessons/app-visual-assets.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -81,6 +82,7 @@ export const MODULES = [
   ...appCompositionLayout,
   ...appColor,
   ...appTypography,
+  ...appVisualAssets,
 ]
 
 export function getModule(id) {
