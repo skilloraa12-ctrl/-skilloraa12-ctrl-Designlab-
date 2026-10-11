@@ -36,6 +36,7 @@ const FOCUS_RULES = [
   { id: 'picker', words: ['picker', 'пікер', 'scroll wheel', 'колесо прокрутки'] },
   { id: 'bottom-sheet', words: ['bottom sheet', 'нижня панель', 'drag-to-dismiss'] },
   { id: 'ui-states-screen', words: ['ui states', 'стани інтерфейсу', 'skeleton screen', 'offline-стан', 'success-стан', 'offline стани'] },
+  { id: 'design-system-component', words: ['майстер-компонент', 'майстер-елемент', 'master component', 'variant', 'component library', 'бібліотека компонентів', 'sub-layers', 'component anatomy', 'анатомія компонента', 'component properties', 'властивості компонента'] },
   { id: 'button', words: ['кнопк', 'cta', 'заклик до дії', 'натисн'] },
   { id: 'image', words: ['зображен', 'картинк', 'фото', 'ілюстрац', 'іконк'] },
   { id: 'color', words: ['колір', 'кольор', 'палітр', 'контраст', 'відтінок'] },
@@ -356,6 +357,21 @@ function BrowserMockup({ focus, alert }) {
           <g key={label}>
             <rect x={20 + (i % 2) * 80} y={50 + Math.floor(i / 2) * 70} width="70" height="56" rx="6" fill="#2a2a34" stroke={i === 1 ? accent : '#3a3a44'} strokeWidth={i === 1 ? 2 : 1.5} />
             <text x={28 + (i % 2) * 80} y={78 + Math.floor(i / 2) * 70} fontFamily="sans-serif" fontSize="8" fontWeight="bold" fill="#e8e8ec">{label}</text>
+          </g>
+        ))}
+      </Frame>
+    )
+  }
+  if (focus === 'design-system-component') {
+    return (
+      <Frame>
+        <rect x="62" y="44" width="76" height="34" rx="6" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="4 3" />
+        <text x="72" y="65" fontFamily="sans-serif" fontSize="8" fontWeight="bold" fill={accent}>Master</text>
+        <path d="M 100 78 L 100 92 M 100 92 L 44 92 L 44 108 M 100 92 L 100 108 M 100 92 L 156 92 L 156 108" fill="none" stroke="#5a5a66" strokeWidth="1.5" />
+        {[44, 100, 156].map((x) => (
+          <g key={x}>
+            <rect x={x - 26} y="108" width="52" height="30" rx="5" fill="#2a2a34" stroke="#3a3a44" />
+            <text x={x - 20} y="127" fontFamily="sans-serif" fontSize="7" fill="#8a8a9a">Instance</text>
           </g>
         ))}
       </Frame>

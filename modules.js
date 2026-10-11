@@ -54,6 +54,7 @@ import { LESSONS as appVisualAssets } from './lessons/app-visual-assets.js'
 import { LESSONS as appScreensStructure } from './lessons/app-screens-structure.js'
 import { LESSONS as appComponents } from './lessons/app-components.js'
 import { LESSONS as appAdaptiveDesign } from './lessons/app-adaptive-design.js'
+import { LESSONS as appDesignSystems } from './lessons/app-design-systems.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -89,6 +90,7 @@ export const MODULES = [
   ...appScreensStructure,
   ...appComponents,
   ...appAdaptiveDesign,
+  ...appDesignSystems,
 ]
 
 export function getModule(id) {
