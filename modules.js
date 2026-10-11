@@ -60,6 +60,7 @@ import { LESSONS as appPrototyping } from './lessons/app-prototyping.js'
 import { LESSONS as appMotionAnimation } from './lessons/app-motion-animation.js'
 import { LESSONS as appAccessibility } from './lessons/app-accessibility.js'
 import { LESSONS as appFigmaBasics } from './lessons/app-figma-basics.js'
+import { LESSONS as appFigmaLayout } from './lessons/app-figma-layout.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -101,6 +102,7 @@ export const MODULES = [
   ...appMotionAnimation,
   ...appAccessibility,
   ...appFigmaBasics,
+  ...appFigmaLayout,
 ]
 
 export function getModule(id) {
