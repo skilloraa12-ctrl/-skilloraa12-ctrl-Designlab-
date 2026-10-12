@@ -142,6 +142,7 @@ import { LESSONS as brandingColors } from './lessons/branding-colors.js'
 import { LESSONS as brandingTypography } from './lessons/branding-typography.js'
 import { LESSONS as brandingVisualIdentity } from './lessons/branding-visual-identity.js'
 import { LESSONS as brandingVoice } from './lessons/branding-voice.js'
+import { LESSONS as brandingMedia } from './lessons/branding-media.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -265,6 +266,7 @@ export const MODULES = [
   ...brandingTypography,
   ...brandingVisualIdentity,
   ...brandingVoice,
+  ...brandingMedia,
 ]
 
 export function getModule(id) {
