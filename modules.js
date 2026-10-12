@@ -156,6 +156,7 @@ import { LESSONS as motionShapeLogo } from './lessons/motion-shape-logo.js'
 import { LESSONS as motionStoryboard } from './lessons/motion-storyboard.js'
 import { LESSONS as motionSound } from './lessons/motion-sound.js'
 import { LESSONS as motionToolsExport } from './lessons/motion-tools-export.js'
+import { LESSONS as motionProcess } from './lessons/motion-process.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -293,6 +294,7 @@ export const MODULES = [
   ...motionStoryboard,
   ...motionSound,
   ...motionToolsExport,
+  ...motionProcess,
 ]
 
 export function getModule(id) {
