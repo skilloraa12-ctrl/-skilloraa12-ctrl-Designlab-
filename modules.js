@@ -148,6 +148,7 @@ import { LESSONS as brandingPresentation } from './lessons/branding-presentation
 import { LESSONS as brandingProcess } from './lessons/branding-process.js'
 import { LESSONS as brandingPortfolio } from './lessons/branding-portfolio.js'
 import { LESSONS as motionBasics } from './lessons/motion-basics.js'
+import { LESSONS as motionPrinciples } from './lessons/motion-principles.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -277,6 +278,7 @@ export const MODULES = [
   ...brandingProcess,
   ...brandingPortfolio,
   ...motionBasics,
+  ...motionPrinciples,
 ]
 
 export function getModule(id) {
