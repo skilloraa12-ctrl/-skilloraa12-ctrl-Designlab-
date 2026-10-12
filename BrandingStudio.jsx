@@ -4,6 +4,8 @@ import { useProgress } from './ProgressContext.jsx'
 import { useLabToast } from './labs/useLabToast.js'
 import LabToast from './labs/LabToast.jsx'
 import NotFound from './NotFound.jsx'
+import GraphicDesignStudio from './GraphicDesignStudio.jsx'
+import { hexToRgb, rgbToHsl, isValidHex, contrastRatio, wcagLevel } from './colorMath.js'
 import { BRAND_STAGES, NAMING_CRITERIA, BRAND_ARCHETYPES } from './brandProject.js'
 
 // Branding Studio — робочий простір п.3.2 ТЗ: ліва панель етапів,
@@ -346,6 +348,108 @@ function PresentationStage({ project, onPatch }) {
   )
 }
 
+const PALETTE_GROUPS = [
+  { key: 'primary', label: 'Основний колір' },
+  { key: 'secondary', label: 'Додаткові кольори' },
+  { key: 'accent', label: 'Акцентні кольори' },
+  { key: 'neutral', label: 'Нейтральна палітра' },
+]
+
+function ColorSwatchRow({ hex, onRemove }) {
+  const { r, g, b } = hexToRgb(hex)
+  const { h, s, l } = rgbToHsl(r, g, b)
+  const onWhite = contrastRatio(hex, '#FFFFFF')
+  const onBlack = contrastRatio(hex, '#000000')
+  const bestBg = onWhite >= onBlack ? '#FFFFFF' : '#000000'
+  const bestRatio = Math.max(onWhite, onBlack)
+  const level = wcagLevel(bestRatio)
+  return (
+    <div className="branding-name-card" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+      <span style={{ width: 40, height: 40, borderRadius: 8, background: hex, border: '1.5px solid var(--line)', flex: 'none' }} />
+      <div style={{ flex: 1, fontSize: 12.5 }}>
+        <div><strong>{hex.toUpperCase()}</strong></div>
+        <div style={{ color: 'var(--muted)' }}>RGB {r}, {g}, {b} · HSL {h}°, {s}%, {l}%</div>
+        <div style={{ color: 'var(--muted)' }}>Контраст на {bestBg === '#FFFFFF' ? 'білому' : 'чорному'}: {bestRatio.toFixed(2)} — {level.aaa ? 'AAA' : level.aa ? 'AA' : 'не проходить WCAG'}</div>
+      </div>
+      <button className="cl-mini-btn" onClick={onRemove}>Видалити</button>
+    </div>
+  )
+}
+
+function PaletteStage({ project, onPatch }) {
+  const palette = project.palette
+  const [drafts, setDrafts] = useState({ primary: '#3E37E0', secondary: '#6B62FF', accent: '#E0523E', neutral: '#17171A' })
+
+  function addColor(groupKey) {
+    const hex = drafts[groupKey]
+    if (!isValidHex(hex)) return
+    const normalized = hex.startsWith('#') ? hex : '#' + hex
+    onPatch({ palette: { ...palette, [groupKey]: [...palette[groupKey], normalized] } })
+  }
+  function removeColor(groupKey, idx) {
+    onPatch({ palette: { ...palette, [groupKey]: palette[groupKey].filter((_, i) => i !== idx) } })
+  }
+
+  return (
+    <div className="branding-form">
+      <p className="cl-section-title">Кольорова система бренду</p>
+      <p className="cl-tab-desc">HEX/RGB/HSL рахуються автоматично (той самий колірний рушій, що й у Color Lab). Для кожного кольору одразу видно контраст на білому й чорному тлі за WCAG.</p>
+      {PALETTE_GROUPS.map((g) => (
+        <div key={g.key} style={{ marginBottom: 18 }}>
+          <p className="cl-section-title" style={{ marginBottom: 6 }}>{g.label}</p>
+          <div className="gfx-row">
+            <input type="color" className="sketchpad-colorpicker" value={drafts[g.key]} onChange={(e) => setDrafts((d) => ({ ...d, [g.key]: e.target.value }))} />
+            <input className="cl-text-input" value={drafts[g.key]} onChange={(e) => setDrafts((d) => ({ ...d, [g.key]: e.target.value }))} />
+            <button className="harmony-btn" onClick={() => addColor(g.key)}>+ Додати</button>
+          </div>
+          {palette[g.key].map((hex, i) => (
+            <ColorSwatchRow key={hex + i} hex={hex} onRemove={() => removeColor(g.key, i)} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function LogoStage({ project, onPatch, graphicProjects }) {
+  const [editorOpen, setEditorOpen] = useState(false)
+  function addFromGraphicProject(gp) {
+    onPatch({ logos: [...project.logos, { id: crypto.randomUUID(), graphicProjectId: gp.id, title: gp.title, addedAt: new Date().toISOString() }] })
+  }
+  function remove(id) {
+    onPatch({ logos: project.logos.filter((l) => l.id !== id) })
+  }
+  return (
+    <div className="branding-form">
+      <p className="cl-section-title">Логотип</p>
+      <p className="cl-tab-desc">Логотип створюється в «Graphic Design Studio» (той самий редактор, що й у курсі Graphic Design — не дублюємо окремий векторний редактор для Branding). Створи й збережи проєкт там, тоді додай його сюди як варіант логотипа.</p>
+      <button className="harmony-btn" onClick={() => setEditorOpen(true)}>🖊 Відкрити Graphic Design Studio</button>
+
+      <p className="cl-section-title">Варіанти логотипа цього бренду</p>
+      {project.logos.length === 0 && <p className="cl-tab-desc">Ще жодного варіанта не додано.</p>}
+      {project.logos.map((l) => (
+        <div key={l.id} className="branding-name-card" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <strong style={{ flex: 1 }}>{l.title}</strong>
+          <button className="cl-mini-btn" onClick={() => remove(l.id)}>Видалити</button>
+        </div>
+      ))}
+
+      <p className="cl-section-title">Додати зі збережених Graphic Design проєктів</p>
+      {graphicProjects.length === 0 && <p className="cl-tab-desc">Поки немає жодного збереженого проєкту — створи його кнопкою вище.</p>}
+      {graphicProjects.map((gp) => (
+        <div key={gp.id} className="gfx-row" style={{ alignItems: 'center' }}>
+          <span style={{ flex: 1 }}>{gp.title}</span>
+          <button className="cl-mini-btn" onClick={() => addFromGraphicProject(gp)}>+ Додати як логотип</button>
+        </div>
+      ))}
+
+      {editorOpen && (
+        <GraphicDesignStudio module={{ title: `${project.name} — логотип` }} onClose={() => setEditorOpen(false)} />
+      )}
+    </div>
+  )
+}
+
 function PendingStage({ title }) {
   return (
     <div className="branding-form">
@@ -358,7 +462,7 @@ function PendingStage({ title }) {
 export default function BrandingStudio() {
   const { projectId } = useParams()
   const location = useLocation()
-  const { brandProjects, saveBrandProject } = useProgress()
+  const { brandProjects, saveBrandProject, graphicProjects } = useProgress()
   const toastApi = useLabToast()
   const project = brandProjects.find((p) => p.id === projectId)
   const [stage, setStage] = useState(location.state?.stage || 'brief')
@@ -396,8 +500,8 @@ export default function BrandingStudio() {
           {stage === 'strategy' && <StrategyStage project={project} onPatch={onPatch} />}
           {stage === 'naming' && <NamingStage project={project} onPatch={onPatch} toastApi={toastApi} />}
           {stage === 'concept' && <ConceptStage project={project} onPatch={onPatch} />}
-          {stage === 'logo' && <PendingStage title="Логотип" />}
-          {stage === 'palette' && <PendingStage title="Палітра" />}
+          {stage === 'logo' && <LogoStage project={project} onPatch={onPatch} graphicProjects={graphicProjects} />}
+          {stage === 'palette' && <PaletteStage project={project} onPatch={onPatch} />}
           {stage === 'typography' && <TypographyStage project={project} onPatch={onPatch} />}
           {stage === 'graphicElements' && <GraphicElementsStage project={project} onPatch={onPatch} />}
           {stage === 'mediaApplications' && <MediaApplicationsStage project={project} onPatch={onPatch} />}
