@@ -153,6 +153,7 @@ import { LESSONS as motionTimingEasing } from './lessons/motion-timing-easing.js
 import { LESSONS as motionUi } from './lessons/motion-ui.js'
 import { LESSONS as motionTypography } from './lessons/motion-typography.js'
 import { LESSONS as motionShapeLogo } from './lessons/motion-shape-logo.js'
+import { LESSONS as motionStoryboard } from './lessons/motion-storyboard.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -287,6 +288,7 @@ export const MODULES = [
   ...motionUi,
   ...motionTypography,
   ...motionShapeLogo,
+  ...motionStoryboard,
 ]
 
 export function getModule(id) {
