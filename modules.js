@@ -118,6 +118,7 @@ import { LESSONS as crossPlatformGameDesign } from './lessons/cross-platform-gam
 import { LESSONS as gameDesignerCareer } from './lessons/game-designer-career.js'
 import { LESSONS as gameDesignPortfolioFinal } from './lessons/game-design-portfolio-final.js'
 import { LESSONS as graphicDesignBasics } from './lessons/graphic-design-basics.js'
+import { LESSONS as graphicComposition } from './lessons/graphic-composition.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -217,6 +218,7 @@ export const MODULES = [
   ...gameDesignerCareer,
   ...gameDesignPortfolioFinal,
   ...graphicDesignBasics,
+  ...graphicComposition,
 ]
 
 export function getModule(id) {
