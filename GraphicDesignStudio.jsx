@@ -38,17 +38,19 @@ const FONT_FAMILIES = [
 
 const FILL_SWATCHES = ['#17171A', '#3E37E0', '#E0523E', '#C8912B', '#2FA36B', '#FFFFFF', 'none']
 const BG_SWATCHES = ['#FFFFFF', '#F5F1E8', '#17171A', '#ECEAE3', '#EAF3EC']
+const QUICK_PALETTE = ['#17171A', '#3E37E0', '#6B62FF', '#E0523E', '#C8912B', '#2FA36B', '#3B82D6', '#FFFFFF']
+const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
 let nextId = 1
 const uid = () => `o${nextId++}`
 
 function defaultObject(type, p) {
   const base = { id: uid(), type, visible: true, locked: false, opacity: 1, rotation: 0 }
-  if (type === 'rect') return { ...base, name: 'Прямокутник', x: p.x, y: p.y, w: 1, h: 1, fill: '#3E37E0', stroke: 'none', strokeWidth: 2, radius: 0 }
-  if (type === 'ellipse') return { ...base, name: 'Еліпс', x: p.x, y: p.y, w: 1, h: 1, fill: '#E0523E', stroke: 'none', strokeWidth: 2 }
+  if (type === 'rect') return { ...base, name: 'Прямокутник', x: p.x, y: p.y, w: 1, h: 1, fill: '#3E37E0', stroke: 'none', strokeWidth: 2, radius: 0, shadow: false, shadowColor: '#17171A', shadowBlur: 16 }
+  if (type === 'ellipse') return { ...base, name: 'Еліпс', x: p.x, y: p.y, w: 1, h: 1, fill: '#E0523E', stroke: 'none', strokeWidth: 2, shadow: false, shadowColor: '#17171A', shadowBlur: 16 }
   if (type === 'line') return { ...base, name: 'Лінія', x1: p.x, y1: p.y, x2: p.x, y2: p.y, color: '#17171A', strokeWidth: 4 }
   if (type === 'text') return { ...base, name: 'Текст', x: p.x, y: p.y, w: 240, h: 60, text: 'Новий текст', fontFamily: FONT_FAMILIES[0].css, fontSize: 28, fontWeight: 400, color: '#17171A', align: 'left', lineHeight: 1.25, letterSpacing: 0 }
-  if (type === 'image') return { ...base, name: 'Зображення', x: p.x, y: p.y, w: 240, h: 240, src: null }
+  if (type === 'image') return { ...base, name: 'Зображення', x: p.x, y: p.y, w: 240, h: 240, src: null, shadow: false, shadowColor: '#17171A', shadowBlur: 16 }
   return base
 }
 
@@ -145,6 +147,11 @@ function drawObject(ctx, o, imageCache) {
     ctx.translate(cx, cy)
     ctx.rotate((o.rotation * Math.PI) / 180)
     ctx.translate(-cx, -cy)
+  }
+  if (o.shadow) {
+    ctx.shadowColor = o.shadowColor
+    ctx.shadowBlur = o.shadowBlur
+    ctx.shadowOffsetY = Math.round(o.shadowBlur / 4)
   }
   if (o.type === 'rect') {
     if (o.fill && o.fill !== 'none') { ctx.fillStyle = o.fill; roundRectPath(ctx, o.x, o.y, o.w, o.h, o.radius || 0); ctx.fill() }
@@ -259,10 +266,11 @@ function buildSvgString(objects, W, H, bg) {
     }
     const cx = o.x + o.w / 2, cy = o.y + o.h / 2
     const transform = o.rotation ? ` transform="rotate(${o.rotation} ${cx} ${cy})"` : ''
+    const shadowFilter = o.shadow ? ` filter="drop-shadow(0 ${Math.round(o.shadowBlur / 4)}px ${o.shadowBlur}px ${o.shadowColor})"` : ''
     if (o.type === 'rect') {
-      body += `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="${o.radius || 0}" fill="${o.fill}" stroke="${o.stroke}" stroke-width="${o.strokeWidth || 0}" opacity="${opacity}"${transform}/>`
+      body += `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="${o.radius || 0}" fill="${o.fill}" stroke="${o.stroke}" stroke-width="${o.strokeWidth || 0}" opacity="${opacity}"${transform}${shadowFilter}/>`
     } else if (o.type === 'ellipse') {
-      body += `<ellipse cx="${cx}" cy="${cy}" rx="${o.w / 2}" ry="${o.h / 2}" fill="${o.fill}" stroke="${o.stroke}" stroke-width="${o.strokeWidth || 0}" opacity="${opacity}"${transform}/>`
+      body += `<ellipse cx="${cx}" cy="${cy}" rx="${o.w / 2}" ry="${o.h / 2}" fill="${o.fill}" stroke="${o.stroke}" stroke-width="${o.strokeWidth || 0}" opacity="${opacity}"${transform}${shadowFilter}/>`
     } else if (o.type === 'text') {
       const anchor = o.align === 'center' ? 'middle' : o.align === 'right' ? 'end' : 'start'
       const tx = o.align === 'center' ? o.x + o.w / 2 : o.align === 'right' ? o.x + o.w : o.x
@@ -270,7 +278,7 @@ function buildSvgString(objects, W, H, bg) {
       String(o.text).split('\n').forEach((line, i) => { body += `<tspan x="${tx}" dy="${i === 0 ? 0 : o.fontSize * (o.lineHeight || 1.2)}">${esc(line)}</tspan>` })
       body += `</text>`
     } else if (o.type === 'image' && o.src) {
-      body += `<image x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" href="${o.src}" opacity="${opacity}"${transform}/>`
+      body += `<image x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" href="${o.src}" opacity="${opacity}"${transform}${shadowFilter}/>`
     }
   })
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${body}</svg>`
@@ -324,7 +332,7 @@ function download(blobOrUrl, filename) {
   if (typeof blobOrUrl !== 'string') setTimeout(() => URL.revokeObjectURL(url), 2000)
 }
 
-function PropertiesPanel({ selected, canvasSize, bg, showGrid, onCanvasChange, onBgChange, onGridChange, onUpdate, onImageFile }) {
+function PropertiesPanel({ selected, canvasSize, bg, showGrid, gridColumns, onCanvasChange, onBgChange, onGridChange, onGridColumnsChange, onUpdate, onImageFile }) {
   if (!selected) {
     return (
       <div className="gfx-props">
@@ -354,6 +362,11 @@ function PropertiesPanel({ selected, canvasSize, bg, showGrid, onCanvasChange, o
           <input type="checkbox" checked={showGrid} onChange={(e) => onGridChange(e.target.checked)} />
           Сітка-орієнтир (не друкується)
         </label>
+        {showGrid && (
+          <label className="gfx-num" style={{ display: 'block', marginTop: 8 }}>Колонок
+            <input type="number" min="1" max="24" value={gridColumns} onChange={(e) => onGridColumnsChange(Math.max(1, Number(e.target.value) || 1))} />
+          </label>
+        )}
         <p className="cl-tab-desc" style={{ marginTop: 10 }}>Нічого не вибрано — клікни об’єкт на полотні чи в списку шарів, щоб редагувати його властивості.</p>
       </div>
     )
@@ -445,6 +458,21 @@ function PropertiesPanel({ selected, canvasSize, bg, showGrid, onCanvasChange, o
         </label>
       )}
 
+      {o.type !== 'line' && 'shadow' in o && (
+        <>
+          <label className="sketchpad-inline-label" style={{ marginBottom: 6 }}>
+            <input type="checkbox" checked={o.shadow} onChange={(e) => set({ shadow: e.target.checked })} />
+            Тінь
+          </label>
+          {o.shadow && (
+            <div className="gfx-row">
+              <label className="gfx-num">Колір тіні<input type="color" value={o.shadowColor} onChange={(e) => set({ shadowColor: e.target.value })} className="sketchpad-colorpicker" /></label>
+              <label className="gfx-num">Розмиття<input type="number" min="0" max="80" value={o.shadowBlur} onChange={(e) => set({ shadowBlur: Number(e.target.value) || 0 })} /></label>
+            </div>
+          )}
+        </>
+      )}
+
       {o.type !== 'line' && (
         <>
           <div className="gfx-row">
@@ -519,6 +547,8 @@ export default function GraphicDesignStudio({ module, onClose }) {
   const [canvasSize, setCanvasSize] = useState({ w: 1080, h: 1080 })
   const [bg, setBg] = useState('#FFFFFF')
   const [showGrid, setShowGrid] = useState(false)
+  const [gridColumns, setGridColumns] = useState(8)
+  const [zoom, setZoom] = useState(1)
   const [tool, setTool] = useState('select')
   const [selectedId, setSelectedId] = useState(null)
   const [projectId, setProjectId] = useState(null)
@@ -551,9 +581,10 @@ export default function GraphicDesignStudio({ module, onClose }) {
       ctx.save()
       ctx.strokeStyle = 'rgba(0,0,0,0.08)'
       ctx.lineWidth = 1
-      const step = Math.max(20, Math.round(canvas.width / 24))
+      const step = canvas.width / Math.max(1, gridColumns)
       for (let x = 0; x <= canvas.width; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke() }
-      for (let y = 0; y <= canvas.height; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke() }
+      const rowStep = canvas.height / Math.max(1, Math.round(gridColumns * (canvas.height / canvas.width)))
+      for (let y = 0; y <= canvas.height; y += rowStep) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke() }
       ctx.restore()
     }
     objects.forEach((o) => drawObject(ctx, liveObj && liveObj.id === o.id ? liveObj : o, imageCache))
@@ -581,6 +612,15 @@ export default function GraphicDesignStudio({ module, onClose }) {
 
   function updateObject(id, patch) {
     commitObjects(objects.map((o) => (o.id === id ? { ...o, ...patch } : o)))
+  }
+
+  // Швидка палітра під полотном (як колірні плашки в референсі) — б'є
+  // одразу в «головний» колір вибраного об'єкта: заливку для фігур,
+  // колір тексту чи лінії. Без вибору — підказуємо обрати об'єкт.
+  function applyQuickColor(hex) {
+    if (!selected) { toastApi.show('Спочатку вибери об’єкт на полотні'); return }
+    if (selected.type === 'text' || selected.type === 'line') updateObject(selected.id, { color: hex })
+    else if (selected.type === 'rect' || selected.type === 'ellipse') updateObject(selected.id, { fill: hex })
   }
 
   function handleImageFile(id, file) {
@@ -743,7 +783,7 @@ export default function GraphicDesignStudio({ module, onClose }) {
   // залежність: відсоткова висота не резолвиться відносно висоти,
   // виведеної з aspect-ratio) — браузер тоді показує canvas у його
   // нативній роздільності замість зменшеної. Рахуємо W/H явно в пікселях.
-  const displayW = Math.min(canvasSize.w, 640)
+  const displayW = Math.round(Math.min(canvasSize.w, 640) * zoom)
   const displayH = Math.round(displayW * (canvasSize.h / canvasSize.w))
 
   return (
@@ -783,6 +823,11 @@ export default function GraphicDesignStudio({ module, onClose }) {
         {TOOLS.map((t) => (
           <button key={t.id} className={'harmony-btn' + (tool === t.id ? ' active' : '')} onClick={() => setTool(t.id)}>{t.icon} {t.label}</button>
         ))}
+        <span className="gfx-zoom">
+          <button className="cl-mini-btn" onClick={() => setZoom((z) => ZOOM_STEPS[Math.max(0, ZOOM_STEPS.indexOf(z) - 1)])} title="Зменшити">−</button>
+          <span className="gfx-zoom-value">{Math.round(zoom * 100)}%</span>
+          <button className="cl-mini-btn" onClick={() => setZoom((z) => ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, ZOOM_STEPS.indexOf(z) + 1)])} title="Збільшити">+</button>
+        </span>
       </div>
 
       <div className="gfx-workspace">
@@ -798,6 +843,12 @@ export default function GraphicDesignStudio({ module, onClose }) {
               onTouchStart={start} onTouchMove={move} onTouchEnd={end}
             />
           </div>
+          <div className="gfx-quick-palette">
+            <span className="gds-level-toolbar-label">Швидкий колір:</span>
+            {QUICK_PALETTE.map((c) => (
+              <button key={c} className="sketchpad-swatch" style={{ background: c, border: c === '#FFFFFF' ? '1.5px solid var(--line)' : undefined }} onClick={() => applyQuickColor(c)} aria-label={c} title={selected ? `Застосувати ${c} до вибраного` : 'Спочатку вибери об’єкт'} />
+            ))}
+          </div>
           <LayersPanel
             objects={objects} selectedId={selectedId}
             onSelect={setSelectedId} onToggleVisible={toggleVisible} onToggleLock={toggleLock}
@@ -805,9 +856,9 @@ export default function GraphicDesignStudio({ module, onClose }) {
           />
         </div>
         <PropertiesPanel
-          selected={drawSelected} canvasSize={canvasSize} bg={bg} showGrid={showGrid}
+          selected={drawSelected} canvasSize={canvasSize} bg={bg} showGrid={showGrid} gridColumns={gridColumns}
           onCanvasChange={(patch) => setCanvasSize((prev) => ({ ...prev, ...patch }))}
-          onBgChange={setBg} onGridChange={setShowGrid}
+          onBgChange={setBg} onGridChange={setShowGrid} onGridColumnsChange={setGridColumns}
           onUpdate={updateObject} onImageFile={handleImageFile}
         />
       </div>
