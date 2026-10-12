@@ -143,6 +143,7 @@ import { LESSONS as brandingTypography } from './lessons/branding-typography.js'
 import { LESSONS as brandingVisualIdentity } from './lessons/branding-visual-identity.js'
 import { LESSONS as brandingVoice } from './lessons/branding-voice.js'
 import { LESSONS as brandingMedia } from './lessons/branding-media.js'
+import { LESSONS as brandingGuidelines } from './lessons/branding-guidelines.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -267,6 +268,7 @@ export const MODULES = [
   ...brandingVisualIdentity,
   ...brandingVoice,
   ...brandingMedia,
+  ...brandingGuidelines,
 ]
 
 export function getModule(id) {
