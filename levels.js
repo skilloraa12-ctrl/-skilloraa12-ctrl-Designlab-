@@ -8,6 +8,7 @@ export const LEVELS = {
   'game-design': { title: 'Game Design', ua: 'Правила та механіки гри' },
   'graphic-design': { title: 'Graphic Design', ua: 'Візуальні матеріали' },
   'branding': { title: 'Branding', ua: 'Створення та розвиток брендів' },
+  'motion-design': { title: 'Motion Design', ua: 'Анімовану графіку' },
 }
 
-export const LEVEL_ORDER = ['web-design', 'app-design', 'ui-design', 'game-design', 'graphic-design', 'branding']
+export const LEVEL_ORDER = ['web-design', 'app-design', 'ui-design', 'game-design', 'graphic-design', 'branding', 'motion-design']

@@ -33,6 +33,12 @@ export default function Module() {
   const done = !!completed[module.id]
   const testDone = !!quizPassed[module.id]
   const usesGameLab = module.level === 'game-design' && GAME_LAB_SUBCATS.includes(module.subcategory)
+  // Motion Design не має окремого вбудованого Studio-оверлея (як
+  // Graphic/Game Design) — для всього напрямку практика ведеться в
+  // уже готовому Motion Lab (/labs/motion: переходи/keyframes/easing/
+  // stagger/scroll reveal/лоадери), так само, як 2 підкатегорії Game
+  // Design спираються на Game Design Lab замість Studio.
+  const usesMotionLab = module.level === 'motion-design'
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -182,6 +188,10 @@ export default function Module() {
             {usesGameLab ? (
               <Link to="/labs/game" className="complete-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
                 🎯 Відкрити «Game Design Lab»
+              </Link>
+            ) : usesMotionLab ? (
+              <Link to="/labs/motion" className="complete-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
+                🎬 Відкрити «Motion Lab»
               </Link>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>
