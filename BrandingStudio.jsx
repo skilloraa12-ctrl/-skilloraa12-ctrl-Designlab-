@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useParams, useLocation, Link } from 'react-router-dom'
 import { useProgress } from './ProgressContext.jsx'
 import { useLabToast } from './labs/useLabToast.js'
@@ -199,6 +199,108 @@ function NamingStage({ project, onPatch, toastApi }) {
   )
 }
 
+const MOOD_GROUP_COLORS = ['#3E37E0', '#E0523E', '#2FA36B', '#C8912B', '#6B62FF']
+
+function MoodboardBuilder({ project, onPatch }) {
+  const items = project.moodboard.items
+  const boardRef = useRef(null)
+  const dragRef = useRef(null)
+
+  function patchItems(next) {
+    onPatch({ moodboard: { items: next } })
+  }
+  function addNote() {
+    patchItems([...items, { id: crypto.randomUUID(), type: 'note', text: 'Нова нотатка', group: '', x: 20 + items.length * 14, y: 20 + items.length * 10 }])
+  }
+  function addKeyword() {
+    patchItems([...items, { id: crypto.randomUUID(), type: 'keyword', text: 'слово', group: '', x: 20 + items.length * 14, y: 20 + items.length * 10 }])
+  }
+  function addImage(file) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      patchItems([...items, { id: crypto.randomUUID(), type: 'image', src: reader.result, group: '', x: 20 + items.length * 14, y: 20 + items.length * 10 }])
+    }
+    reader.readAsDataURL(file)
+  }
+  function updateItem(id, patch) {
+    patchItems(items.map((it) => (it.id === id ? { ...it, ...patch } : it)))
+  }
+  function removeItem(id) {
+    patchItems(items.filter((it) => it.id !== id))
+  }
+  function groupColor(group) {
+    if (!group) return 'var(--line)'
+    let hash = 0
+    for (let i = 0; i < group.length; i++) hash = (hash * 31 + group.charCodeAt(i)) >>> 0
+    return MOOD_GROUP_COLORS[hash % MOOD_GROUP_COLORS.length]
+  }
+
+  function onItemPointerDown(e, item) {
+    const boardRect = boardRef.current.getBoundingClientRect()
+    dragRef.current = { id: item.id, offX: e.clientX - boardRect.left - item.x, offY: e.clientY - boardRect.top - item.y }
+  }
+  function onBoardPointerMove(e) {
+    if (!dragRef.current) return
+    const boardRect = boardRef.current.getBoundingClientRect()
+    const x = Math.max(0, e.clientX - boardRect.left - dragRef.current.offX)
+    const y = Math.max(0, e.clientY - boardRect.top - dragRef.current.offY)
+    updateItem(dragRef.current.id, { x, y })
+  }
+  function onBoardPointerUp() {
+    dragRef.current = null
+  }
+
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <p className="cl-section-title">Moodboard</p>
+      <p className="cl-tab-desc">Перетягуй елементи, щоб групувати їх візуально. Поле «група» підписує колір рамки для пов'язаних референсів.</p>
+      <div className="gfx-row">
+        <label className="harmony-btn" style={{ cursor: 'pointer' }}>
+          📤 Зображення
+          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => e.target.files[0] && addImage(e.target.files[0])} />
+        </label>
+        <button className="harmony-btn" onClick={addNote}>+ Нотатка</button>
+        <button className="harmony-btn" onClick={addKeyword}>+ Ключове слово</button>
+      </div>
+      <div
+        ref={boardRef}
+        className="branding-moodboard"
+        onPointerMove={onBoardPointerMove}
+        onPointerUp={onBoardPointerUp}
+        onPointerLeave={onBoardPointerUp}
+      >
+        {items.length === 0 && <p className="cl-tab-desc" style={{ padding: 14 }}>Дошка порожня — додай зображення, нотатку чи ключове слово вище.</p>}
+        {items.map((it) => (
+          <div
+            key={it.id}
+            className={'branding-mood-item branding-mood-item--' + it.type}
+            style={{ left: it.x, top: it.y, borderColor: groupColor(it.group) }}
+          >
+            <span className="branding-mood-handle" onPointerDown={(e) => onItemPointerDown(e, it)} title="Перетягнути">⠿</span>
+            <button className="branding-mood-remove" onPointerDown={(e) => e.stopPropagation()} onClick={() => removeItem(it.id)}>×</button>
+            {it.type === 'image' && <img src={it.src} alt="" draggable={false} />}
+            {(it.type === 'note' || it.type === 'keyword') && (
+              <textarea
+                className="branding-mood-text"
+                value={it.text}
+                onPointerDown={(e) => e.stopPropagation()}
+                onChange={(e) => updateItem(it.id, { text: e.target.value })}
+              />
+            )}
+            <input
+              className="branding-mood-group"
+              placeholder="група"
+              value={it.group}
+              onPointerDown={(e) => e.stopPropagation()}
+              onChange={(e) => updateItem(it.id, { group: e.target.value })}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function ConceptStage({ project, onPatch }) {
   const concepts = project.concepts
   function addConcept() {
@@ -215,6 +317,7 @@ function ConceptStage({ project, onPatch }) {
   }
   return (
     <div className="branding-form">
+      <MoodboardBuilder project={project} onPatch={onPatch} />
       <p className="cl-section-title">Концепції бренду</p>
       <p className="cl-tab-desc">Створи щонайменше 2 різні творчі напрямки словами (образи, ключові слова, метафори) і аргументовано обери один.</p>
       <button className="harmony-btn" onClick={addConcept}>+ Новий напрямок</button>

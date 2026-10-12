@@ -66,6 +66,7 @@ export function createEmptyBrandProject(name) {
       rationalBenefits: '', emotionalBenefits: '', toneOfVoice: '', mainMessage: '',
     },
     naming: { candidates: [], chosenId: null },
+    moodboard: { items: [] },
     concepts: [],
     logos: [],
     palette: { primary: [], secondary: [], accent: [], neutral: [] },
