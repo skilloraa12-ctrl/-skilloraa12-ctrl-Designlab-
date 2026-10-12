@@ -3,6 +3,7 @@ import { useProgress } from './ProgressContext.jsx'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabHistory } from './labs/useLabHistory.js'
 import LabToast from './labs/LabToast.jsx'
+import GamePlayer from './GamePlay.jsx'
 
 // Практичний інструмент для уроків напрямку Game Design — замінює
 // загальний SketchPad (вільне малювання), бо для планування правил,
@@ -414,6 +415,7 @@ export default function GameDesignStudio({ module, onClose }) {
   const [goal, setGoal] = useState(null)
   const [difficulty, setDifficulty] = useState(null)
   const [activeTab, setActiveTab] = useState(module?.studioTab || 'rules')
+  const [playMode, setPlayMode] = useState('platformer')
   const [objects, setObjects] = useState([])
   const [gridSizeId, setGridSizeId] = useState(GRID_SIZES[0].id)
   const initialGrid = useRef(emptyGrid(GRID_SIZES[0].rows, GRID_SIZES[0].cols)).current
@@ -561,6 +563,7 @@ export default function GameDesignStudio({ module, onClose }) {
                 { id: 'rules', label: 'Правила' },
                 { id: 'objects', label: 'Об’єкти' },
                 { id: 'level', label: 'Рівень' },
+                { id: 'play', label: 'Гра' },
                 { id: 'test', label: 'Тест' },
               ].map((t) => (
                 <button key={t.id} className={'cl-tab' + (activeTab === t.id ? ' active' : '')} onClick={() => setActiveTab(t.id)}>{t.label}</button>
@@ -575,6 +578,20 @@ export default function GameDesignStudio({ module, onClose }) {
                 canUndo={gridHistory.canUndo} canRedo={gridHistory.canRedo} onUndo={handleUndoGrid} onRedo={handleRedoGrid}
                 problems={levelProblems} onCheck={handleCheckLevel}
               />
+            )}
+            {activeTab === 'play' && (
+              <div>
+                <p className="cl-tab-desc">Пройди свій рівень насправді — зі справжньою фізикою, стрибками чи рухом у 4 напрямки, а не лише схемою для планування.</p>
+                <div className="cl-btn-row">
+                  <button className={'harmony-btn' + (playMode === 'platformer' ? ' active' : '')} onClick={() => setPlayMode('platformer')}>🏃 Платформер (гравітація + стрибок)</button>
+                  <button className={'harmony-btn' + (playMode === 'topdown' ? ' active' : '')} onClick={() => setPlayMode('topdown')}>🔭 Вигляд зверху (4 напрямки)</button>
+                </div>
+                {grid.some((row) => row.includes('start')) ? (
+                  <GamePlayer key={playMode} grid={grid} mode={playMode} goal={goal} />
+                ) : (
+                  <p className="cl-tab-desc">Спочатку розстав клітинку «Старт» на вкладці «Рівень» — звідти почнеться проходження.</p>
+                )}
+              </div>
             )}
             {activeTab === 'test' && <TestTab items={testItems} onToggle={toggleTest} onAdd={addTest} onRemove={removeTest} />}
             <button className="cl-mini-btn" style={{ marginTop: 14 }} onClick={() => setStep(3)}>← До складності</button>

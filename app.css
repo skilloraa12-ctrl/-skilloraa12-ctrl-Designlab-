@@ -1346,6 +1346,24 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .gds-object-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .gds-object-head input { flex: 1; }
 .gds-object-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex: none; }
+
+.gds-play { margin-top: 12px; }
+.gds-play-hud {
+  display: flex; gap: 14px; align-items: center; font-size: 14px; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 8px 12px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.gds-play-hint { font-weight: 400; font-size: 12.5px; color: var(--coral); }
+.gds-play-canvas-wrap {
+  display: inline-block; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  overflow: hidden; box-shadow: var(--shadow-md); line-height: 0;
+}
+.gds-play-canvas-wrap canvas { display: block; }
+.gds-play-result {
+  margin-top: 10px; padding: 14px 16px; border-radius: var(--radius-sm); max-width: 420px;
+}
+.gds-play-result.win { background: color-mix(in srgb, var(--green) 10%, var(--surface)); border: 1px solid var(--green); }
+.gds-play-result.lose { background: color-mix(in srgb, var(--coral) 10%, var(--surface)); border: 1px solid var(--coral); }
 .gds-object-behavior {
   width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); color: var(--ink);
   font-family: var(--sans); font-size: 12.5px; padding: 8px 10px; resize: vertical;
