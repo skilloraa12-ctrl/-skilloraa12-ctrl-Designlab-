@@ -133,6 +133,7 @@ import { LESSONS as graphicInfographics } from './lessons/graphic-infographics.j
 import { LESSONS as graphicProcess } from './lessons/graphic-process.js'
 import { LESSONS as graphicPortfolio } from './lessons/graphic-portfolio.js'
 import { LESSONS as brandingBasics } from './lessons/branding-basics.js'
+import { LESSONS as brandingBriefResearch } from './lessons/branding-brief-research.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -247,6 +248,7 @@ export const MODULES = [
   ...graphicProcess,
   ...graphicPortfolio,
   ...brandingBasics,
+  ...brandingBriefResearch,
 ]
 
 export function getModule(id) {
