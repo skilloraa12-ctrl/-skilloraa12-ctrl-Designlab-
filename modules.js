@@ -119,6 +119,7 @@ import { LESSONS as gameDesignerCareer } from './lessons/game-designer-career.js
 import { LESSONS as gameDesignPortfolioFinal } from './lessons/game-design-portfolio-final.js'
 import { LESSONS as graphicDesignBasics } from './lessons/graphic-design-basics.js'
 import { LESSONS as graphicComposition } from './lessons/graphic-composition.js'
+import { LESSONS as graphicColor } from './lessons/graphic-color.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -219,6 +220,7 @@ export const MODULES = [
   ...gameDesignPortfolioFinal,
   ...graphicDesignBasics,
   ...graphicComposition,
+  ...graphicColor,
 ]
 
 export function getModule(id) {
