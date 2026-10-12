@@ -15,6 +15,7 @@ const EMPTY_STATE = {
   savedColors: [],
   savedGradients: [],
   graphicProjects: [],
+  brandProjects: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -155,6 +156,44 @@ export function ProgressProvider({ children }) {
     setState((prev) => ({ ...prev, graphicProjects: prev.graphicProjects.filter((p) => p.id !== id) }))
   }, [])
 
+  // Єдина модель брендингового проєкту (Branding Studio) — усі інструменти
+  // майстерні (бриф, стратегія, нейминг, мудборд, лого/колір/типографіка,
+  // носії, брендбук, презентація) читають і пишуть той самий запис за id,
+  // тож зміна, скажімо, палітри одразу видно в брендбуку й презентації
+  // без окремих копій даних у кожному інструменті.
+  const saveBrandProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.brandProjects.find((p) => p.id === id)
+      const now = new Date().toISOString()
+      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
+      return {
+        ...prev,
+        brandProjects: exists
+          ? prev.brandProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.brandProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removeBrandProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, brandProjects: prev.brandProjects.filter((p) => p.id !== id) }))
+  }, [])
+
+  const duplicateBrandProject = useCallback((id) => {
+    let newId = null
+    setState((prev) => {
+      const src = prev.brandProjects.find((p) => p.id === id)
+      if (!src) return prev
+      newId = crypto.randomUUID()
+      const now = new Date().toISOString()
+      const copy = { ...src, id: newId, name: src.name + ' (копія)', createdAt: now, updatedAt: now }
+      return { ...prev, brandProjects: [copy, ...prev.brandProjects] }
+    })
+    return newId
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -207,6 +246,7 @@ export function ProgressProvider({ children }) {
     savedColors: state.savedColors, saveColor, removeColor,
     savedGradients: state.savedGradients, saveGradient, removeGradient,
     graphicProjects: state.graphicProjects, saveGraphicProject, removeGraphicProject,
+    brandProjects: state.brandProjects, saveBrandProject, removeBrandProject, duplicateBrandProject,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,
