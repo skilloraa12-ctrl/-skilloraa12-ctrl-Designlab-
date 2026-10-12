@@ -13,12 +13,66 @@ import LabToast from './labs/LabToast.jsx'
 // блокуванням/дублюванням — як того вимагає ТЗ для цього напрямку.
 
 const TOOLS = [
-  { id: 'select', icon: '🖱️', label: 'Вибрати' },
+  { id: 'select', icon: '🖱️', label: 'Об’єкти' },
   { id: 'rect', icon: '▭', label: 'Прямокутник' },
   { id: 'ellipse', icon: '⬭', label: 'Еліпс' },
   { id: 'line', icon: '➖', label: 'Лінія' },
   { id: 'text', icon: '🅰', label: 'Текст' },
   { id: 'image', icon: '🖼️', label: 'Зображення' },
+  { id: 'icon', icon: '⭐', label: 'Іконки' },
+  { id: 'draw', icon: '🖌️', label: 'Пензель' },
+]
+
+// Невелика бібліотека готових векторних іконок — кожна як багатокутник
+// у нормалізованому полі 0..100, масштабований під o.w/o.h об'єкта. Той
+// самий принцип "ілюстрація простими формами", що й у модулі 10 курсу
+// (вектор): прості фігури замість довільних кривих Безьє.
+function regularPolygon(cx, cy, r, sides, rotationDeg = -90) {
+  const pts = []
+  for (let i = 0; i < sides; i++) {
+    const a = ((rotationDeg + (360 / sides) * i) * Math.PI) / 180
+    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)])
+  }
+  return pts
+}
+function starPoints(cx, cy, outerR, innerR, spikes) {
+  const pts = []
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR
+    const a = ((-90 + (360 / (spikes * 2)) * i) * Math.PI) / 180
+    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)])
+  }
+  return pts
+}
+function heartPoints() {
+  const pts = []
+  for (let i = 0; i <= 48; i++) {
+    const t = (i / 48) * Math.PI * 2
+    const x = 16 * Math.pow(Math.sin(t), 3)
+    const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))
+    pts.push([50 + x * 2.6, 50 + y * 2.6])
+  }
+  return pts
+}
+const ICONS = {
+  star: starPoints(50, 50, 46, 19, 5),
+  heart: heartPoints(),
+  arrow: [[10, 35], [55, 35], [55, 15], [92, 50], [55, 85], [55, 65], [10, 65]],
+  check: [[14, 55], [36, 76], [86, 14], [96, 24], [38, 92], [4, 64]],
+  plus: [[40, 8], [60, 8], [60, 40], [92, 40], [92, 60], [60, 60], [60, 92], [40, 92], [40, 60], [8, 60], [8, 40], [40, 40]],
+  bolt: [[55, 4], [18, 56], [45, 56], [34, 96], [84, 40], [52, 40]],
+  bubble: [[8, 10], [92, 10], [92, 66], [46, 66], [30, 92], [34, 66], [8, 66]],
+  circle: regularPolygon(50, 50, 46, 28),
+}
+const ICON_LIST = [
+  { id: 'star', label: 'Зірка' },
+  { id: 'heart', label: 'Серце' },
+  { id: 'arrow', label: 'Стрілка' },
+  { id: 'check', label: 'Галочка' },
+  { id: 'plus', label: 'Плюс' },
+  { id: 'bolt', label: 'Блискавка' },
+  { id: 'bubble', label: 'Бульбашка' },
+  { id: 'circle', label: 'Коло' },
 ]
 
 const CANVAS_PRESETS = [
@@ -51,11 +105,16 @@ function defaultObject(type, p) {
   if (type === 'line') return { ...base, name: 'Лінія', x1: p.x, y1: p.y, x2: p.x, y2: p.y, color: '#17171A', strokeWidth: 4 }
   if (type === 'text') return { ...base, name: 'Текст', x: p.x, y: p.y, w: 240, h: 60, text: 'Новий текст', fontFamily: FONT_FAMILIES[0].css, fontSize: 28, fontWeight: 400, color: '#17171A', align: 'left', lineHeight: 1.25, letterSpacing: 0 }
   if (type === 'image') return { ...base, name: 'Зображення', x: p.x, y: p.y, w: 240, h: 240, src: null, shadow: false, shadowColor: '#17171A', shadowBlur: 16 }
+  if (type === 'icon') return { ...base, name: 'Іконка', x: p.x, y: p.y, w: 80, h: 80, iconId: 'star', fill: '#3E37E0', shadow: false, shadowColor: '#17171A', shadowBlur: 16 }
   return base
 }
 
 function bboxOf(o) {
   if (o.type === 'line') return { x: Math.min(o.x1, o.x2), y: Math.min(o.y1, o.y2), w: Math.abs(o.x2 - o.x1), h: Math.abs(o.y2 - o.y1) }
+  if (o.type === 'path') {
+    const xs = o.points.map((p) => p.x), ys = o.points.map((p) => p.y)
+    return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
+  }
   return { x: o.x, y: o.y, w: o.w, h: o.h }
 }
 
@@ -77,14 +136,19 @@ function hitTest(objects, p) {
   for (let i = objects.length - 1; i >= 0; i--) {
     const o = objects[i]
     if (o.visible === false || o.locked) continue
-    if (o.type === 'line') {
-      const a = { x: o.x1, y: o.y1 }, b = { x: o.x2, y: o.y2 }
-      const dx = b.x - a.x, dy = b.y - a.y
-      const lenSq = dx * dx + dy * dy
-      let t = lenSq === 0 ? 0 : ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq
-      t = Math.max(0, Math.min(1, t))
-      const d = Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
-      if (d <= Math.max(o.strokeWidth, 8)) return o
+    if (o.type === 'line' || o.type === 'path') {
+      const pts = o.type === 'line' ? [{ x: o.x1, y: o.y1 }, { x: o.x2, y: o.y2 }] : o.points
+      let hit = false
+      for (let s = 0; s < pts.length - 1; s++) {
+        const a = pts[s], b = pts[s + 1]
+        const dx = b.x - a.x, dy = b.y - a.y
+        const lenSq = dx * dx + dy * dy
+        let t = lenSq === 0 ? 0 : ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq
+        t = Math.max(0, Math.min(1, t))
+        const d = Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
+        if (d <= Math.max(o.strokeWidth, 8)) { hit = true; break }
+      }
+      if (hit) return o
       continue
     }
     const lp = toLocal(o, p)
@@ -142,6 +206,18 @@ function drawObject(ctx, o, imageCache) {
     ctx.restore()
     return
   }
+  if (o.type === 'path') {
+    if (!o.points || o.points.length < 2) { ctx.restore(); return }
+    ctx.strokeStyle = o.color
+    ctx.lineWidth = o.strokeWidth
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.beginPath()
+    o.points.forEach((pt, i) => (i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y)))
+    ctx.stroke()
+    ctx.restore()
+    return
+  }
   const cx = o.x + o.w / 2, cy = o.y + o.h / 2
   if (o.rotation) {
     ctx.translate(cx, cy)
@@ -175,11 +251,31 @@ function drawObject(ctx, o, imageCache) {
     const img = imageCache.current.get(o.id)
     if (img && img.complete) ctx.drawImage(img, o.x, o.y, o.w, o.h)
     else { ctx.fillStyle = '#00000014'; ctx.fillRect(o.x, o.y, o.w, o.h) }
+  } else if (o.type === 'icon') {
+    const pts = ICONS[o.iconId] || ICONS.star
+    ctx.beginPath()
+    pts.forEach(([px, py], i) => {
+      const ax = o.x + (px / 100) * o.w
+      const ay = o.y + (py / 100) * o.h
+      if (i === 0) ctx.moveTo(ax, ay); else ctx.lineTo(ax, ay)
+    })
+    ctx.closePath()
+    if (o.fill && o.fill !== 'none') { ctx.fillStyle = o.fill; ctx.fill() }
   }
   ctx.restore()
 }
 
 function drawHandles(ctx, o) {
+  if (o.type === 'path') {
+    const bb = bboxOf(o)
+    ctx.save()
+    ctx.strokeStyle = '#3E37E0'
+    ctx.setLineDash([4, 3])
+    ctx.lineWidth = 1.5
+    ctx.strokeRect(bb.x - 4, bb.y - 4, bb.w + 8, bb.h + 8)
+    ctx.restore()
+    return
+  }
   const bb = bboxOf(o)
   const corners = o.type === 'line'
     ? [{ x: o.x1, y: o.y1 }, { x: o.x2, y: o.y2 }]
@@ -212,6 +308,7 @@ function drawHandles(ctx, o) {
 
 function hitHandle(o, p) {
   const R = 10
+  if (o.type === 'path') return null
   if (o.type === 'line') {
     if (Math.hypot(p.x - o.x1, p.y - o.y1) <= R) return 'p1'
     if (Math.hypot(p.x - o.x2, p.y - o.y2) <= R) return 'p2'
@@ -233,6 +330,7 @@ function hitHandle(o, p) {
 
 function translateObj(o, dx, dy) {
   if (o.type === 'line') return { ...o, x1: o.x1 + dx, y1: o.y1 + dy, x2: o.x2 + dx, y2: o.y2 + dy }
+  if (o.type === 'path') return { ...o, points: o.points.map((p) => ({ x: p.x + dx, y: p.y + dy })) }
   return { ...o, x: o.x + dx, y: o.y + dy }
 }
 
@@ -264,6 +362,12 @@ function buildSvgString(objects, W, H, bg) {
       body += `<line x1="${o.x1}" y1="${o.y1}" x2="${o.x2}" y2="${o.y2}" stroke="${o.color}" stroke-width="${o.strokeWidth}" stroke-linecap="round" opacity="${opacity}"/>`
       return
     }
+    if (o.type === 'path') {
+      if (!o.points || o.points.length < 2) return
+      const pts = o.points.map((pt) => `${pt.x},${pt.y}`).join(' ')
+      body += `<polyline points="${pts}" fill="none" stroke="${o.color}" stroke-width="${o.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}"/>`
+      return
+    }
     const cx = o.x + o.w / 2, cy = o.y + o.h / 2
     const transform = o.rotation ? ` transform="rotate(${o.rotation} ${cx} ${cy})"` : ''
     const shadowFilter = o.shadow ? ` filter="drop-shadow(0 ${Math.round(o.shadowBlur / 4)}px ${o.shadowBlur}px ${o.shadowColor})"` : ''
@@ -279,6 +383,10 @@ function buildSvgString(objects, W, H, bg) {
       body += `</text>`
     } else if (o.type === 'image' && o.src) {
       body += `<image x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" href="${o.src}" opacity="${opacity}"${transform}${shadowFilter}/>`
+    } else if (o.type === 'icon') {
+      const pts = ICONS[o.iconId] || ICONS.star
+      const d = pts.map(([px, py], i) => `${i === 0 ? 'M' : 'L'} ${(o.x + (px / 100) * o.w).toFixed(2)} ${(o.y + (py / 100) * o.h).toFixed(2)}`).join(' ') + ' Z'
+      body += `<path d="${d}" fill="${o.fill}" opacity="${opacity}"${transform}${shadowFilter}/>`
     }
   })
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${body}</svg>`
@@ -440,12 +548,32 @@ function PropertiesPanel({ selected, canvasSize, bg, showGrid, gridColumns, onCa
         </>
       )}
 
-      {o.type === 'line' && (
+      {(o.type === 'line' || o.type === 'path') && (
         <>
           <label className="gfx-field">Колір
             <input type="color" value={o.color} onChange={(e) => set({ color: e.target.value })} className="sketchpad-colorpicker" />
           </label>
-          <label className="gfx-num">Товщина<input type="number" min="1" max="40" value={o.strokeWidth} onChange={(e) => set({ strokeWidth: Number(e.target.value) || 1 })} /></label>
+          <label className="gfx-num">Товщина<input type="number" min="1" max="60" value={o.strokeWidth} onChange={(e) => set({ strokeWidth: Number(e.target.value) || 1 })} /></label>
+        </>
+      )}
+
+      {o.type === 'icon' && (
+        <>
+          <label className="gfx-field">Іконка
+            <div className="cl-btn-row" style={{ flexWrap: 'wrap' }}>
+              {ICON_LIST.map((ic) => (
+                <button key={ic.id} className={'harmony-btn' + (o.iconId === ic.id ? ' active' : '')} onClick={() => set({ iconId: ic.id })}>{ic.label}</button>
+              ))}
+            </div>
+          </label>
+          <label className="gfx-field">Колір
+            <div className="sketchpad-colors">
+              {FILL_SWATCHES.filter((c) => c !== 'none').map((c) => (
+                <button key={c} className={'sketchpad-swatch' + (o.fill === c ? ' active' : '')} style={{ background: c, border: c === '#FFFFFF' ? '1.5px solid var(--line)' : undefined }} onClick={() => set({ fill: c })} aria-label={c} />
+              ))}
+              <input type="color" value={o.fill} onChange={(e) => set({ fill: e.target.value })} className="sketchpad-colorpicker" />
+            </div>
+          </label>
         </>
       )}
 
@@ -473,7 +601,7 @@ function PropertiesPanel({ selected, canvasSize, bg, showGrid, gridColumns, onCa
         </>
       )}
 
-      {o.type !== 'line' && (
+      {o.type !== 'line' && o.type !== 'path' && (
         <>
           <div className="gfx-row">
             <label className="gfx-num">X<input type="number" value={Math.round(o.x)} onChange={(e) => set({ x: Number(e.target.value) || 0 })} /></label>
@@ -550,6 +678,7 @@ export default function GraphicDesignStudio({ module, onClose }) {
   const [gridColumns, setGridColumns] = useState(8)
   const [zoom, setZoom] = useState(1)
   const [tool, setTool] = useState('select')
+  const [rightTab, setRightTab] = useState('design')
   const [selectedId, setSelectedId] = useState(null)
   const [projectId, setProjectId] = useState(null)
   const [projectTitle, setProjectTitle] = useState(module?.title ? `${module.title} — проєкт` : 'Новий проєкт')
@@ -588,6 +717,9 @@ export default function GraphicDesignStudio({ module, onClose }) {
       ctx.restore()
     }
     objects.forEach((o) => drawObject(ctx, liveObj && liveObj.id === o.id ? liveObj : o, imageCache))
+    // Об'єкт, що ще малюється (нова фігура/лінія/пензель), ще не в
+    // objects — без цього рядка нічого не видно до відпускання кнопки.
+    if (liveObj && !objects.some((o) => o.id === liveObj.id)) drawObject(ctx, liveObj, imageCache)
     if (tool === 'select' && drawSelected && drawSelected.visible !== false) drawHandles(ctx, drawSelected)
   }
 
@@ -619,8 +751,8 @@ export default function GraphicDesignStudio({ module, onClose }) {
   // колір тексту чи лінії. Без вибору — підказуємо обрати об'єкт.
   function applyQuickColor(hex) {
     if (!selected) { toastApi.show('Спочатку вибери об’єкт на полотні'); return }
-    if (selected.type === 'text' || selected.type === 'line') updateObject(selected.id, { color: hex })
-    else if (selected.type === 'rect' || selected.type === 'ellipse') updateObject(selected.id, { fill: hex })
+    if (selected.type === 'text' || selected.type === 'line' || selected.type === 'path') updateObject(selected.id, { color: hex })
+    else if (selected.type === 'rect' || selected.type === 'ellipse' || selected.type === 'icon') updateObject(selected.id, { fill: hex })
   }
 
   function handleImageFile(id, file) {
@@ -643,7 +775,9 @@ export default function GraphicDesignStudio({ module, onClose }) {
     const o = objects.find((x) => x.id === id)
     if (!o) return
     const copy = { ...o, id: uid(), name: o.name + ' (копія)' }
-    if (copy.type === 'line') { copy.x1 += 16; copy.y1 += 16; copy.x2 += 16; copy.y2 += 16 } else { copy.x += 16; copy.y += 16 }
+    if (copy.type === 'line') { copy.x1 += 16; copy.y1 += 16; copy.x2 += 16; copy.y2 += 16 }
+    else if (copy.type === 'path') { copy.points = copy.points.map((p) => ({ x: p.x + 16, y: p.y + 16 })) }
+    else { copy.x += 16; copy.y += 16 }
     commitObjects([...objects, copy])
     setSelectedId(copy.id)
   }
@@ -696,6 +830,17 @@ export default function GraphicDesignStudio({ module, onClose }) {
       setTool('select')
       return
     }
+    if (tool === 'icon') {
+      const o = defaultObject('icon', { x: p.x - 40, y: p.y - 40 })
+      addObject(o)
+      setTool('select')
+      return
+    }
+    if (tool === 'draw') {
+      dragRef.current = { mode: 'draw', type: 'path', startP: p }
+      setLiveObj({ id: uid(), type: 'path', name: 'Пензель', points: [p], color: '#17171A', strokeWidth: 6, visible: true, locked: false, opacity: 1 })
+      return
+    }
     dragRef.current = { mode: 'draw', type: tool, startP: p, obj: defaultObject(tool, p) }
   }
 
@@ -710,6 +855,7 @@ export default function GraphicDesignStudio({ module, onClose }) {
     if (drag.mode === 'draw') {
       const sp = drag.startP
       if (drag.type === 'line') setLiveObj({ ...drag.obj, x1: sp.x, y1: sp.y, x2: p.x, y2: p.y })
+      else if (drag.type === 'path') setLiveObj((prev) => (prev && prev.type === 'path' ? { ...prev, points: [...prev.points, p] } : prev))
       else setLiveObj({ ...drag.obj, x: Math.min(sp.x, p.x), y: Math.min(sp.y, p.y), w: Math.abs(p.x - sp.x), h: Math.abs(p.y - sp.y) })
     }
   }
@@ -719,7 +865,7 @@ export default function GraphicDesignStudio({ module, onClose }) {
     dragRef.current = null
     if (!drag) return
     if (drag.mode === 'draw') {
-      if (liveObj && (liveObj.w > 4 || liveObj.h > 4 || liveObj.type === 'line')) addObject(liveObj)
+      if (liveObj && (liveObj.w > 4 || liveObj.h > 4 || liveObj.type === 'line' || (liveObj.type === 'path' && liveObj.points.length > 1))) addObject(liveObj)
       setLiveObj(null)
       return
     }
@@ -823,6 +969,7 @@ export default function GraphicDesignStudio({ module, onClose }) {
         {TOOLS.map((t) => (
           <button key={t.id} className={'harmony-btn' + (tool === t.id ? ' active' : '')} onClick={() => setTool(t.id)}>{t.icon} {t.label}</button>
         ))}
+        <button className={'harmony-btn' + (showGrid ? ' active' : '')} onClick={() => setShowGrid((g) => !g)}>🔳 Сітка</button>
         <span className="gfx-zoom">
           <button className="cl-mini-btn" onClick={() => setZoom((z) => ZOOM_STEPS[Math.max(0, ZOOM_STEPS.indexOf(z) - 1)])} title="Зменшити">−</button>
           <span className="gfx-zoom-value">{Math.round(zoom * 100)}%</span>
@@ -855,12 +1002,25 @@ export default function GraphicDesignStudio({ module, onClose }) {
             onRename={renameObj} onDuplicate={duplicateObj} onDelete={deleteObj} onReorder={reorderObj}
           />
         </div>
-        <PropertiesPanel
-          selected={drawSelected} canvasSize={canvasSize} bg={bg} showGrid={showGrid} gridColumns={gridColumns}
-          onCanvasChange={(patch) => setCanvasSize((prev) => ({ ...prev, ...patch }))}
-          onBgChange={setBg} onGridChange={setShowGrid} onGridColumnsChange={setGridColumns}
-          onUpdate={updateObject} onImageFile={handleImageFile}
-        />
+        <div className="gfx-props-col">
+          <div className="gfx-tabs">
+            <button className={'gfx-tab' + (rightTab === 'design' ? ' active' : '')} onClick={() => setRightTab('design')}>Дизайн</button>
+            <button className={'gfx-tab' + (rightTab === 'prototype' ? ' active' : '')} onClick={() => setRightTab('prototype')}>Прототип</button>
+          </div>
+          {rightTab === 'design' ? (
+            <PropertiesPanel
+              selected={drawSelected} canvasSize={canvasSize} bg={bg} showGrid={showGrid} gridColumns={gridColumns}
+              onCanvasChange={(patch) => setCanvasSize((prev) => ({ ...prev, ...patch }))}
+              onBgChange={setBg} onGridChange={setShowGrid} onGridColumnsChange={setGridColumns}
+              onUpdate={updateObject} onImageFile={handleImageFile}
+            />
+          ) : (
+            <div className="gfx-props">
+              <p className="cl-section-title">Прототипування</p>
+              <p className="cl-tab-desc">Переходи між екранами й інтерактивні стани — функція, яку «Graphic Design Studio» цього курсу чесно не підтримує: тут один редагований аркуш, а не кілька пов’язаних екранів із клікабельними переходами між ними. Для прототипування спробуй безкоштовний Figma.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="sketchpad-actions">
