@@ -151,6 +151,7 @@ import { LESSONS as motionBasics } from './lessons/motion-basics.js'
 import { LESSONS as motionPrinciples } from './lessons/motion-principles.js'
 import { LESSONS as motionTimingEasing } from './lessons/motion-timing-easing.js'
 import { LESSONS as motionUi } from './lessons/motion-ui.js'
+import { LESSONS as motionTypography } from './lessons/motion-typography.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -283,6 +284,7 @@ export const MODULES = [
   ...motionPrinciples,
   ...motionTimingEasing,
   ...motionUi,
+  ...motionTypography,
 ]
 
 export function getModule(id) {
