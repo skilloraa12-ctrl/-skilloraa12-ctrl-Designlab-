@@ -130,7 +130,7 @@ export default function Module() {
                   // Бейдж про вбудований ескізник має сам відкривати SketchPad,
                   // а не бути просто написом, що дублює кнопку нижче —
                   // інакше клік по ньому виглядає як кнопка, що не працює.
-                  if (t.name.includes('ескізник') || t.name.includes('Game Design Studio')) {
+                  if (t.name.includes('ескізник') || t.name.includes('Game Design Studio') || t.name.includes('Graphic Design Studio')) {
                     return (
                       <button
                         key={'f' + i}
@@ -186,7 +186,7 @@ export default function Module() {
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>
                 {module.level === 'game-design' ? '🖊 Відкрити «Game Design Studio»'
-                  : module.level === 'graphic-design' ? '🖊 Відкрити «Graphic Design Studio»'
+                  : module.level === 'graphic-design' || module.level === 'branding' ? '🖊 Відкрити «Graphic Design Studio»'
                   : '🖊 Створити ескіз у застосунку'}
               </button>
             )}
@@ -215,11 +215,11 @@ export default function Module() {
             <GameDesignStudio module={module} onClose={() => setSketchOpen(false)} />
           )}
 
-          {sketchOpen && module.level === 'graphic-design' && (
+          {sketchOpen && (module.level === 'graphic-design' || module.level === 'branding') && (
             <GraphicDesignStudio module={module} onClose={() => setSketchOpen(false)} />
           )}
 
-          {sketchOpen && module.level !== 'game-design' && module.level !== 'graphic-design' && (
+          {sketchOpen && module.level !== 'game-design' && module.level !== 'graphic-design' && module.level !== 'branding' && (
             <SketchPad
               module={module}
               onClose={() => setSketchOpen(false)}

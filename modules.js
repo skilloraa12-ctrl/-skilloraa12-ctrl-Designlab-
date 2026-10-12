@@ -132,6 +132,7 @@ import { LESSONS as graphicPackaging } from './lessons/graphic-packaging.js'
 import { LESSONS as graphicInfographics } from './lessons/graphic-infographics.js'
 import { LESSONS as graphicProcess } from './lessons/graphic-process.js'
 import { LESSONS as graphicPortfolio } from './lessons/graphic-portfolio.js'
+import { LESSONS as brandingBasics } from './lessons/branding-basics.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -245,6 +246,7 @@ export const MODULES = [
   ...graphicInfographics,
   ...graphicProcess,
   ...graphicPortfolio,
+  ...brandingBasics,
 ]
 
 export function getModule(id) {

@@ -1,9 +1,10 @@
 // Напрямки дизайну, показані на Головній. `id` збігається зі slug-ами
 // category в data/tools/tools.js та level у modules.js/levels.js для
-// консистентності між Інструменти й Академією. Уроки в Академії поки що
-// є лише для Web Design, App Design, UI Design і Game Design (id:
-// 'web-design'/'app-design'/'ui-design'/'game-design') — інші напрямки
-// залишаються декоративними картками, доки не отримають реальний вміст.
+// консистентності між Інструменти й Академією. Картка стає клікабельним
+// напрямком (замість бейджа «У розробці») автоматично, щойно для її id
+// з'являються записи в subcategories.js — Academy.jsx перевіряє це сам
+// (getSubcategoriesByLevel(d.id).length > 0), нічого вручну вмикати тут
+// не треба.
 export const DIRECTIONS = [
   { id: 'web-design', emoji: '🌐', name: 'Web Design', desc: 'Сайти та вебсторінки' },
   { id: 'app-design', emoji: '📱', name: 'App Design', desc: 'Мобільні застосунки' },
@@ -13,7 +14,7 @@ export const DIRECTIONS = [
   { id: 'game-art', emoji: '🎨', name: 'Game Art', desc: 'Візуальну частину гри' },
   { id: 'graphic-design', emoji: '🖌️', name: 'Graphic Design', desc: 'Візуальні матеріали' },
   { id: 'logo-design', emoji: '🏷️', name: 'Logo Design', desc: 'Логотипи' },
-  { id: 'branding', emoji: '🏢', name: 'Branding', desc: 'Цілісну айдентику бренду' },
+  { id: 'branding', emoji: '🏢', name: 'Branding', desc: 'Створення та розвиток брендів' },
   { id: 'advertising-design', emoji: '📢', name: 'Advertising Design', desc: 'Рекламні матеріали' },
   { id: 'motion-design', emoji: '🎬', name: 'Motion Design', desc: 'Анімовану графіку' },
   { id: '3d-design', emoji: '🧊', name: '3D Design', desc: "Тривимірні об'єкти та сцени" },
