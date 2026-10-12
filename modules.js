@@ -126,6 +126,7 @@ import { LESSONS as graphicImages } from './lessons/graphic-images.js'
 import { LESSONS as graphicPosters } from './lessons/graphic-posters.js'
 import { LESSONS as graphicSocialMedia } from './lessons/graphic-social-media.js'
 import { LESSONS as graphicLogos } from './lessons/graphic-logos.js'
+import { LESSONS as graphicVector } from './lessons/graphic-vector.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -233,6 +234,7 @@ export const MODULES = [
   ...graphicPosters,
   ...graphicSocialMedia,
   ...graphicLogos,
+  ...graphicVector,
 ]
 
 export function getModule(id) {
