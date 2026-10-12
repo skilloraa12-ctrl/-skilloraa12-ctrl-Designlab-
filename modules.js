@@ -122,6 +122,7 @@ import { LESSONS as graphicComposition } from './lessons/graphic-composition.js'
 import { LESSONS as graphicColor } from './lessons/graphic-color.js'
 import { LESSONS as graphicTypography } from './lessons/graphic-typography.js'
 import { LESSONS as graphicShapes } from './lessons/graphic-shapes.js'
+import { LESSONS as graphicImages } from './lessons/graphic-images.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -225,6 +226,7 @@ export const MODULES = [
   ...graphicColor,
   ...graphicTypography,
   ...graphicShapes,
+  ...graphicImages,
 ]
 
 export function getModule(id) {
