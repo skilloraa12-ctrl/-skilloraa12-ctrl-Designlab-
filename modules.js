@@ -154,6 +154,7 @@ import { LESSONS as motionUi } from './lessons/motion-ui.js'
 import { LESSONS as motionTypography } from './lessons/motion-typography.js'
 import { LESSONS as motionShapeLogo } from './lessons/motion-shape-logo.js'
 import { LESSONS as motionStoryboard } from './lessons/motion-storyboard.js'
+import { LESSONS as motionSound } from './lessons/motion-sound.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -289,6 +290,7 @@ export const MODULES = [
   ...motionTypography,
   ...motionShapeLogo,
   ...motionStoryboard,
+  ...motionSound,
 ]
 
 export function getModule(id) {
