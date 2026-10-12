@@ -6,6 +6,7 @@ import { useProgress } from './ProgressContext.jsx'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import GameDesignStudio from './GameDesignStudio.jsx'
+import GraphicDesignStudio from './GraphicDesignStudio.jsx'
 import LessonMentor from './LessonMentor.jsx'
 import AudioNarration from './AudioNarration.jsx'
 import PresentationMode from './PresentationMode.jsx'
@@ -184,7 +185,9 @@ export default function Module() {
               </Link>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>
-                {module.level === 'game-design' ? '🖊 Відкрити «Game Design Studio»' : '🖊 Створити ескіз у застосунку'}
+                {module.level === 'game-design' ? '🖊 Відкрити «Game Design Studio»'
+                  : module.level === 'graphic-design' ? '🖊 Відкрити «Graphic Design Studio»'
+                  : '🖊 Створити ескіз у застосунку'}
               </button>
             )}
             <button className="mentor-cta" onClick={() => setMentorOpen(true)}>
@@ -212,7 +215,11 @@ export default function Module() {
             <GameDesignStudio module={module} onClose={() => setSketchOpen(false)} />
           )}
 
-          {sketchOpen && module.level !== 'game-design' && (
+          {sketchOpen && module.level === 'graphic-design' && (
+            <GraphicDesignStudio module={module} onClose={() => setSketchOpen(false)} />
+          )}
+
+          {sketchOpen && module.level !== 'game-design' && module.level !== 'graphic-design' && (
             <SketchPad
               module={module}
               onClose={() => setSketchOpen(false)}

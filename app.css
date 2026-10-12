@@ -1392,3 +1392,33 @@ button.tool-badge--action:hover { border-color: var(--green); }
 }
 .gds-check-problems li { color: var(--coral); }
 .gds-check-problems li::before { color: var(--coral); }
+
+/* Graphic Design Studio */
+.gfx-studio { max-width: 1100px; }
+.gfx-topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.gfx-projects-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.cl-mini-btn.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.gfx-workspace { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+.gfx-canvas-col { flex: 1; min-width: 280px; }
+.gfx-canvas-wrap {
+  max-width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  overflow: hidden; box-shadow: inset 0 1px 4px rgba(0,0,0,.06); background: repeating-conic-gradient(#ececec 0% 25%, #f7f7f7 0% 50%) 50% / 16px 16px;
+}
+.gfx-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.gfx-props {
+  width: 260px; flex: none; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 14px; max-height: 640px; overflow-y: auto;
+}
+.gfx-field { display: block; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.gfx-field > *:not(:first-child) { margin-top: 4px; }
+.gfx-textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 13px; padding: 8px 10px; resize: vertical;
+}
+.gfx-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.gfx-num { flex: 1; font-size: 11.5px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+.gfx-num input, .gfx-num select { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); color: var(--ink); font-size: 13px; padding: 6px 8px; width: 100%; }
+.gfx-num input[type="range"] { padding: 0; }
+@media (max-width: 760px) {
+  .gfx-props { width: 100%; max-height: none; }
+}

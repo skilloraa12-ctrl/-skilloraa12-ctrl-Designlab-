@@ -14,6 +14,7 @@ const EMPTY_STATE = {
   palettes: [],
   savedColors: [],
   savedGradients: [],
+  graphicProjects: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -132,6 +133,28 @@ export function ProgressProvider({ children }) {
     setState((prev) => ({ ...prev, savedGradients: prev.savedGradients.filter((g) => g.id !== id) }))
   }, [])
 
+  // На відміну від palettes/savedColors (додаються в кінець, незмінні),
+  // графічні проєкти редагуються й повторно відкриваються — тому збереження
+  // за наявним id оновлює той самий запис на місці, а не додає дублікат.
+  const saveGraphicProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.graphicProjects.some((p) => p.id === id)
+      const record = { ...project, id, updatedAt: new Date().toISOString() }
+      return {
+        ...prev,
+        graphicProjects: exists
+          ? prev.graphicProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.graphicProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removeGraphicProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, graphicProjects: prev.graphicProjects.filter((p) => p.id !== id) }))
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -183,6 +206,7 @@ export function ProgressProvider({ children }) {
     palettes: state.palettes, savePalette, removePalette,
     savedColors: state.savedColors, saveColor, removeColor,
     savedGradients: state.savedGradients, saveGradient, removeGradient,
+    graphicProjects: state.graphicProjects, saveGraphicProject, removeGraphicProject,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,
