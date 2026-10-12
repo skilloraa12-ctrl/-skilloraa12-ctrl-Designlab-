@@ -1432,3 +1432,37 @@ button.tool-badge--action:hover { border-color: var(--green); }
 @media (max-width: 760px) {
   .gfx-props, .gfx-props-col { width: 100%; max-height: none; }
 }
+
+/* Branding Studio workspace */
+.branding-studio { max-width: 1200px; }
+.branding-layout { display: flex; gap: 16px; align-items: flex-start; margin-top: 12px; flex-wrap: wrap; }
+.branding-stages {
+  width: 210px; flex: none; display: flex; flex-direction: column; gap: 4px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 10px;
+}
+.branding-stage-btn {
+  text-align: left; border: none; background: transparent; color: var(--ink); font-size: 13.5px;
+  padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer;
+}
+.branding-stage-btn:hover { background: var(--bg); }
+.branding-stage-btn.active { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.branding-center {
+  flex: 1; min-width: 320px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); padding: 18px; max-height: 720px; overflow-y: auto;
+}
+.branding-side {
+  width: 240px; flex: none; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); padding: 14px;
+}
+.branding-form .gfx-field { margin-bottom: 14px; }
+.branding-competitor-row, .branding-name-card {
+  border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; margin: 10px 0; background: var(--bg);
+}
+.branding-name-card.chosen { border-color: var(--accent); border-width: 2px; }
+.branding-score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 14px; margin: 8px 0; }
+.branding-criteria-list { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+.branding-criteria-list li { margin-bottom: 4px; }
+@media (max-width: 860px) {
+  .branding-stages { width: 100%; flex-direction: row; flex-wrap: wrap; }
+  .branding-side { width: 100%; }
+}
