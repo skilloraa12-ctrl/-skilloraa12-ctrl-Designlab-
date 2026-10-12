@@ -73,6 +73,7 @@ export function createEmptyBrandProject(name) {
     typography: { logoFont: '', headingFont: '', bodyFont: '', rules: '' },
     graphicElements: { shapes: '', patterns: '', iconography: '', photoStyle: '', notes: '' },
     mediaApplications: [],
+    brandAssets: { logoImage: null },
     guidelines: { pages: {}, exportedAt: null },
     presentation: { slides: [] },
     learningProgress: {},

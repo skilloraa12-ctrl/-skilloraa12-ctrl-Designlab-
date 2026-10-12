@@ -367,6 +367,62 @@ function GraphicElementsStage({ project, onPatch }) {
   )
 }
 
+const MOCKUP_FRAMES = [
+  { id: 'card', label: 'Візитка', w: 280, h: 160 },
+  { id: 'social', label: 'Публікація для соцмереж', w: 220, h: 220 },
+  { id: 'poster', label: 'Постер', w: 170, h: 240 },
+  { id: 'banner', label: 'Рекламний банер', w: 300, h: 120 },
+  { id: 'cover', label: 'Обкладинка', w: 260, h: 150 },
+]
+
+function MockupFrame({ frame, brandName, primary, neutral, logoImage }) {
+  const bg = primary || '#3E37E0'
+  const ink = neutral || '#FFFFFF'
+  return (
+    <div className="branding-mockup-card">
+      <div className="branding-mockup-frame" style={{ width: frame.w, height: frame.h, background: bg }}>
+        {logoImage ? (
+          <img src={logoImage} alt="лого" className="branding-mockup-logo" />
+        ) : (
+          <span className="branding-mockup-fallback-logo" style={{ color: ink, borderColor: ink }}>{(brandName || 'Б')[0].toUpperCase()}</span>
+        )}
+        <span className="branding-mockup-name" style={{ color: ink }}>{brandName || 'Назва бренду'}</span>
+      </div>
+      <span className="branding-mockup-label">{frame.label}</span>
+    </div>
+  )
+}
+
+function MockupStudio({ project, onPatch }) {
+  const brandName = project.naming.candidates.find((c) => c.id === project.naming.chosenId)?.text || project.name
+  const primary = project.palette.primary[0]
+  const neutral = project.palette.neutral[0] || '#FFFFFF'
+  const logoImage = project.brandAssets.logoImage
+
+  function uploadLogo(file) {
+    const reader = new FileReader()
+    reader.onload = () => onPatch({ brandAssets: { ...project.brandAssets, logoImage: reader.result } })
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <p className="cl-section-title">Brand Mockup Studio</p>
+      <p className="cl-tab-desc">Демонстраційні макети на основі реальних даних проєкту (назва, основний і нейтральний колір). Це орієнтовна демонстрація застосування системи, не готовий до друку файл — для фінальних матеріалів використовуй «Graphic Design Studio» чи зовнішній інструмент.</p>
+      {!primary && <p className="cl-tab-desc">Додай основний колір на етапі «Палітра», щоб макети показували фірмовий колір, а не колір за замовчуванням.</p>}
+      <label className="harmony-btn" style={{ cursor: 'pointer', display: 'inline-block', marginBottom: 10 }}>
+        {logoImage ? '🔄 Замінити зображення логотипа' : '📤 Завантажити зображення логотипа (PNG)'}
+        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => e.target.files[0] && uploadLogo(e.target.files[0])} />
+      </label>
+      <div className="branding-mockup-grid">
+        {MOCKUP_FRAMES.map((f) => (
+          <MockupFrame key={f.id} frame={f} brandName={brandName} primary={primary} neutral={neutral} logoImage={logoImage} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function MediaApplicationsStage({ project, onPatch }) {
   const list = project.mediaApplications
   function add() {
@@ -380,6 +436,7 @@ function MediaApplicationsStage({ project, onPatch }) {
   }
   return (
     <div className="branding-form">
+      <MockupStudio project={project} onPatch={onPatch} />
       <p className="cl-section-title">Носії айдентики</p>
       <p className="cl-tab-desc">Застосуй свою систему щонайменше до 3 різних носіїв. Самі матеріали створюй у «Graphic Design Studio» (посилання — модуль 11 курсу), сюди запиши, що саме зроблено й де зберігається.</p>
       <button className="harmony-btn" onClick={add}>+ Новий носій</button>

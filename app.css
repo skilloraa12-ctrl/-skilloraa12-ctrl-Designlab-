@@ -1483,6 +1483,19 @@ button.tool-badge--action:hover { border-color: var(--green); }
   border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 13px;
   line-height: 1; cursor: pointer; padding: 0;
 }
+.branding-mockup-grid { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+.branding-mockup-card { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.branding-mockup-frame {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--radius-sm); box-shadow: 0 2px 8px rgba(0,0,0,.12); padding: 10px; overflow: hidden;
+}
+.branding-mockup-logo { max-width: 50%; max-height: 40%; object-fit: contain; }
+.branding-mockup-fallback-logo {
+  width: 36px; height: 36px; border: 2px solid; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-weight: 700; font-size: 16px;
+}
+.branding-mockup-name { font-weight: 600; font-size: 13px; text-align: center; }
+.branding-mockup-label { font-size: 11.5px; color: var(--muted); }
 @media (max-width: 860px) {
   .branding-stages { width: 100%; flex-direction: row; flex-wrap: wrap; }
   .branding-side { width: 100%; }
