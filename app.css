@@ -1496,6 +1496,34 @@ button.tool-badge--action:hover { border-color: var(--green); }
 }
 .branding-mockup-name { font-weight: 600; font-size: 13px; text-align: center; }
 .branding-mockup-label { font-size: 11.5px; color: var(--muted); }
+
+/* Motion Design Studio — канвас + таймлайн + keyframes (motionEngine.js) */
+.motion-anim-stage { display: flex; flex-direction: column; gap: 12px; }
+.motion-anim-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.motion-anim-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.motion-canvas-wrap { background: #0E0E11; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; flex: none; }
+.motion-canvas-wrap canvas { display: block; touch-action: none; cursor: default; }
+.motion-props-panel { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
+.motion-prop-row { display: flex; flex-direction: column; gap: 4px; }
+.motion-kf-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.motion-kf-chip {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted);
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 6px 2px 8px;
+}
+.motion-kf-chip button { border: none; background: none; color: var(--coral); cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px; }
+.motion-timeline { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; }
+.motion-timeline-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.motion-time-label { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.motion-timeline-ruler { position: relative; height: 18px; background: var(--surface-1); border-radius: 4px; cursor: pointer; margin-bottom: 8px; }
+.motion-playhead { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--accent); pointer-events: none; }
+.motion-playhead::before { content: ''; position: absolute; top: -3px; left: -4px; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; }
+.motion-timeline-tracks { display: flex; flex-direction: column; gap: 4px; }
+.motion-track { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+.motion-track:hover { background: var(--surface-1); }
+.motion-track.active { border-color: var(--accent); background: var(--surface-1); }
+.motion-track-label { font-size: 12px; min-width: 90px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.motion-track-lane { position: relative; flex: 1; height: 14px; background: var(--surface-1); border-radius: 3px; }
+.motion-kf-dot { position: absolute; top: 2px; width: 10px; height: 10px; background: var(--accent); border-radius: 2px; transform: translateX(-50%) rotate(45deg); }
 @media (max-width: 860px) {
   .branding-stages { width: 100%; flex-direction: row; flex-wrap: wrap; }
   .branding-side { width: 100%; }

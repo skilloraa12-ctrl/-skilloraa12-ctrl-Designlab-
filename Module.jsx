@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
 import { getModule, MODULES } from './modules.js'
 import { getSubcategory } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
+import { createEmptyMotionProject } from './motionProject.js'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import GameDesignStudio from './GameDesignStudio.jsx'
@@ -20,10 +21,29 @@ import { getPracticeTools } from './practiceTools.js'
 // Design Studio — так само, як прокоментовано в subcategories.js.
 const GAME_LAB_SUBCATS = ['hud-ingame-ui', 'game-menus-navigation']
 
+// Кожен урок Motion Design веде в конкретний етап реального Motion
+// Design Studio (канва + таймлайн + keyframes), а не в загальний,
+// однаковий для всіх завдань Motion Lab — підкатегорія уроку визначає,
+// який етап студії відкриється.
+const MOTION_SUBCAT_STAGE = {
+  'motion-basics': 'idea',
+  'motion-principles': 'animation',
+  'motion-timing-easing': 'animation',
+  'motion-ui': 'animation',
+  'motion-typography': 'animation',
+  'motion-shape-logo': 'animation',
+  'motion-storyboard': 'storyboard',
+  'motion-sound': 'sound',
+  'motion-tools-export': 'export',
+  'motion-process': 'idea',
+  'motion-portfolio': 'presentation',
+}
+
 export default function Module() {
   const { id } = useParams()
   const module = getModule(id)
-  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem } = useProgress()
+  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject } = useProgress()
+  const navigate = useNavigate()
   const [sketchOpen, setSketchOpen] = useState(false)
   const [presentationOpen, setPresentationOpen] = useState(false)
   const [mentorOpen, setMentorOpen] = useState(false)
@@ -33,12 +53,11 @@ export default function Module() {
   const done = !!completed[module.id]
   const testDone = !!quizPassed[module.id]
   const usesGameLab = module.level === 'game-design' && GAME_LAB_SUBCATS.includes(module.subcategory)
-  // Motion Design не має окремого вбудованого Studio-оверлея (як
-  // Graphic/Game Design) — для всього напрямку практика ведеться в
-  // уже готовому Motion Lab (/labs/motion: переходи/keyframes/easing/
-  // stagger/scroll reveal/лоадери), так само, як 2 підкатегорії Game
-  // Design спираються на Game Design Lab замість Studio.
-  const usesMotionLab = module.level === 'motion-design'
+  // Motion Design відкриває справжню Motion Studio (канва+таймлайн+
+  // keyframes), так само, як Graphic/Branding відкривають Graphic
+  // Design Studio — замість посилання на спільний, однаковий для всіх
+  // уроків Motion Lab.
+  const usesMotionStudio = module.level === 'motion-design'
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -189,10 +208,18 @@ export default function Module() {
               <Link to="/labs/game" className="complete-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
                 🎯 Відкрити «Game Design Lab»
               </Link>
-            ) : usesMotionLab ? (
-              <Link to="/labs/motion" className="complete-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
-                🎬 Відкрити «Motion Lab»
-              </Link>
+            ) : usesMotionStudio ? (
+              <button
+                className="complete-btn"
+                onClick={() => {
+                  const stage = MOTION_SUBCAT_STAGE[module.subcategory] || 'animation'
+                  const existing = motionProjects[0]
+                  const id = existing ? existing.id : saveMotionProject(createEmptyMotionProject())
+                  navigate(`/motion-studio/${id}`, { state: { stage } })
+                }}
+              >
+                🎬 Відкрити «Motion Design Studio»
+              </button>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>
                 {module.level === 'game-design' ? '🖊 Відкрити «Game Design Studio»'

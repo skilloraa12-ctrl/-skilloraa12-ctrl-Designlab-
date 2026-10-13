@@ -5,6 +5,7 @@ import { getSubcategoriesByLevel } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
 import NotFound from './NotFound.jsx'
 import BrandingHome from './BrandingHome.jsx'
+import MotionHome from './MotionHome.jsx'
 
 export default function AcademyDirection() {
   const { direction: directionId } = useParams()
@@ -46,6 +47,17 @@ export default function AcademyDirection() {
   if (direction.id === 'branding') {
     return (
       <BrandingHome
+        subcats={subcats}
+        lessonGrid={lessonGrid}
+        doneInDirection={doneInDirection}
+        totalInDirection={allModsInDirection.length}
+      />
+    )
+  }
+
+  if (direction.id === 'motion-design') {
+    return (
+      <MotionHome
         subcats={subcats}
         lessonGrid={lessonGrid}
         doneInDirection={doneInDirection}

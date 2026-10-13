@@ -16,6 +16,7 @@ const EMPTY_STATE = {
   savedGradients: [],
   graphicProjects: [],
   brandProjects: [],
+  motionProjects: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -194,6 +195,44 @@ export function ProgressProvider({ children }) {
     return newId
   }, [])
 
+  // Єдина модель моушн-проєкту (Motion Design Studio) — та сама логіка
+  // злиття за полями, що й у Branding Studio: кожен етап майстерні
+  // (Ідея, Розкадровка, Анімація, Ефекти, Звук, Експорт, Презентація)
+  // пише у той самий запис, тож тривалість сцени, задана на етапі
+  // Анімації, одразу видно в підсумку Презентації.
+  const saveMotionProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.motionProjects.find((p) => p.id === id)
+      const now = new Date().toISOString()
+      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
+      return {
+        ...prev,
+        motionProjects: exists
+          ? prev.motionProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.motionProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removeMotionProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, motionProjects: prev.motionProjects.filter((p) => p.id !== id) }))
+  }, [])
+
+  const duplicateMotionProject = useCallback((id) => {
+    let newId = null
+    setState((prev) => {
+      const src = prev.motionProjects.find((p) => p.id === id)
+      if (!src) return prev
+      newId = crypto.randomUUID()
+      const now = new Date().toISOString()
+      const copy = { ...src, id: newId, name: src.name + ' (копія)', createdAt: now, updatedAt: now }
+      return { ...prev, motionProjects: [copy, ...prev.motionProjects] }
+    })
+    return newId
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -247,6 +286,7 @@ export function ProgressProvider({ children }) {
     savedGradients: state.savedGradients, saveGradient, removeGradient,
     graphicProjects: state.graphicProjects, saveGraphicProject, removeGraphicProject,
     brandProjects: state.brandProjects, saveBrandProject, removeBrandProject, duplicateBrandProject,
+    motionProjects: state.motionProjects, saveMotionProject, removeMotionProject, duplicateMotionProject,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,
