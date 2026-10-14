@@ -64,3 +64,21 @@ export function createEmptyGameArtProject(name) {
 export function makeEmptyAsset(kind) {
   return makeAsset(kind)
 }
+
+// Яка робоча область Game Art Studio відкривається для підкатегорії —
+// спільне для Module.jsx (кнопка «Відкрити Game Art Studio») і самої
+// студії (ліве дерево треків/уроків), щоб дві копії мапи не розійшлися.
+// Поповнюється разом із кожним новим блоком курсу (A, B, C, ...).
+export const GAME_ART_SUBCAT_SECTION = {
+  'game-art-basics': 'concepts2d',
+  'game-art-2d-digital': 'concepts2d',
+  'game-art-pixel-art': 'concepts2d',
+  'game-art-concept-character': 'concepts2d',
+  'game-art-3d-modeling': 'models3d',
+  'game-art-uv-texturing': 'textures',
+  'game-art-environment': 'models3d',
+  'game-art-animation-vfx': 'models3d',
+  'game-art-pipeline': 'requirements',
+  'game-art-engines': 'requirements',
+  'game-art-portfolio': 'review',
+}

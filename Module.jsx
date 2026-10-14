@@ -5,7 +5,7 @@ import { getSubcategory } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
 import { createEmptyMotionProject } from './motionProject.js'
 import { createEmptyUxProject } from './uxProject.js'
-import { createEmptyGameArtProject } from './gameArtProject.js'
+import { createEmptyGameArtProject, GAME_ART_SUBCAT_SECTION } from './gameArtProject.js'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import GameDesignStudio from './GameDesignStudio.jsx'
@@ -58,23 +58,6 @@ const UX_SUBCAT_STAGE = {
   'ux-testing': 'testing',
   'ux-iteration': 'audit',
   'ux-case-portfolio': 'presentation',
-}
-
-// Game Art Academy: підкатегорія визначає, яка робоча область Game Art
-// Studio відкриється (асети за типом, рев'ю чи версії) — поповнюється
-// разом із кожним новим блоком курсу (A, B, C, ...).
-const GAME_ART_SUBCAT_SECTION = {
-  'game-art-basics': 'concepts2d',
-  'game-art-2d-digital': 'concepts2d',
-  'game-art-pixel-art': 'concepts2d',
-  'game-art-concept-character': 'concepts2d',
-  'game-art-3d-modeling': 'models3d',
-  'game-art-uv-texturing': 'textures',
-  'game-art-environment': 'models3d',
-  'game-art-animation-vfx': 'models3d',
-  'game-art-pipeline': 'requirements',
-  'game-art-engines': 'requirements',
-  'game-art-portfolio': 'review',
 }
 
 export default function Module() {
@@ -283,7 +266,7 @@ export default function Module() {
                   const section = GAME_ART_SUBCAT_SECTION[module.subcategory] || 'concepts2d'
                   const existing = gameArtProjects[0]
                   const id = existing ? existing.id : saveGameArtProject(createEmptyGameArtProject('Новий проєкт Game Art'))
-                  navigate(`/game-art-studio/${id}`, { state: { section } })
+                  navigate(`/game-art-studio/${id}`, { state: { section, subcategory: module.subcategory } })
                 }}
               >
                 🎨 Відкрити «Game Art Studio»

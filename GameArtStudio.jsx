@@ -1,24 +1,33 @@
-import { useEffect, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useLocation, Link } from 'react-router-dom'
 import { useProgress } from './ProgressContext.jsx'
 import { useLabToast } from './labs/useLabToast.js'
 import LabToast from './labs/LabToast.jsx'
 import NotFound from './NotFound.jsx'
-import { ASSET_KINDS, RUBRIC_SETS, SELF_SCORE_OPTIONS, makeEmptyAsset } from './gameArtProject.js'
+import { ASSET_KINDS, RUBRIC_SETS, SELF_SCORE_OPTIONS, makeEmptyAsset, GAME_ART_SUBCAT_SECTION } from './gameArtProject.js'
 import PixelCanvasEditor from './labs/PixelCanvasEditor.jsx'
 import { emptyGrid, pixelsToPngDataUrl } from './labs/pixelArtEngine.js'
+import { MODULES } from './modules.js'
+import { getSubcategoriesByLevel } from './subcategories.js'
 
 // Game Art Studio — робочий простір за зразком UX/Motion/Branding Studio:
 // один спільний проєкт (GameArtProject за :id), усі панелі читають і
 // пишуть той самий запис через saveGameArtProject({ id, ...patch }).
 //
-// На відміну від UX/Motion Studio, тут немає лінійного процесу «етап за
-// етапом» — ліва навігація це категорії роботи (асети/рев'ю/версії), і
-// студія свідомо НЕ дублює Pixel Art Editor чи 3D Lab усередині себе:
-// вона посилається на вже реальні, окремі інструменти (/labs/pixel-art,
-// /labs/3d) і зберігає результат (зображення, нотатку, JSON-сцену) як
-// запис асета — так само, як Motion Studio посилається на Graphic Design
-// Studio для складної векторної роботи, замість дублювання.
+// Ліва панель — реальне дерево всіх 11 треків курсу (subcategories.js) з
+// реальним прогресом (completed[]) і списком уроків активного треку, а не
+// статичний список категорій роботи. Центр — перемикач реальних розділів
+// студії (асети/рев'ю/версії) + рядок-чекліст уроків активного треку.
+// Права панель — підказка для розділу + самооцінка проєкту (справжні дані
+// з рубрики рев'ю, без вигаданого ментора чи автооцінки). Знизу — реальна
+// історія версій з порівнянням «до/після» на основі збережених знімків.
+//
+// Чесна межа: студія НЕ дублює Pixel Art Editor чи 3D Lab усередині себе
+// як окремий рушій — Pixel Art Editor вбудований напряму (спільний
+// labs/PixelCanvasEditor.jsx з /labs/pixel-art), а 3D Lab лишається
+// окремим реальним інструментом, на який студія посилається.
+
+const TRACKS = getSubcategoriesByLevel('game-art')
 
 const SECTIONS = [
   ...ASSET_KINDS.map((k) => ({ id: k.key, emoji: k.emoji, label: k.label })),
@@ -32,7 +41,37 @@ const SECTION_HELP = {
   textures: { tip: 'Опиши текстуру й PBR-карти (Albedo/Normal/Roughness/Metallic), які готуєш — реальний файл текстури зберігається в зовнішній програмі (Substance Painter, GIMP, Krita), тут лише облік.', criteria: ['Є назва текстури', 'Вказано, для якого асета вона призначена'] },
   requirements: { tip: 'Занеси технічне завдання проєкту як чекліст: формат файлів, ліміт полігонів, розмір текстур, стиль.', criteria: ['Є щонайменше 3 пункти вимог'] },
   review: { tip: 'Обери рубрику під тип роботи, чесно постав собі самооцінку по кожному критерію (чи це справді «відмінно», чи ще «потребує роботи») і залиш коментар із поясненням.', criteria: ['Обрано рубрику', 'Є самооцінка щонайменше по половині критеріїв'] },
-  versions: { tip: '«Зберегти версію» робить реальний знімок поточного стану проєкту з міткою часу — на відміну від вигаданих v1.0/v2.0, тут з’являються лише версії, які ти сам створив.', criteria: ['Збережено хоча б одну версію перед здачею роботи'] },
+  versions: { tip: '«Зберегти версію» робить реальний знімок поточного стану проєкту з міткою часу — на відміну від вигаданих v1.0/v2.0, тут з’являються лише версії, які ти сам створив. «Порівняти з поточним» показує реальну різницю у кількості записів і картинках, без вигаданих балів.', criteria: ['Збережено хоча б одну версію перед здачею роботи'] },
+}
+
+function scorePct(score) {
+  if (score === 'Відмінно') return 100
+  if (score === 'Непогано') return 60
+  if (score === 'Потребує роботи') return 25
+  return 0
+}
+
+function projectStats(p) {
+  return {
+    concepts2d: p.assets.concepts2d.length,
+    models3d: p.assets.models3d.length,
+    textures: p.assets.textures.length,
+    requirementsDone: p.assets.requirements.filter((r) => r.checked).length,
+    requirementsTotal: p.assets.requirements.length,
+    scored: p.review.items.filter((it) => it.selfScore).length,
+    scoredTotal: p.review.items.length,
+  }
+}
+
+function firstConceptImage(p) {
+  return p.assets.concepts2d.find((a) => a.imageDataUrl)?.imageDataUrl || null
+}
+
+function deriveStatus(project) {
+  if (project.versions.length > 0) return '🕓 Версію збережено'
+  const hasAnyAsset = Object.values(project.assets).some((arr) => arr.length > 0)
+  if (hasAnyAsset) return '✏️ У роботі'
+  return '🆕 Новий проєкт'
 }
 
 function TextField({ label, value, onCommit, textarea, placeholder }) {
@@ -189,7 +228,7 @@ function ReviewSection({ project, onPatch }) {
   return (
     <div className="branding-form">
       <p className="cl-section-title">Game Art Review Workspace</p>
-      <p className="cl-tab-desc"><strong>Чесна межа:</strong> це самооцінка й місце для нотаток реального ментора/фідбеку — студія не оцінює художню якість автоматично.</p>
+      <p className="cl-tab-desc"><strong>Чесна межа:</strong> це самооцінка й місце для нотаток реального ментора/фідбеку — студія не оцінює художню якість автоматично і не вигадує персону ментора чи бал.</p>
 
       <p className="cl-section-title" style={{ marginTop: 12 }}>Рубрика</p>
       <div className="cl-btn-row">
@@ -222,8 +261,39 @@ function ReviewSection({ project, onPatch }) {
   )
 }
 
+function VersionCompare({ snapshot, current }) {
+  const before = projectStats(snapshot)
+  const after = projectStats(current)
+  const beforeImg = firstConceptImage(snapshot)
+  const afterImg = firstConceptImage(current)
+  return (
+    <div className="gfx-compare-panel">
+      <div className="gfx-compare-col">
+        <p className="gfx-compare-title">до</p>
+        <div className="gfx-compare-stat"><span>2D-концепти</span><b>{before.concepts2d}</b></div>
+        <div className="gfx-compare-stat"><span>3D-моделі</span><b>{before.models3d}</b></div>
+        <div className="gfx-compare-stat"><span>Текстури</span><b>{before.textures}</b></div>
+        <div className="gfx-compare-stat"><span>Вимоги виконано</span><b>{before.requirementsDone}/{before.requirementsTotal}</b></div>
+        <div className="gfx-compare-stat"><span>Критеріїв оцінено</span><b>{before.scored}/{before.scoredTotal}</b></div>
+        {beforeImg && <img src={beforeImg} alt="до" className="gfx-concept-preview" />}
+      </div>
+      <div className="gfx-compare-arrow">→</div>
+      <div className="gfx-compare-col">
+        <p className="gfx-compare-title">зараз</p>
+        <div className="gfx-compare-stat"><span>2D-концепти</span><b>{after.concepts2d}</b></div>
+        <div className="gfx-compare-stat"><span>3D-моделі</span><b>{after.models3d}</b></div>
+        <div className="gfx-compare-stat"><span>Текстури</span><b>{after.textures}</b></div>
+        <div className="gfx-compare-stat"><span>Вимоги виконано</span><b>{after.requirementsDone}/{after.requirementsTotal}</b></div>
+        <div className="gfx-compare-stat"><span>Критеріїв оцінено</span><b>{after.scored}/{after.scoredTotal}</b></div>
+        {afterImg && <img src={afterImg} alt="зараз" className="gfx-concept-preview" />}
+      </div>
+    </div>
+  )
+}
+
 function VersionsSection({ project, onPatch, toastApi }) {
   const [label, setLabel] = useState('')
+  const [compareId, setCompareId] = useState(null)
   function saveVersion() {
     const { versions, ...snapshot } = project
     const entry = { id: crypto.randomUUID(), label: label.trim() || `Версія ${project.versions.length + 1}`, savedAt: new Date().toISOString(), snapshot }
@@ -233,11 +303,13 @@ function VersionsSection({ project, onPatch, toastApi }) {
   }
   function removeVersion(id) {
     onPatch({ versions: project.versions.filter((v) => v.id !== id) })
+    if (compareId === id) setCompareId(null)
   }
+  const compareVersion = project.versions.find((v) => v.id === compareId)
   return (
     <div className="branding-form">
       <p className="cl-section-title">Версії проєкту</p>
-      <p className="cl-tab-desc">Реальні знімки стану проєкту на момент збереження — список порожній, доки ти сам не натиснеш «Зберегти версію».</p>
+      <p className="cl-tab-desc">Реальні знімки стану проєкту на момент збереження — список порожній, доки ти сам не натиснеш «Зберегти версію». «Порівняти з поточним» показує справжню різницю в кількості записів і картинках, без вигаданих балів.</p>
       <div className="gfx-row">
         <input className="cl-text-input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Назва версії (необов’язково)" />
         <button className="harmony-btn" onClick={saveVersion}>📌 Зберегти версію</button>
@@ -245,9 +317,15 @@ function VersionsSection({ project, onPatch, toastApi }) {
       {project.versions.length === 0 && <p className="cl-tab-desc" style={{ marginTop: 12 }}>Ще немає жодної збереженої версії.</p>}
       <div className="ux-list-editor" style={{ marginTop: 12 }}>
         {project.versions.map((v) => (
-          <div key={v.id} className="ux-list-row">
-            <span className="motion-track-label" style={{ flex: 1, minWidth: 0 }}>{v.label} — {new Date(v.savedAt).toLocaleString('uk-UA')}</span>
-            <button type="button" className="cl-mini-btn" onClick={() => removeVersion(v.id)}>×</button>
+          <div key={v.id}>
+            <div className="ux-list-row">
+              <span className="motion-track-label" style={{ flex: 1, minWidth: 0 }}>{v.label} — {new Date(v.savedAt).toLocaleString('uk-UA')}</span>
+              <button type="button" className="cl-mini-btn" onClick={() => setCompareId(compareId === v.id ? null : v.id)}>
+                {compareId === v.id ? '✕ Сховати' : '📊 Порівняти'}
+              </button>
+              <button type="button" className="cl-mini-btn" onClick={() => removeVersion(v.id)}>×</button>
+            </div>
+            {compareId === v.id && <VersionCompare snapshot={v.snapshot} current={project} />}
           </div>
         ))}
       </div>
@@ -258,40 +336,101 @@ function VersionsSection({ project, onPatch, toastApi }) {
 export default function GameArtStudio() {
   const { projectId } = useParams()
   const location = useLocation()
-  const { gameArtProjects, saveGameArtProject } = useProgress()
+  const { gameArtProjects, saveGameArtProject, completed, xp, level } = useProgress()
   const toastApi = useLabToast()
   const project = gameArtProjects.find((p) => p.id === projectId)
   const [section, setSection] = useState(location.state?.section || 'concepts2d')
+  const [activeTrackId, setActiveTrackId] = useState(() => {
+    if (location.state?.subcategory) return location.state.subcategory
+    const wanted = location.state?.section || 'concepts2d'
+    return TRACKS.find((t) => GAME_ART_SUBCAT_SECTION[t.id] === wanted)?.id || TRACKS[0]?.id
+  })
+
+  const trackLessons = useMemo(
+    () => MODULES.filter((m) => m.subcategory === activeTrackId).sort((a, b) => a.id - b.id),
+    [activeTrackId]
+  )
+  const activeTrack = TRACKS.find((t) => t.id === activeTrackId)
 
   if (!project) return <NotFound />
 
   function onPatch(patch) {
     saveGameArtProject({ id: project.id, ...patch })
   }
+  function selectTrack(trackId) {
+    setActiveTrackId(trackId)
+    setSection(GAME_ART_SUBCAT_SECTION[trackId] || 'concepts2d')
+  }
 
   const help = SECTION_HELP[section]
 
   return (
-    <div className="branding-studio">
+    <div className="branding-studio gfx-studio-wide">
       <div className="dict-breadcrumb">
-        <Link to="/academy/game-art">Game Art Academy</Link> <span>→</span> <span>{project.name}</span>
+        <Link to="/academy/game-art">Game Art Academy</Link> <span>→</span>
+        {activeTrack && <><span>{activeTrack.emoji} {activeTrack.title}</span> <span>→</span></>}
+        <span>{project.name}</span>
       </div>
       <div className="gfx-topbar motion-topbar-sticky">
         <input className="cl-text-input" style={{ flex: 1, minWidth: 160 }} defaultValue={project.name} onBlur={(e) => onPatch({ name: e.target.value || 'Новий проєкт Game Art' })} placeholder="Назва проєкту" />
+        <span className="gfx-status-pill">{deriveStatus(project)}</span>
+        <span className="gfx-xp-pill" title="Загальний прогрес на платформі (усі напрями)">Рівень {level} · {xp} XP</span>
         <button className="harmony-btn" onClick={() => { saveGameArtProject(project); toastApi.show('✓ Збережено') }}>💾 Зберегти</button>
         <span className="motion-autosave-note">Кожна зміна зберігається автоматично — ця кнопка лише підтверджує збереження назви проєкту.</span>
       </div>
 
       <div className="branding-layout">
-        <div className="branding-stages">
-          {SECTIONS.map((s) => (
-            <button key={s.id} className={'branding-stage-btn' + (section === s.id ? ' active' : '')} onClick={() => setSection(s.id)}>
-              {s.emoji} {s.label}
-            </button>
-          ))}
+        <div className="gfx-track-panel">
+          <p className="gfx-track-panel-title">Програма курсу · {TRACKS.length} треків</p>
+          <div className="gfx-track-list">
+            {TRACKS.map((t) => {
+              const lessons = MODULES.filter((m) => m.subcategory === t.id)
+              const doneCount = lessons.filter((m) => completed[m.id]).length
+              const isActive = t.id === activeTrackId
+              return (
+                <div key={t.id} className="gfx-track-group">
+                  <button type="button" className={'gfx-track-row' + (isActive ? ' active' : '')} onClick={() => selectTrack(t.id)}>
+                    <span className="gfx-track-emoji">{t.emoji}</span>
+                    <span className="gfx-track-info">
+                      <span className="gfx-track-name">{t.title}</span>
+                      <span className="gfx-track-progress">{doneCount}/{lessons.length} уроків</span>
+                    </span>
+                  </button>
+                  {isActive && (
+                    <div className="gfx-lesson-list">
+                      {lessons.map((m) => (
+                        <Link key={m.id} to={`/module/${m.id}`} className={'gfx-lesson-row' + (completed[m.id] ? ' done' : '')}>
+                          <span className="gfx-lesson-dot">{completed[m.id] ? '✓' : '○'}</span>
+                          <span className="gfx-lesson-title">{m.title}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         <div className="branding-center">
+          <div className="gfx-view-tabs">
+            {SECTIONS.map((s) => (
+              <button key={s.id} className={'gfx-view-tab' + (section === s.id ? ' active' : '')} onClick={() => setSection(s.id)}>
+                {s.emoji} {s.label}
+              </button>
+            ))}
+          </div>
+
+          {trackLessons.length > 0 && (
+            <div className="gfx-stage-row">
+              {trackLessons.map((m) => (
+                <Link key={m.id} to={`/module/${m.id}`} className={'gfx-stage-chip' + (completed[m.id] ? ' done' : '')} title={m.title}>
+                  {completed[m.id] ? '✓' : '○'} {m.title}
+                </Link>
+              ))}
+            </div>
+          )}
+
           {section === 'concepts2d' && <AssetSection kind="concepts2d" label="2D-концепти" labLink={{ url: '/labs/pixel-art', label: 'Pixel Art Editor' }} project={project} onPatch={onPatch} toastApi={toastApi} />}
           {section === 'models3d' && <AssetSection kind="models3d" label="3D-моделі" labLink={{ url: '/labs/3d', label: '3D Lab' }} project={project} onPatch={onPatch} />}
           {section === 'textures' && <AssetSection kind="textures" label="PBR-текстури" project={project} onPatch={onPatch} />}
@@ -311,6 +450,21 @@ export default function GameArtStudio() {
               </ul>
             </>
           )}
+
+          <div className="gfx-review-mini">
+            <p className="cl-section-title">Самооцінка проєкту</p>
+            {project.review.items.length === 0 && <p className="cl-tab-desc">Немає критеріїв — обери рубрику на вкладці «Рев’ю».</p>}
+            {project.review.items.map((it) => (
+              <div key={it.id} className="gfx-score-row">
+                <span className="gfx-score-label">{it.criterion}</span>
+                <div className="gfx-score-bar"><div className="gfx-score-fill" style={{ width: scorePct(it.selfScore) + '%' }} /></div>
+              </div>
+            ))}
+            <button className="cl-mini-btn" style={{ marginTop: 10 }} onClick={() => setSection('review')}>Повне рев’ю →</button>
+            {project.review.comments.length > 0 && (
+              <p className="cl-tab-desc" style={{ marginTop: 10 }}>💬 {project.review.comments.length} коментар(ів) — останній: «{project.review.comments[project.review.comments.length - 1].text || '(порожній)'}»</p>
+            )}
+          </div>
         </div>
       </div>
       <LabToast message={toastApi.toast} />

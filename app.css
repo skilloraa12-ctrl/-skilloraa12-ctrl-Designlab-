@@ -1584,8 +1584,83 @@ button.tool-badge--action:hover { border-color: var(--green); }
 /* ---------- Game Art Studio ---------- */
 .gfx-link { color: var(--accent); font-weight: 600; }
 .gfx-concept-preview { max-width: 100%; max-height: 240px; border-radius: var(--radius-sm); border: 1px solid var(--line); margin-top: 10px; display: block; }
+.gfx-studio-wide { max-width: 1440px; }
+
+.gfx-status-pill, .gfx-xp-pill {
+  font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--muted); white-space: nowrap;
+}
+.gfx-xp-pill { color: var(--accent); font-weight: 600; border-color: var(--accent); }
+
+/* Left: real track tree (11 Game Art subcategories + their real lessons) */
+.gfx-track-panel {
+  width: 270px; flex: none; display: flex; flex-direction: column; gap: 8px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 12px; max-height: 760px; overflow-y: auto;
+}
+.gfx-track-panel-title { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 2px; }
+.gfx-track-list { display: flex; flex-direction: column; gap: 2px; }
+.gfx-track-group { border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 2px; }
+.gfx-track-group:last-child { border-bottom: none; }
+.gfx-track-row {
+  width: 100%; display: flex; align-items: center; gap: 8px; text-align: left; border: none;
+  background: transparent; color: var(--ink); padding: 8px 8px; border-radius: var(--radius-sm); cursor: pointer;
+}
+.gfx-track-row:hover { background: var(--bg); }
+.gfx-track-row.active { background: var(--accent); color: var(--accent-ink); }
+.gfx-track-emoji { font-size: 16px; flex: none; }
+.gfx-track-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.gfx-track-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gfx-track-progress { font-size: 11px; opacity: .75; }
+.gfx-lesson-list { display: flex; flex-direction: column; gap: 1px; margin: 2px 0 4px 26px; }
+.gfx-lesson-row {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); text-decoration: none;
+  padding: 4px 6px; border-radius: var(--radius-sm);
+}
+.gfx-lesson-row:hover { background: var(--bg); color: var(--ink); }
+.gfx-lesson-row.done { color: var(--ink); }
+.gfx-lesson-dot { flex: none; width: 14px; text-align: center; }
+.gfx-lesson-row.done .gfx-lesson-dot { color: #2bb673; }
+.gfx-lesson-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Center: real-section tabs + real per-lesson stage checklist for the active track */
+.gfx-view-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.gfx-view-tab {
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13px;
+  padding: 7px 12px; border-radius: var(--radius-sm); cursor: pointer;
+}
+.gfx-view-tab:hover { border-color: var(--accent); }
+.gfx-view-tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+
+.gfx-stage-row {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 14px;
+  border-bottom: 1px dashed var(--line);
+}
+.gfx-stage-chip {
+  flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; white-space: nowrap;
+  color: var(--muted); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px;
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+}
+.gfx-stage-chip:hover { border-color: var(--accent); color: var(--ink); }
+.gfx-stage-chip.done { color: #2bb673; border-color: #2bb673; }
+
+/* Right: self-assessment mini-summary (real rubric data, no fabricated mentor/score) */
+.gfx-review-mini { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.gfx-score-row { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
+.gfx-score-label { font-size: 12px; color: var(--muted); }
+.gfx-score-bar { height: 6px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+.gfx-score-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width .2s; }
+
+/* Bottom: real before/after version compare (counts + saved images, no invented score) */
+.gfx-compare-panel { display: flex; align-items: stretch; gap: 10px; margin: 8px 0 14px; flex-wrap: wrap; }
+.gfx-compare-col { flex: 1; min-width: 200px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); padding: 10px; }
+.gfx-compare-title { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 6px; }
+.gfx-compare-stat { display: flex; justify-content: space-between; font-size: 12.5px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.gfx-compare-stat:last-of-type { border-bottom: none; }
+.gfx-compare-arrow { flex: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 18px; align-self: center; }
 
 @media (max-width: 860px) {
   .branding-stages { width: 100%; flex-direction: row; flex-wrap: wrap; }
   .branding-side { width: 100%; }
+  .gfx-track-panel { width: 100%; max-height: 320px; }
 }
