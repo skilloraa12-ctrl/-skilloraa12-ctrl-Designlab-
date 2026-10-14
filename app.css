@@ -1594,12 +1594,32 @@ button.tool-badge--action:hover { border-color: var(--green); }
   background: #ffffff; display: flex; align-items: center; justify-content: center;
 }
 .fpc-canvas { width: 100%; height: auto; display: block; touch-action: none; cursor: crosshair; }
+/* Повноекранний режим — як у звичайних графічних редакторах (Paint,
+   Krita): вузька прокручувана панель інструментів зліва, а полотно займає
+   всю решту екрану на всю висоту. Раніше панель лежала згори і на малих
+   вікнах займала аж половину висоти, стискаючи полотно до маленького
+   квадрата (`object-fit:contain` + `max-height:80vh` від *залишку* висоти
+   після високого тулбару) — тепер тулбар не забирає висоту полотна. */
 .fpc-fullscreen {
-  position: fixed; inset: 0; z-index: 2000; background: var(--bg); padding: 16px;
-  display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
+  position: fixed; inset: 0; z-index: 2000; background: var(--bg);
+  display: flex; flex-direction: row; overflow: hidden;
 }
-.fpc-fullscreen .fpc-canvas-wrap { flex: 1; min-height: 0; }
-.fpc-fullscreen .fpc-canvas { width: auto; height: 100%; max-width: 100%; max-height: 80vh; object-fit: contain; }
+.fpc-fullscreen .fpc-toolbar {
+  width: 300px; flex: none; height: 100%; overflow-y: auto;
+  padding: 14px; box-sizing: border-box; border-right: 1px solid var(--line);
+}
+.fpc-fullscreen .fpc-canvas-wrap {
+  flex: 1; min-width: 0; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; box-sizing: border-box; border: none; border-radius: 0;
+}
+.fpc-fullscreen .fpc-canvas { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
+
+@media (max-width: 860px) {
+  .fpc-fullscreen { flex-direction: column; }
+  .fpc-fullscreen .fpc-toolbar { width: 100%; height: auto; max-height: 45vh; border-right: none; border-bottom: 1px solid var(--line); }
+  .fpc-fullscreen .fpc-canvas-wrap { height: auto; flex: 1; min-height: 0; }
+}
 
 .fpc-color-row { display: flex; align-items: center; gap: 14px; margin-top: 8px; flex-wrap: wrap; }
 .fpc-wheel-row { position: relative; width: 140px; height: 140px; flex: none; }
