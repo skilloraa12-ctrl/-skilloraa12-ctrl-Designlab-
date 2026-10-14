@@ -5,6 +5,8 @@ import { useLabToast } from './labs/useLabToast.js'
 import LabToast from './labs/LabToast.jsx'
 import NotFound from './NotFound.jsx'
 import { ASSET_KINDS, RUBRIC_SETS, SELF_SCORE_OPTIONS, makeEmptyAsset } from './gameArtProject.js'
+import PixelCanvasEditor from './labs/PixelCanvasEditor.jsx'
+import { emptyGrid, pixelsToPngDataUrl } from './labs/pixelArtEngine.js'
 
 // Game Art Studio — робочий простір за зразком UX/Motion/Branding Studio:
 // один спільний проєкт (GameArtProject за :id), усі панелі читають і
@@ -25,7 +27,7 @@ const SECTIONS = [
 ]
 
 const SECTION_HELP = {
-  concepts2d: { tip: 'Малюй у Pixel Art Editor, збережи PNG на свій пристрій, тоді завантаж його сюди як концепт — або додай нотатку без зображення, якщо працюєш у зовнішній програмі.', criteria: ['Є назва концепту', 'Є зображення або чітка нотатка про задум'] },
+  concepts2d: { tip: 'Малюй прямо тут — вбудований Pixel Art Editor нижче зберігає малюнок у самому записі проєкту. Коли готово, натисни «Зберегти як зображення концепту». Малював у зовнішній програмі (Krita, Photoshop) — завантаж готовий файл кнопкою «Завантажити зображення».', criteria: ['Є назва концепту', 'Є зображення (намальоване тут або завантажене) або чітка нотатка про задум'] },
   models3d: { tip: 'Побудуй модель у 3D Lab, на вкладці «Експорт» скопіюй JSON сцени і встав його сюди — це реальний знімок геометрії/матеріалів, а не вигадана назва файлу.', criteria: ['Є назва моделі', 'Є JSON сцени або нотатка про стан роботи в Blender'] },
   textures: { tip: 'Опиши текстуру й PBR-карти (Albedo/Normal/Roughness/Metallic), які готуєш — реальний файл текстури зберігається в зовнішній програмі (Substance Painter, GIMP, Krita), тут лише облік.', criteria: ['Є назва текстури', 'Вказано, для якого асета вона призначена'] },
   requirements: { tip: 'Занеси технічне завдання проєкту як чекліст: формат файлів, ліміт полігонів, розмір текстур, стиль.', criteria: ['Є щонайменше 3 пункти вимог'] },
@@ -57,7 +59,7 @@ function readImageFile(file, cb) {
   reader.readAsDataURL(file)
 }
 
-function AssetSection({ kind, label, labLink, project, onPatch }) {
+function AssetSection({ kind, label, labLink, project, onPatch, toastApi }) {
   const items = project.assets[kind]
   const [selectedId, setSelectedId] = useState(items[0]?.id || null)
   const selected = items.find((a) => a.id === selectedId) || null
@@ -83,7 +85,8 @@ function AssetSection({ kind, label, labLink, project, onPatch }) {
       <p className="cl-section-title">{label}</p>
       {labLink && (
         <p className="cl-tab-desc">
-          Реальний інструмент для цієї роботи: <Link to={labLink.url} className="gfx-link">{labLink.label} →</Link>
+          {kind === 'concepts2d' ? 'Той самий редактор вбудований нижче. Потрібне більше місця або розмір 24×24/32×32 з іншими налаштуваннями — відкрий ' : 'Реальний інструмент для цієї роботи: '}
+          <Link to={labLink.url} className="gfx-link">{labLink.label} →</Link>
         </p>
       )}
       <button className="harmony-btn" onClick={add}>+ Додати запис</button>
@@ -105,7 +108,29 @@ function AssetSection({ kind, label, labLink, project, onPatch }) {
           <TextField label="Нотатка" value={selected.note} onCommit={(v) => update(selected.id, { note: v })} textarea placeholder={kind === 'models3d' ? 'JSON сцени з 3D Lab, або опис стану роботи' : 'Опис, статус, посилання на референс'} />
           {kind === 'concepts2d' && (
             <>
-              <label className="harmony-btn" style={{ cursor: 'pointer', display: 'inline-block', marginTop: 8 }}>
+              <p className="cl-section-title" style={{ marginTop: 16 }}>Малювання</p>
+              <PixelCanvasEditor
+                size={selected.pixelData?.size || 16}
+                pixels={selected.pixelData?.pixels || emptyGrid(selected.pixelData?.size || 16)}
+                onChangePixels={(next) => update(selected.id, { pixelData: { size: selected.pixelData?.size || 16, pixels: next } })}
+                onSizeChange={(newSize) => update(selected.id, { pixelData: { size: newSize, pixels: emptyGrid(newSize) } })}
+                showExport={false}
+                onMessage={toastApi.show}
+              />
+              <button
+                type="button"
+                className="harmony-btn"
+                style={{ marginTop: 10 }}
+                onClick={() => {
+                  if (!selected.pixelData) { toastApi.show('Спочатку намалюй щось'); return }
+                  const url = pixelsToPngDataUrl(selected.pixelData.size, selected.pixelData.pixels, 8)
+                  update(selected.id, { imageDataUrl: url })
+                  toastApi.show('✓ Малюнок збережено як зображення концепту')
+                }}
+              >
+                💾 Зберегти як зображення концепту
+              </button>
+              <label className="harmony-btn" style={{ cursor: 'pointer', display: 'inline-block', marginTop: 8, marginLeft: 8 }}>
                 📤 Завантажити зображення
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => e.target.files[0] && readImageFile(e.target.files[0], (dataUrl) => update(selected.id, { imageDataUrl: dataUrl }))} />
               </label>
@@ -267,7 +292,7 @@ export default function GameArtStudio() {
         </div>
 
         <div className="branding-center">
-          {section === 'concepts2d' && <AssetSection kind="concepts2d" label="2D-концепти" labLink={{ url: '/labs/pixel-art', label: 'Pixel Art Editor' }} project={project} onPatch={onPatch} />}
+          {section === 'concepts2d' && <AssetSection kind="concepts2d" label="2D-концепти" labLink={{ url: '/labs/pixel-art', label: 'Pixel Art Editor' }} project={project} onPatch={onPatch} toastApi={toastApi} />}
           {section === 'models3d' && <AssetSection kind="models3d" label="3D-моделі" labLink={{ url: '/labs/3d', label: '3D Lab' }} project={project} onPatch={onPatch} />}
           {section === 'textures' && <AssetSection kind="textures" label="PBR-текстури" project={project} onPatch={onPatch} />}
           {section === 'requirements' && <RequirementsSection project={project} onPatch={onPatch} />}

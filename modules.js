@@ -187,6 +187,16 @@ import { LESSONS as uxDesignTesting } from './lessons/ux-testing.js'
 import { LESSONS as uxDesignIteration } from './lessons/ux-iteration.js'
 import { LESSONS as uxDesignCasePortfolio } from './lessons/ux-case-portfolio.js'
 import { LESSONS as gameArtBasics } from './lessons/game-art-basics.js'
+import { LESSONS as gameArt2dDigital } from './lessons/game-art-2d-digital.js'
+import { LESSONS as gameArtPixelArt } from './lessons/game-art-pixel-art.js'
+import { LESSONS as gameArtConceptCharacter } from './lessons/game-art-concept-character.js'
+import { LESSONS as gameArt3dModeling } from './lessons/game-art-3d-modeling.js'
+import { LESSONS as gameArtUvTexturing } from './lessons/game-art-uv-texturing.js'
+import { LESSONS as gameArtEnvironment } from './lessons/game-art-environment.js'
+import { LESSONS as gameArtAnimationVfx } from './lessons/game-art-animation-vfx.js'
+import { LESSONS as gameArtPipeline } from './lessons/game-art-pipeline.js'
+import { LESSONS as gameArtEngines } from './lessons/game-art-engines.js'
+import { LESSONS as gameArtPortfolio } from './lessons/game-art-portfolio.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -355,6 +365,16 @@ export const MODULES = [
   ...uxDesignIteration,
   ...uxDesignCasePortfolio,
   ...gameArtBasics,
+  ...gameArt2dDigital,
+  ...gameArtPixelArt,
+  ...gameArtConceptCharacter,
+  ...gameArt3dModeling,
+  ...gameArtUvTexturing,
+  ...gameArtEnvironment,
+  ...gameArtAnimationVfx,
+  ...gameArtPipeline,
+  ...gameArtEngines,
+  ...gameArtPortfolio,
 ]
 
 export function getModule(id) {

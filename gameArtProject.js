@@ -37,7 +37,10 @@ export const RUBRIC_SETS = [
 export const SELF_SCORE_OPTIONS = ['Потребує роботи', 'Непогано', 'Відмінно']
 
 function makeAsset(kind) {
-  return { id: crypto.randomUUID(), kind, title: '', note: '', imageDataUrl: null }
+  // pixelData зберігає реальний малюнок, зроблений прямо у вбудованому
+  // Pixel Art Editor для 2D-концептів (не лише посилання на зовнішній
+  // файл) — { size, pixels }, той самий формат, що й /labs/pixel-art.
+  return { id: crypto.randomUUID(), kind, title: '', note: '', imageDataUrl: null, pixelData: null }
 }
 
 export function createEmptyGameArtProject(name) {
