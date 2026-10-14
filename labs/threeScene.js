@@ -37,6 +37,15 @@ export const LIGHT_PRESETS = [
 // Standard CAD/game-engine camera presets: orthogonal views (front/side/
 // top) for precise alignment plus the default 3/4 "isometric-ish" angle
 // used for a natural, readable overview.
+// Режими матеріалу перегляду (не плутати з per-об'єктним Wireframe-чекбоксом
+// у вкладці «Матеріал» — це глобальний перемикач того, ЯКИЙ тип матеріалу
+// рушій будує для кожного обʼєкта, справжня Three.js-функція, не фільтр).
+export const RENDER_MODES = [
+  { key: 'standard', label: 'Стандарт' },
+  { key: 'toon', label: 'Toon-шейдер' },
+  { key: 'clay', label: 'Глина' },
+]
+
 export const CAMERA_VIEWS = [
   { key: 'iso', icon: '◆', label: 'Ізометрія', position: [3.2, 2.6, 4.4] },
   { key: 'front', icon: '⬜', label: 'Спереду', position: [0, 1.2, 6] },
@@ -74,6 +83,25 @@ export function createThreeScene(container) {
 
   const group = new THREE.Group()
   scene.add(group)
+
+  // Простий 3-ступінчастий gradient map для THREE.MeshToonMaterial — те
+  // саме, що реальний cel-shading у грі: не плавний градієнт, а чіткі
+  // смуги світла/напівтону/тіні, замість вигаданого "toon-ефекту".
+  const toonGradientMap = (() => {
+    // RGBA, 3 texels (тінь/напівтон/світло), усі канали рівні — відтінок
+    // сірого, бо MeshToonMaterial множить це лише як яскравість кроку.
+    const colors = new Uint8Array([64, 64, 64, 255, 150, 150, 150, 255, 255, 255, 255, 255])
+    const tex = new THREE.DataTexture(colors, 3, 1, THREE.RGBAFormat)
+    tex.needsUpdate = true
+    tex.minFilter = THREE.NearestFilter
+    tex.magFilter = THREE.NearestFilter
+    return tex
+  })()
+
+  let renderMode = 'standard' // 'standard' | 'toon' | 'clay'
+  let wireframeOverlay = false
+  let lastObjects = []
+  let lastSelectedId = null
 
   const raycaster = new THREE.Raycaster()
   const pointer = new THREE.Vector2()
@@ -117,23 +145,61 @@ export function createThreeScene(container) {
     if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement)
   }
 
+  // renderMode — реальний Three.js перемикач типу матеріалу (ЩО освітлює
+  // рушій, а не намальований поверх ефект): 'standard' лишає матеріал
+  // обʼєкта як є (PBR-подібний MeshStandardMaterial), 'toon' будує
+  // MeshToonMaterial із 3-ступінчастим gradient map (справжній cel-shading,
+  // не вигаданий фільтр), 'clay' ігнорує колір/метал обʼєкта й показує
+  // нейтральний матовий сірий — стандартна техніка "clay render" для
+  // перевірки форми без відволікання на колір. wireframeOverlay — окремий
+  // глобальний перемикач: примусово рендерить каркас понад обраним
+  // режимом, незалежно від персонального "Wireframe" чекбокса матеріалу.
+  function buildMaterial(obj, type) {
+    const wireframe = wireframeOverlay || obj.material.wireframe
+    const side = type === 'plane' ? THREE.DoubleSide : THREE.FrontSide
+    if (renderMode === 'toon') {
+      return new THREE.MeshToonMaterial({
+        color: obj.material.color,
+        gradientMap: toonGradientMap,
+        wireframe,
+        transparent: obj.material.opacity < 1,
+        opacity: obj.material.opacity,
+        side,
+      })
+    }
+    if (renderMode === 'clay') {
+      return new THREE.MeshStandardMaterial({
+        color: 0xb9b4ac,
+        metalness: 0,
+        roughness: 0.9,
+        wireframe,
+        transparent: obj.material.opacity < 1,
+        opacity: obj.material.opacity,
+        side,
+      })
+    }
+    return new THREE.MeshStandardMaterial({
+      color: obj.material.color,
+      metalness: obj.material.metalness,
+      roughness: obj.material.roughness,
+      wireframe,
+      transparent: obj.material.opacity < 1,
+      opacity: obj.material.opacity,
+      side,
+    })
+  }
+
   // Scenes here are a handful of primitives at most, so a full rebuild on
   // every change is simpler and safer than diffing individual meshes, with
   // no real performance cost.
   function sync(objects, selectedId) {
+    lastObjects = objects
+    lastSelectedId = selectedId
     clearGroup()
     for (const obj of objects) {
       const build = GEOMETRY_BUILDERS[obj.type] || GEOMETRY_BUILDERS.box
       const geometry = build()
-      const material = new THREE.MeshStandardMaterial({
-        color: obj.material.color,
-        metalness: obj.material.metalness,
-        roughness: obj.material.roughness,
-        wireframe: obj.material.wireframe,
-        transparent: obj.material.opacity < 1,
-        opacity: obj.material.opacity,
-        side: obj.type === 'plane' ? THREE.DoubleSide : THREE.FrontSide,
-      })
+      const material = buildMaterial(obj, obj.type)
       const mesh = new THREE.Mesh(geometry, material)
       mesh.position.set(obj.position.x, obj.position.y, obj.position.z)
       mesh.rotation.set(
@@ -190,5 +256,15 @@ export function createThreeScene(container) {
     camera.updateProjectionMatrix()
   }
 
-  return { sync, dispose, pickAt, screenshot, setLighting, setCameraView, setFov }
+  function setRenderMode(mode) {
+    renderMode = mode
+    sync(lastObjects, lastSelectedId)
+  }
+
+  function setWireframeOverlay(value) {
+    wireframeOverlay = value
+    sync(lastObjects, lastSelectedId)
+  }
+
+  return { sync, dispose, pickAt, screenshot, setLighting, setCameraView, setFov, setRenderMode, setWireframeOverlay }
 }

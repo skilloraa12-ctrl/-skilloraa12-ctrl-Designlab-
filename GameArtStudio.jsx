@@ -227,7 +227,7 @@ function ReviewSection({ project, onPatch }) {
   }
   return (
     <div className="branding-form">
-      <p className="cl-section-title">Game Art Review Workspace</p>
+      <p className="cl-section-title">Робоча область рев’ю Game Art</p>
       <p className="cl-tab-desc"><strong>Чесна межа:</strong> це самооцінка й місце для нотаток реального ментора/фідбеку — студія не оцінює художню якість автоматично і не вигадує персону ментора чи бал.</p>
 
       <p className="cl-section-title" style={{ marginTop: 12 }}>Рубрика</p>

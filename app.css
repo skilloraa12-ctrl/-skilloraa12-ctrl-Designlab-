@@ -744,6 +744,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 }
 
 /* ---------- 3D Lab ---------- */
+.l3d-render-modes { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .l3d-viewport {
   width: 100%; height: 360px; border-radius: var(--radius); border: 1px solid var(--line);
   margin-bottom: 20px; overflow: hidden; background: #16161d; cursor: grab;
@@ -1584,13 +1585,39 @@ button.tool-badge--action:hover { border-color: var(--green); }
 /* ---------- Game Art Studio ---------- */
 .gfx-link { color: var(--accent); font-weight: 600; }
 .gfx-concept-preview { max-width: 100%; max-height: 240px; border-radius: var(--radius-sm); border: 1px solid var(--line); margin-top: 10px; display: block; }
-.gfx-studio-wide { max-width: 1440px; }
+/* Game Art Studio gets its own dark "pro GameDev tool" palette (deep slate +
+   neon violet/cyan) instead of the platform's default accent — scoped to
+   this subtree only (CSS custom-property cascade) so every other Studio,
+   page and Lab keeps its normal DESIGNLAB UA theme untouched. */
+.gfx-studio-wide {
+  max-width: 1440px;
+  --accent: #8b5cf6;
+  --accent-2: #22d3ee;
+  --accent-ink: #ffffff;
+  --bg: #0a0a16;
+  --surface: #121024;
+  --surface-2: #19173a;
+  --line: #2a2756;
+  --ink: #f1efff;
+  --muted: #9a93c9;
+}
+.gfx-studio-wide, .gfx-studio-wide .cl-text-input, .gfx-studio-wide .gfx-textarea {
+  background: var(--bg);
+}
+.gfx-studio-wide .branding-center, .gfx-studio-wide .branding-side,
+.gfx-studio-wide .gfx-track-panel, .gfx-studio-wide .branding-name-card,
+.gfx-studio-wide .cl-text-input, .gfx-studio-wide .gfx-textarea {
+  background: var(--surface);
+}
 
 .gfx-status-pill, .gfx-xp-pill {
   font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line);
   background: var(--surface); color: var(--muted); white-space: nowrap;
 }
-.gfx-xp-pill { color: var(--accent); font-weight: 600; border-color: var(--accent); }
+.gfx-xp-pill {
+  color: var(--accent-2); font-weight: 600; border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(139,92,246,.35);
+}
 
 /* Left: real track tree (11 Game Art subcategories + their real lessons) */
 .gfx-track-panel {
@@ -1606,8 +1633,11 @@ button.tool-badge--action:hover { border-color: var(--green); }
   width: 100%; display: flex; align-items: center; gap: 8px; text-align: left; border: none;
   background: transparent; color: var(--ink); padding: 8px 8px; border-radius: var(--radius-sm); cursor: pointer;
 }
-.gfx-track-row:hover { background: var(--bg); }
-.gfx-track-row.active { background: var(--accent); color: var(--accent-ink); }
+.gfx-track-row:hover { background: var(--surface-2); }
+.gfx-track-row.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink);
+  box-shadow: 0 0 16px rgba(139,92,246,.4);
+}
 .gfx-track-emoji { font-size: 16px; flex: none; }
 .gfx-track-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .gfx-track-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1617,20 +1647,23 @@ button.tool-badge--action:hover { border-color: var(--green); }
   display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); text-decoration: none;
   padding: 4px 6px; border-radius: var(--radius-sm);
 }
-.gfx-lesson-row:hover { background: var(--bg); color: var(--ink); }
+.gfx-lesson-row:hover { background: var(--surface-2); color: var(--ink); }
 .gfx-lesson-row.done { color: var(--ink); }
 .gfx-lesson-dot { flex: none; width: 14px; text-align: center; }
-.gfx-lesson-row.done .gfx-lesson-dot { color: #2bb673; }
+.gfx-lesson-row.done .gfx-lesson-dot { color: var(--accent-2); }
 .gfx-lesson-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Center: real-section tabs + real per-lesson stage checklist for the active track */
 .gfx-view-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
 .gfx-view-tab {
-  border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 13px;
   padding: 7px 12px; border-radius: var(--radius-sm); cursor: pointer;
 }
 .gfx-view-tab:hover { border-color: var(--accent); }
-.gfx-view-tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.gfx-view-tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink);
+  border-color: var(--accent); font-weight: 600; box-shadow: 0 0 14px rgba(139,92,246,.4);
+}
 
 .gfx-stage-row {
   display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 14px;
@@ -1642,14 +1675,14 @@ button.tool-badge--action:hover { border-color: var(--green); }
   max-width: 180px; overflow: hidden; text-overflow: ellipsis;
 }
 .gfx-stage-chip:hover { border-color: var(--accent); color: var(--ink); }
-.gfx-stage-chip.done { color: #2bb673; border-color: #2bb673; }
+.gfx-stage-chip.done { color: var(--accent-2); border-color: var(--accent-2); }
 
 /* Right: self-assessment mini-summary (real rubric data, no fabricated mentor/score) */
 .gfx-review-mini { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
 .gfx-score-row { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
 .gfx-score-label { font-size: 12px; color: var(--muted); }
-.gfx-score-bar { height: 6px; border-radius: 999px; background: var(--bg); overflow: hidden; }
-.gfx-score-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width .2s; }
+.gfx-score-bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.gfx-score-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; transition: width .2s; }
 
 /* Bottom: real before/after version compare (counts + saved images, no invented score) */
 .gfx-compare-panel { display: flex; align-items: stretch; gap: 10px; margin: 8px 0 14px; flex-wrap: wrap; }

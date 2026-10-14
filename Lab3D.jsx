@@ -6,7 +6,7 @@ import { useLabMode } from './labs/useLabMode.js'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabShortcuts } from './labs/useLabShortcuts.js'
 import { useLabRecent } from './labs/useLabRecent.js'
-import { createThreeScene, PRIMITIVES, LIGHT_PRESETS, CAMERA_VIEWS } from './labs/threeScene.js'
+import { createThreeScene, PRIMITIVES, LIGHT_PRESETS, CAMERA_VIEWS, RENDER_MODES } from './labs/threeScene.js'
 import { TEMPLATES } from './labs/threeTemplates.js'
 
 const TABS = [
@@ -367,6 +367,8 @@ export default function Lab3D() {
   const [cameraView, setCameraViewState] = useState('iso')
   const [fov, setFovState] = useState(50)
   const [tab, setTab] = useState('objects')
+  const [renderMode, setRenderModeState] = useState('standard')
+  const [wireOverlay, setWireOverlayState] = useState(false)
 
   const containerRef = useRef(null)
   const sceneApiRef = useRef(null)
@@ -454,6 +456,16 @@ export default function Lab3D() {
     sceneApiRef.current?.setFov(deg)
   }
 
+  function setRenderMode(mode) {
+    setRenderModeState(mode)
+    sceneApiRef.current?.setRenderMode(mode)
+  }
+  function toggleWireOverlay() {
+    const next = !wireOverlay
+    setWireOverlayState(next)
+    sceneApiRef.current?.setWireframeOverlay(next)
+  }
+
   const selected = useMemo(() => objects.find((o) => o.id === selectedId) || null, [objects, selectedId])
 
   function addObject(type) {
@@ -528,7 +540,7 @@ export default function Lab3D() {
   return (
     <LabShell
       title="3D Lab"
-      subtitle="Легкі 3D-обʼєкти прямо в браузері: готові шаблони (будинок, людина, рослина, іграшка) або окремі фігури — керуй позицією, обертанням, матеріалом, освітленням і камерою, експортуй сцену."
+      subtitle="Легкі 3D-обʼєкти прямо в браузері: готові шаблони (будинок, людина, рослина, іграшка) або окремі фігури — керуй позицією, обертанням, матеріалом, освітленням і камерою, перемикай Стандарт/Toon-шейдер/Глину та Каркас, експортуй сцену."
       icon="🧊"
       mode={labMode.mode}
       onToggleMode={labMode.toggle}
@@ -544,6 +556,12 @@ export default function Lab3D() {
       }
     >
       <div className="cl l3d">
+        <div className="l3d-render-modes">
+          {RENDER_MODES.map((m) => (
+            <button key={m.key} type="button" className={'cl-mini-btn' + (renderMode === m.key ? ' active' : '')} onClick={() => setRenderMode(m.key)}>{m.label}</button>
+          ))}
+          <button type="button" className={'cl-mini-btn' + (wireOverlay ? ' active' : '')} onClick={toggleWireOverlay}>◇ Каркас</button>
+        </div>
         <div ref={containerRef} className="l3d-viewport" />
         <div className="cl-tabs">
           {TABS.map((t) => (
