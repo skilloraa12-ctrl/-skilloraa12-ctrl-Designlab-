@@ -5,6 +5,7 @@ import { getSubcategory } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
 import { createEmptyMotionProject } from './motionProject.js'
 import { createEmptyUxProject } from './uxProject.js'
+import { createEmptyGameArtProject } from './gameArtProject.js'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import GameDesignStudio from './GameDesignStudio.jsx'
@@ -59,10 +60,17 @@ const UX_SUBCAT_STAGE = {
   'ux-case-portfolio': 'presentation',
 }
 
+// Game Art Academy: підкатегорія визначає, яка робоча область Game Art
+// Studio відкриється (асети за типом, рев'ю чи версії) — поповнюється
+// разом із кожним новим блоком курсу (A, B, C, ...).
+const GAME_ART_SUBCAT_SECTION = {
+  'game-art-basics': 'concepts2d',
+}
+
 export default function Module() {
   const { id } = useParams()
   const module = getModule(id)
-  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject } = useProgress()
+  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject } = useProgress()
   const navigate = useNavigate()
   const [sketchOpen, setSketchOpen] = useState(false)
   const [presentationOpen, setPresentationOpen] = useState(false)
@@ -81,6 +89,9 @@ export default function Module() {
   // UX Design відкриває справжню UX Design Studio (research/persona/
   // journey/flow/wireframe/prototype/...) замість загального ескізу.
   const usesUxStudio = module.level === 'ux-design'
+  // Game Art відкриває справжню Game Art Studio (асети/рев'ю/версії)
+  // замість загального ескізу.
+  const usesGameArtStudio = module.level === 'game-art'
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -254,6 +265,18 @@ export default function Module() {
                 }}
               >
                 🧠 Відкрити «UX Design Studio»
+              </button>
+            ) : usesGameArtStudio ? (
+              <button
+                className="complete-btn"
+                onClick={() => {
+                  const section = GAME_ART_SUBCAT_SECTION[module.subcategory] || 'concepts2d'
+                  const existing = gameArtProjects[0]
+                  const id = existing ? existing.id : saveGameArtProject(createEmptyGameArtProject('Новий проєкт Game Art'))
+                  navigate(`/game-art-studio/${id}`, { state: { section } })
+                }}
+              >
+                🎨 Відкрити «Game Art Studio»
               </button>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>

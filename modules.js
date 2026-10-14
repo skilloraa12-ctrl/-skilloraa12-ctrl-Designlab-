@@ -186,6 +186,7 @@ import { LESSONS as uxDesignPrototype } from './lessons/ux-prototype.js'
 import { LESSONS as uxDesignTesting } from './lessons/ux-testing.js'
 import { LESSONS as uxDesignIteration } from './lessons/ux-iteration.js'
 import { LESSONS as uxDesignCasePortfolio } from './lessons/ux-case-portfolio.js'
+import { LESSONS as gameArtBasics } from './lessons/game-art-basics.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -353,6 +354,7 @@ export const MODULES = [
   ...uxDesignTesting,
   ...uxDesignIteration,
   ...uxDesignCasePortfolio,
+  ...gameArtBasics,
 ]
 
 export function getModule(id) {

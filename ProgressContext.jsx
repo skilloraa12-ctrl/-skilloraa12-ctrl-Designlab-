@@ -18,6 +18,7 @@ const EMPTY_STATE = {
   brandProjects: [],
   motionProjects: [],
   uxProjects: [],
+  gameArtProjects: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -272,6 +273,39 @@ export function ProgressProvider({ children }) {
     return newId
   }, [])
 
+  const saveGameArtProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.gameArtProjects.find((p) => p.id === id)
+      const now = new Date().toISOString()
+      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
+      return {
+        ...prev,
+        gameArtProjects: exists
+          ? prev.gameArtProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.gameArtProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removeGameArtProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, gameArtProjects: prev.gameArtProjects.filter((p) => p.id !== id) }))
+  }, [])
+
+  const duplicateGameArtProject = useCallback((id) => {
+    let newId = null
+    setState((prev) => {
+      const src = prev.gameArtProjects.find((p) => p.id === id)
+      if (!src) return prev
+      newId = crypto.randomUUID()
+      const now = new Date().toISOString()
+      const copy = { ...src, id: newId, name: src.name + ' (копія)', createdAt: now, updatedAt: now }
+      return { ...prev, gameArtProjects: [copy, ...prev.gameArtProjects] }
+    })
+    return newId
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -327,6 +361,7 @@ export function ProgressProvider({ children }) {
     brandProjects: state.brandProjects, saveBrandProject, removeBrandProject, duplicateBrandProject,
     motionProjects: state.motionProjects, saveMotionProject, removeMotionProject, duplicateMotionProject,
     uxProjects: state.uxProjects, saveUxProject, removeUxProject, duplicateUxProject,
+    gameArtProjects: state.gameArtProjects, saveGameArtProject, removeGameArtProject, duplicateGameArtProject,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,

@@ -7,6 +7,7 @@ import NotFound from './NotFound.jsx'
 import BrandingHome from './BrandingHome.jsx'
 import MotionHome from './MotionHome.jsx'
 import UXHome from './UXHome.jsx'
+import GameArtHome from './GameArtHome.jsx'
 
 export default function AcademyDirection() {
   const { direction: directionId } = useParams()
@@ -70,6 +71,17 @@ export default function AcademyDirection() {
   if (direction.id === 'ux-design') {
     return (
       <UXHome
+        subcats={subcats}
+        lessonGrid={lessonGrid}
+        doneInDirection={doneInDirection}
+        totalInDirection={allModsInDirection.length}
+      />
+    )
+  }
+
+  if (direction.id === 'game-art') {
+    return (
+      <GameArtHome
         subcats={subcats}
         lessonGrid={lessonGrid}
         doneInDirection={doneInDirection}

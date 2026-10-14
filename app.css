@@ -782,6 +782,20 @@ button.tool-badge--action:hover { border-color: var(--green); }
   .l3d-viewport { height: 280px; }
 }
 
+/* ---------- Pixel Art Lab ---------- */
+.pxa-canvas-wrap {
+  display: flex; justify-content: center; align-items: flex-start;
+  border: 1px solid var(--line); border-radius: var(--radius); background: #16161d;
+  padding: 16px; margin-bottom: 20px; overflow: auto;
+}
+.pxa-canvas { image-rendering: pixelated; cursor: crosshair; touch-action: none; border: 1px solid var(--line); }
+.pxa-palette { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+.pxa-palette-item { display: flex; align-items: center; gap: 2px; }
+.pxa-swatch {
+  width: 28px; height: 28px; border-radius: var(--radius-sm); border: 2px solid var(--line); cursor: pointer; padding: 0;
+}
+.pxa-swatch.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(62,55,224,0.25); }
+
 /* ---------- Typography Lab ---------- */
 .tl-scale-list { display: flex; flex-direction: column; gap: 4px; }
 .tl-scale-row { display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid var(--line); padding: 10px 0; }
@@ -1566,6 +1580,10 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .ux-audit-row .cl-text-input { max-width: 220px; }
 .ux-screen-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
 .ux-flow-canvas { background: #fff; }
+
+/* ---------- Game Art Studio ---------- */
+.gfx-link { color: var(--accent); font-weight: 600; }
+.gfx-concept-preview { max-width: 100%; max-height: 240px; border-radius: var(--radius-sm); border: 1px solid var(--line); margin-top: 10px; display: block; }
 
 @media (max-width: 860px) {
   .branding-stages { width: 100%; flex-direction: row; flex-wrap: wrap; }

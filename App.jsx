@@ -9,6 +9,7 @@ import AcademySubcategory from './AcademySubcategory.jsx'
 import BrandingStudio from './BrandingStudio.jsx'
 import MotionStudio from './MotionStudio.jsx'
 import UXStudio from './UXStudio.jsx'
+import GameArtStudio from './GameArtStudio.jsx'
 import Module from './Module.jsx'
 import ProgressPage from './Progress.jsx'
 import Glossary from './Glossary.jsx'
@@ -32,6 +33,7 @@ import MotionLab from './MotionLab.jsx'
 import UserFlowLab from './UserFlowLab.jsx'
 import UiPreviewLab from './UiPreviewLab.jsx'
 import GameDesignLab from './GameDesignLab.jsx'
+import PixelArtLab from './PixelArtLab.jsx'
 import Portfolio from './Portfolio.jsx'
 import Career from './Career.jsx'
 import NotFound from './NotFound.jsx'
@@ -67,6 +69,7 @@ export default function App() {
           <Route path="/branding-studio/:projectId" element={<RequireAuth><BrandingStudio /></RequireAuth>} />
           <Route path="/motion-studio/:projectId" element={<RequireAuth><MotionStudio /></RequireAuth>} />
           <Route path="/ux-studio/:projectId" element={<RequireAuth><UXStudio /></RequireAuth>} />
+          <Route path="/game-art-studio/:projectId" element={<RequireAuth><GameArtStudio /></RequireAuth>} />
           <Route path="/module/:id" element={<RequireAuth><Module /></RequireAuth>} />
           <Route path="/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
           <Route path="/glossary" element={<Glossary />} />
@@ -102,6 +105,7 @@ export default function App() {
           <Route path="/labs/user-flow" element={<RequireAuth><UserFlowLab /></RequireAuth>} />
           <Route path="/labs/ui-preview" element={<RequireAuth><UiPreviewLab /></RequireAuth>} />
           <Route path="/labs/game" element={<RequireAuth><GameDesignLab /></RequireAuth>} />
+          <Route path="/labs/pixel-art" element={<RequireAuth><PixelArtLab /></RequireAuth>} />
           <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
           <Route path="/career" element={<Career />} />
           <Route path="*" element={<NotFound />} />

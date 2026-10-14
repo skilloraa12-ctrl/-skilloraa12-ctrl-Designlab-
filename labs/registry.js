@@ -16,6 +16,7 @@ export const LAB_CATEGORIES = [
   { id: 'systems', label: 'Systems' },
   { id: 'production', label: 'Production' },
   { id: 'advanced', label: 'Advanced' },
+  { id: 'game-art', label: 'Game Art' },
 ]
 
 export const LABS = [
@@ -54,6 +55,10 @@ export const LABS = [
   { id: 'storyboard', route: '/labs/storyboard', icon: '🎬', title: 'Storyboard Lab', desc: 'Кадри розкадровки з описом дії, камери й діалогів.', category: 'advanced', tools: 3, status: 'soon' },
   { id: 'critique', route: '/labs/critique', icon: '🧠', title: 'Design Critique Lab', desc: 'Оцінка композиції за конкретними, описовими критеріями.', category: 'advanced', tools: 4, status: 'soon' },
   { id: 'pixel', route: '/labs/pixel', icon: '🔍', title: 'Pixel Precision Lab', desc: 'Піксельна сітка, лінійки, точні координати й відстані.', category: 'production', tools: 4, status: 'soon' },
+  { id: 'pixel-art', route: '/labs/pixel-art', icon: '🟪', title: 'Pixel Art Editor', desc: 'Малювання по сітці з обмеженою палітрою: олівець, гумка, заливка, піпетка, скасування дій, експорт PNG 1x/8x.', category: 'game-art', tools: 4, status: 'available' },
+  { id: 'sprite-animation', route: '/labs/sprite-animation', icon: '🎞️', title: 'Sprite Animation Lab', desc: 'Покадрова анімація: кілька кадрів, швидкість відтворення, прев’ю в русі.', category: 'game-art', tools: 3, status: 'soon' },
+  { id: 'character-design', route: '/labs/character-design', icon: '🧑‍🎨', title: 'Character Design Lab', desc: 'Силуетні дослідження, варіанти персонажа, character sheet.', category: 'game-art', tools: 3, status: 'soon' },
+  { id: 'game-art-review', route: '/labs/game-art-review', icon: '🖊️', title: 'Game Art Review Workspace', desc: 'Перегляд роботи з коментарями, paintover-позначками й рубрикою оцінювання.', category: 'game-art', tools: 3, status: 'soon' },
   { id: 'calculator', route: '/labs/calculator', icon: '🧮', title: 'Design Calculator Lab', desc: 'px↔rem, DPI/PPI, fluid typography, розмір файлу, мс↔кадри, шкала відступів, колонкова сітка, довжина рядка.', category: 'production', tools: 8, status: 'available' },
   { id: 'design-system', route: '/labs/design-system', icon: '🧩', title: 'Design System Lab', desc: 'Токени кольору, типографіки, spacing, radius і тіней з усіх Labs.', category: 'systems', tools: 6, status: 'soon' },
   { id: 'export', route: '/labs/export', icon: '🛠️', title: 'Export & Production Lab', desc: 'Підготовка дизайну до Web/Mobile/Print/Social з оптимізацією файлів.', category: 'production', tools: 4, status: 'soon' },
