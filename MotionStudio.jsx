@@ -6,7 +6,7 @@ import LabToast from './labs/LabToast.jsx'
 import NotFound from './NotFound.jsx'
 import { MOTION_STAGES, CANVAS_PRESETS } from './motionProject.js'
 import {
-  EASINGS, defaultObject, valueAt, objectAt, upsertKeyframe, removeKeyframe,
+  EASINGS, defaultObject, defaultShadow, defaultStroke, valueAt, objectAt, upsertKeyframe, removeKeyframe,
   hitTest, hitHandle, drawObject, drawHandles, resizeObj, rotateObj, maxKeyframeTime,
 } from './motionEngine.js'
 
@@ -101,28 +101,99 @@ function EffectsStage({ project, onPatch, objects, onUpdateObject }) {
   return (
     <div className="branding-form">
       <p className="cl-section-title">Ефекти</p>
-      <p className="cl-tab-desc">Прозорість уже керується ключовими кадрами на етапі «Анімація». Нижче — додаткові ефекти для обраних об’єктів (застосовуються одразу на канвасі).</p>
+      <p className="cl-tab-desc">Прозорість уже керується ключовими кадрами на етапі «Анімація». Тінь і обведення нижче — реальні ефекти: вони одразу малюються на канвасі (і враховуються в SVG-експорті), а не просто описані текстом.</p>
       {objects.length === 0 && <p className="cl-tab-desc">Спочатку додай об’єкти на етапі «Анімація».</p>}
-      {objects.map((o) => (
-        <div key={o.id} className="branding-name-card">
-          <strong>{o.type === 'text' ? `Текст: «${o.text}»` : o.type === 'ellipse' ? 'Еліпс' : 'Прямокутник'}</strong>
-          <label className="gfx-field">
-            Базова прозорість
-            <input type="range" min="0" max="1" step="0.05" value={o.opacity} onChange={(ev) => onUpdateObject(o.id, { opacity: Number(ev.target.value) })} />
-          </label>
-        </div>
-      ))}
-      <TextField label="Нотатки про інші ефекти (тінь, світіння тощо)" value={e.notes} onCommit={(v) => onPatch({ effects: { notes: v } })} textarea placeholder="Опиши задум — якщо в цьому списку немає потрібного ефекту" />
+      {objects.map((o) => {
+        const shadow = o.shadow || defaultShadow()
+        const stroke = o.stroke || defaultStroke()
+        return (
+          <div key={o.id} className="branding-name-card">
+            <strong>{o.type === 'text' ? `Текст: «${o.text}»` : o.type === 'ellipse' ? 'Еліпс' : 'Прямокутник'}</strong>
+            <label className="gfx-field">
+              Базова прозорість
+              <input type="range" min="0" max="1" step="0.05" value={o.opacity} onChange={(ev) => onUpdateObject(o.id, { opacity: Number(ev.target.value) })} />
+            </label>
+
+            <label className="gfx-field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+              <input type="checkbox" checked={shadow.enabled} onChange={(ev) => onUpdateObject(o.id, { shadow: { ...shadow, enabled: ev.target.checked } })} />
+              Тінь
+            </label>
+            {shadow.enabled && (
+              <div className="branding-score-grid">
+                <label className="gfx-field">Колір тіні
+                  <input type="color" className="sketchpad-colorpicker" value={shadow.color} onChange={(ev) => onUpdateObject(o.id, { shadow: { ...shadow, color: ev.target.value } })} />
+                </label>
+                <label className="gfx-field">Розмиття ({shadow.blur}px)
+                  <input type="range" min="0" max="60" value={shadow.blur} onChange={(ev) => onUpdateObject(o.id, { shadow: { ...shadow, blur: Number(ev.target.value) } })} />
+                </label>
+                <label className="gfx-field">Зсув X ({shadow.offsetX}px)
+                  <input type="range" min="-40" max="40" value={shadow.offsetX} onChange={(ev) => onUpdateObject(o.id, { shadow: { ...shadow, offsetX: Number(ev.target.value) } })} />
+                </label>
+                <label className="gfx-field">Зсув Y ({shadow.offsetY}px)
+                  <input type="range" min="-40" max="40" value={shadow.offsetY} onChange={(ev) => onUpdateObject(o.id, { shadow: { ...shadow, offsetY: Number(ev.target.value) } })} />
+                </label>
+              </div>
+            )}
+
+            <label className="gfx-field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+              <input type="checkbox" checked={stroke.enabled} onChange={(ev) => onUpdateObject(o.id, { stroke: { ...stroke, enabled: ev.target.checked } })} />
+              Обведення (контур)
+            </label>
+            {stroke.enabled && (
+              <div className="branding-score-grid">
+                <label className="gfx-field">Колір контуру
+                  <input type="color" className="sketchpad-colorpicker" value={stroke.color} onChange={(ev) => onUpdateObject(o.id, { stroke: { ...stroke, color: ev.target.value } })} />
+                </label>
+                <label className="gfx-field">Товщина ({stroke.width}px)
+                  <input type="range" min="1" max="20" value={stroke.width} onChange={(ev) => onUpdateObject(o.id, { stroke: { ...stroke, width: Number(ev.target.value) } })} />
+                </label>
+              </div>
+            )}
+          </div>
+        )
+      })}
+      <p className="cl-tab-desc" style={{ marginTop: 14 }}><strong>Чесна межа:</strong> складніші ефекти (світіння/glow, розмиття самого об’єкта, частинки) студія поки не рендерить по-справжньому — якщо задум потребує такого, опиши його нижче й перенеси в один з інструментів модуля 9 (Rive, Cavalry) для реалізації.</p>
+      <TextField label="Нотатки про інші ефекти (що не підтримує студія)" value={e.notes} onCommit={(v) => onPatch({ effects: { notes: v } })} textarea placeholder="Опиши задум — якщо вище немає потрібного ефекту" />
     </div>
   )
 }
 
 function SoundStage({ project, onPatch }) {
   const s = project.sound
+  // Реальне прослуховування локального аудіофайлу (не просто текстове
+  // поле-заглушка) — чесна межа: сам файл лишається тільки в цій вкладці
+  // браузера (не йде на сервер і не зберігається в проєкті), бо студія
+  // не вміє вшивати аудіо в JSON-стан прогресу.
+  const [audioUrl, setAudioUrl] = useState(null)
+  const [audioName, setAudioName] = useState('')
+
+  function pickFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (audioUrl) URL.revokeObjectURL(audioUrl)
+    setAudioUrl(URL.createObjectURL(file))
+    setAudioName(file.name)
+  }
+
+  useEffect(() => () => { if (audioUrl) URL.revokeObjectURL(audioUrl) }, [audioUrl])
+
   return (
     <div className="branding-form">
       <p className="cl-section-title">Звук</p>
-      <p className="cl-tab-desc">Студія не має вбудованого аудіоредактора — опиши задум текстом (модуль 8). Для реального звуку: YouTube Audio Library, Mixkit, Pixabay Audio (безкоштовно, перевір ліцензію кожного файлу).</p>
+      <p className="cl-tab-desc">Завантаж свій аудіофайл і прослухай його тут по-справжньому — щоб перевірити настрій і темп, перш ніж синхронізувати з анімацією вручну (модуль 8).</p>
+
+      <label className="gfx-field">
+        Аудіофайл (mp3/wav/ogg)
+        <input type="file" accept="audio/*" className="cl-text-input" onChange={pickFile} />
+      </label>
+      {audioUrl && (
+        <div className="branding-name-card">
+          <strong>{audioName}</strong>
+          <audio controls src={audioUrl} style={{ width: '100%', marginTop: 8 }} />
+        </div>
+      )}
+      <p className="cl-tab-desc"><strong>Чесна межа:</strong> цей файл не зберігається в проєкті й не завантажується на сервер — лише прев’ю в цій вкладці. Студія поки не вміє автоматично синхронізувати аудіодоріжку з таймлайном «Анімації» — познач потрібні акценти нотатками нижче. Безкоштовні джерела треків: YouTube Audio Library, Mixkit, Pixabay Audio (перевір ліцензію кожного файлу).</p>
+
       <TextField label="Концепція звуку/музики" value={s.concept} onCommit={(v) => onPatch({ sound: { ...s, concept: v } })} textarea placeholder="Який настрій, темп, які ключові звукові акценти" />
       <TextField label="Нотатки синхронізації" value={s.syncNotes} onCommit={(v) => onPatch({ sound: { ...s, syncNotes: v } })} textarea placeholder="Який момент анімації має співпасти з яким звуковим акцентом" />
     </div>
@@ -132,12 +203,23 @@ function SoundStage({ project, onPatch }) {
 function ExportStage({ project, objects, canvasSize, toastApi }) {
   function exportFrameSvg() {
     const w = canvasSize.w, h = canvasSize.h
-    const parts = objects.map((o) => {
-      if (o.type === 'ellipse') return `<ellipse cx="${o.x + o.w / 2}" cy="${o.y + o.h / 2}" rx="${o.w / 2}" ry="${o.h / 2}" fill="${o.fill}" opacity="${o.opacity}" transform="rotate(${o.rotation} ${o.x + o.w / 2} ${o.y + o.h / 2})"/>`
-      if (o.type === 'text') return `<text x="${o.x}" y="${o.y + o.h / 2}" font-size="${o.fontSize || 28}" font-family="system-ui, sans-serif" font-weight="600" fill="${o.fill}" opacity="${o.opacity}" dominant-baseline="middle">${(o.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')}</text>`
-      return `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" fill="${o.fill}" opacity="${o.opacity}" transform="rotate(${o.rotation} ${o.x + o.w / 2} ${o.y + o.h / 2})"/>`
+    // Тінь/обведення мають виглядати в SVG так само, як на канвасі —
+    // інакше експорт бреше про те, що насправді побудовано в студії.
+    const defs = []
+    const parts = objects.map((o, i) => {
+      const shadow = o.shadow
+      let filterAttr = ''
+      if (shadow?.enabled) {
+        const filterId = `shadow${i}`
+        defs.push(`<filter id="${filterId}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="${shadow.offsetX}" dy="${shadow.offsetY}" stdDeviation="${shadow.blur / 2}" flood-color="${shadow.color}"/></filter>`)
+        filterAttr = ` filter="url(#${filterId})"`
+      }
+      const strokeAttr = o.stroke?.enabled ? ` stroke="${o.stroke.color}" stroke-width="${o.stroke.width}"` : ''
+      if (o.type === 'ellipse') return `<ellipse cx="${o.x + o.w / 2}" cy="${o.y + o.h / 2}" rx="${o.w / 2}" ry="${o.h / 2}" fill="${o.fill}" opacity="${o.opacity}"${strokeAttr}${filterAttr} transform="rotate(${o.rotation} ${o.x + o.w / 2} ${o.y + o.h / 2})"/>`
+      if (o.type === 'text') return `<text x="${o.x}" y="${o.y + o.h / 2}" font-size="${o.fontSize || 28}" font-family="system-ui, sans-serif" font-weight="600" fill="${o.fill}" opacity="${o.opacity}"${strokeAttr}${filterAttr} dominant-baseline="middle">${(o.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')}</text>`
+      return `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" fill="${o.fill}" opacity="${o.opacity}"${strokeAttr}${filterAttr} transform="rotate(${o.rotation} ${o.x + o.w / 2} ${o.y + o.h / 2})"/>`
     })
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${parts.join('')}</svg>`
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${defs.length > 0 ? `<defs>${defs.join('')}</defs>` : ''}${parts.join('')}</svg>`
     const blob = new Blob([svg], { type: 'image/svg+xml' })
     downloadBlob(blob, `${project.name || 'motion'}-frame.svg`)
     toastApi.show('✓ Кадр експортовано як SVG')
@@ -232,8 +314,11 @@ function AnimationStage({ project, onPatch, toastApi }) {
   const duration = project.duration
 
   const selected = objects.find((o) => o.id === selectedId) || null
-  const displayW = Math.min(project.canvas.w, 560)
-  const displayH = Math.round(displayW * (project.canvas.h / project.canvas.w))
+  // Канва має РЕАГУВАТИ на реальну доступну ширину центральної колонки
+  // (aspect-ratio + width:100%), а не мати фіксовану піксельну ширину —
+  // інакше на вузькому вікні вона просто вилазить за межі панелі й
+  // ламає весь layout (обрізаний текст, горизонтальний скрол).
+  const maxDisplayW = Math.min(project.canvas.w, 560)
 
   function commitObjects(next) { onPatch({ objects: next }) }
 
@@ -369,10 +454,10 @@ function AnimationStage({ project, onPatch, toastApi }) {
       </div>
 
       <div className="motion-anim-row">
-        <div className="motion-canvas-wrap" style={{ width: displayW, height: displayH }}>
+        <div className="motion-canvas-wrap" style={{ maxWidth: maxDisplayW, aspectRatio: `${project.canvas.w} / ${project.canvas.h}` }}>
           <canvas
             ref={canvasRef}
-            style={{ width: displayW, height: displayH }}
+            style={{ width: '100%', height: '100%' }}
             onPointerDown={start}
             onPointerMove={move}
             onPointerUp={end}
@@ -535,7 +620,7 @@ export default function MotionStudio() {
         <button className="harmony-btn" onClick={() => { saveMotionProject(project); toastApi.show('✓ Збережено') }}>💾 Зберегти</button>
       </div>
 
-      <div className="branding-layout">
+      <div className={'branding-layout' + (stage === 'animation' ? ' branding-layout--canvas' : '')}>
         <div className="branding-stages">
           {MOTION_STAGES.map((s) => (
             <button key={s.id} className={'branding-stage-btn' + (stage === s.id ? ' active' : '')} onClick={() => setStage(s.id)}>

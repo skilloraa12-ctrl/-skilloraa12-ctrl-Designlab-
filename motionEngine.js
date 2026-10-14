@@ -36,8 +36,21 @@ export function ease(t, kind) {
   }
 }
 
+// Тінь і обведення — реальні, по-справжньому відрендерені ефекти
+// (canvas 2D shadowBlur/shadowOffset та stroke), а не декоративний
+// опис-заглушка: те, що обрано тут, видно і на канвасі, і в SVG-експорті.
+export function defaultShadow() {
+  return { enabled: false, color: '#000000', blur: 12, offsetX: 4, offsetY: 4 }
+}
+export function defaultStroke() {
+  return { enabled: false, color: '#ffffff', width: 2 }
+}
+
 export function defaultObject(type, p) {
-  const base = { id: crypto.randomUUID(), type, x: p.x, y: p.y, w: 160, h: 90, rotation: 0, opacity: 1, fill: '#6B62FF', keyframes: {} }
+  const base = {
+    id: crypto.randomUUID(), type, x: p.x, y: p.y, w: 160, h: 90, rotation: 0, opacity: 1, fill: '#6B62FF',
+    shadow: defaultShadow(), stroke: defaultStroke(), keyframes: {},
+  }
   if (type === 'ellipse') return { ...base, w: 120, h: 120 }
   if (type === 'text') return { ...base, w: 220, h: 50, text: 'Текст', fontSize: 28, fill: '#F4F4F6' }
   return base // rect
@@ -128,16 +141,25 @@ export function drawObject(ctx, o) {
   ctx.translate(-cx, -cy)
   ctx.globalAlpha = Math.max(0, Math.min(1, o.opacity))
   ctx.fillStyle = o.fill
+  if (o.shadow?.enabled) {
+    ctx.shadowColor = o.shadow.color
+    ctx.shadowBlur = o.shadow.blur
+    ctx.shadowOffsetX = o.shadow.offsetX
+    ctx.shadowOffsetY = o.shadow.offsetY
+  }
   if (o.type === 'ellipse') {
     ctx.beginPath()
     ctx.ellipse(cx, cy, o.w / 2, o.h / 2, 0, 0, Math.PI * 2)
     ctx.fill()
+    if (o.stroke?.enabled) { ctx.strokeStyle = o.stroke.color; ctx.lineWidth = o.stroke.width; ctx.stroke() }
   } else if (o.type === 'text') {
     ctx.font = `600 ${o.fontSize || 28}px system-ui, sans-serif`
     ctx.textBaseline = 'middle'
     ctx.fillText(o.text || '', o.x, cy)
+    if (o.stroke?.enabled) { ctx.strokeStyle = o.stroke.color; ctx.lineWidth = o.stroke.width; ctx.strokeText(o.text || '', o.x, cy) }
   } else {
     ctx.fillRect(o.x, o.y, o.w, o.h)
+    if (o.stroke?.enabled) { ctx.strokeStyle = o.stroke.color; ctx.lineWidth = o.stroke.width; ctx.strokeRect(o.x, o.y, o.w, o.h) }
   }
   ctx.restore()
 }
