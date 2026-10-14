@@ -7,6 +7,7 @@ import NotFound from './NotFound.jsx'
 import { ASSET_KINDS, RUBRIC_SETS, SELF_SCORE_OPTIONS, makeEmptyAsset, GAME_ART_SUBCAT_SECTION } from './gameArtProject.js'
 import PixelCanvasEditor from './labs/PixelCanvasEditor.jsx'
 import { emptyGrid, pixelsToPngDataUrl } from './labs/pixelArtEngine.js'
+import FreePaintCanvas from './labs/FreePaintCanvas.jsx'
 import { MODULES } from './modules.js'
 import { getSubcategoriesByLevel } from './subcategories.js'
 
@@ -36,7 +37,7 @@ const SECTIONS = [
 ]
 
 const SECTION_HELP = {
-  concepts2d: { tip: 'Малюй прямо тут — вбудований Pixel Art Editor нижче зберігає малюнок у самому записі проєкту. Коли готово, натисни «Зберегти як зображення концепту». Малював у зовнішній програмі (Krita, Photoshop) — завантаж готовий файл кнопкою «Завантажити зображення».', criteria: ['Є назва концепту', 'Є зображення (намальоване тут або завантажене) або чітка нотатка про задум'] },
+  concepts2d: { tip: 'Малюй прямо тут. У треку «Pixel Art» — піксельна сітка з обмеженою палітрою; у решті 2D-треків — довільний пензель на великому полотні з гумкою, розміром/непрозорістю/м’якістю краю та власним кольором, збереження автоматичне після кожного мазка. Мало місця — натисни «⛶ На весь екран». Малював у зовнішній програмі (Krita, Photoshop) — завантаж готовий файл кнопкою «Завантажити зображення».', criteria: ['Є назва концепту', 'Є зображення (намальоване тут або завантажене) або чітка нотатка про задум'] },
   models3d: { tip: 'Побудуй модель у 3D Lab, на вкладці «Експорт» скопіюй JSON сцени і встав його сюди — це реальний знімок геометрії/матеріалів, а не вигадана назва файлу.', criteria: ['Є назва моделі', 'Є JSON сцени або нотатка про стан роботи в Blender'] },
   textures: { tip: 'Опиши текстуру й PBR-карти (Albedo/Normal/Roughness/Metallic), які готуєш — реальний файл текстури зберігається в зовнішній програмі (Substance Painter, GIMP, Krita), тут лише облік.', criteria: ['Є назва текстури', 'Вказано, для якого асета вона призначена'] },
   requirements: { tip: 'Занеси технічне завдання проєкту як чекліст: формат файлів, ліміт полігонів, розмір текстур, стиль.', criteria: ['Є щонайменше 3 пункти вимог'] },
@@ -98,7 +99,7 @@ function readImageFile(file, cb) {
   reader.readAsDataURL(file)
 }
 
-function AssetSection({ kind, label, labLink, project, onPatch, toastApi }) {
+function AssetSection({ kind, label, labLink, project, onPatch, toastApi, drawMode }) {
   const items = project.assets[kind]
   const [selectedId, setSelectedId] = useState(items[0]?.id || null)
   const selected = items.find((a) => a.id === selectedId) || null
@@ -124,7 +125,7 @@ function AssetSection({ kind, label, labLink, project, onPatch, toastApi }) {
       <p className="cl-section-title">{label}</p>
       {labLink && (
         <p className="cl-tab-desc">
-          {kind === 'concepts2d' ? 'Той самий редактор вбудований нижче. Потрібне більше місця або розмір 24×24/32×32 з іншими налаштуваннями — відкрий ' : 'Реальний інструмент для цієї роботи: '}
+          {kind === 'concepts2d' && drawMode === 'pixel' ? 'Той самий редактор вбудований нижче. Потрібне більше місця або розмір 24×24/32×32 з іншими налаштуваннями — відкрий ' : 'Реальний інструмент для цієї роботи: '}
           <Link to={labLink.url} className="gfx-link">{labLink.label} →</Link>
         </p>
       )}
@@ -148,32 +149,43 @@ function AssetSection({ kind, label, labLink, project, onPatch, toastApi }) {
           {kind === 'concepts2d' && (
             <>
               <p className="cl-section-title" style={{ marginTop: 16 }}>Малювання</p>
-              <PixelCanvasEditor
-                size={selected.pixelData?.size || 16}
-                pixels={selected.pixelData?.pixels || emptyGrid(selected.pixelData?.size || 16)}
-                onChangePixels={(next) => update(selected.id, { pixelData: { size: selected.pixelData?.size || 16, pixels: next } })}
-                onSizeChange={(newSize) => update(selected.id, { pixelData: { size: newSize, pixels: emptyGrid(newSize) } })}
-                showExport={false}
-                onMessage={toastApi.show}
-              />
-              <button
-                type="button"
-                className="harmony-btn"
-                style={{ marginTop: 10 }}
-                onClick={() => {
-                  if (!selected.pixelData) { toastApi.show('Спочатку намалюй щось'); return }
-                  const url = pixelsToPngDataUrl(selected.pixelData.size, selected.pixelData.pixels, 8)
-                  update(selected.id, { imageDataUrl: url })
-                  toastApi.show('✓ Малюнок збережено як зображення концепту')
-                }}
-              >
-                💾 Зберегти як зображення концепту
-              </button>
-              <label className="harmony-btn" style={{ cursor: 'pointer', display: 'inline-block', marginTop: 8, marginLeft: 8 }}>
+              {drawMode === 'pixel' ? (
+                <>
+                  <PixelCanvasEditor
+                    size={selected.pixelData?.size || 16}
+                    pixels={selected.pixelData?.pixels || emptyGrid(selected.pixelData?.size || 16)}
+                    onChangePixels={(next) => update(selected.id, { pixelData: { size: selected.pixelData?.size || 16, pixels: next } })}
+                    onSizeChange={(newSize) => update(selected.id, { pixelData: { size: newSize, pixels: emptyGrid(newSize) } })}
+                    showExport={false}
+                    onMessage={toastApi.show}
+                  />
+                  <button
+                    type="button"
+                    className="harmony-btn"
+                    style={{ marginTop: 10 }}
+                    onClick={() => {
+                      if (!selected.pixelData) { toastApi.show('Спочатку намалюй щось'); return }
+                      const url = pixelsToPngDataUrl(selected.pixelData.size, selected.pixelData.pixels, 8)
+                      update(selected.id, { imageDataUrl: url })
+                      toastApi.show('✓ Малюнок збережено як зображення концепту')
+                    }}
+                  >
+                    💾 Зберегти як зображення концепту
+                  </button>
+                </>
+              ) : (
+                <FreePaintCanvas
+                  assetKey={selected.id}
+                  initialImage={selected.imageDataUrl}
+                  onChangeImage={(dataUrl) => update(selected.id, { imageDataUrl: dataUrl })}
+                  onMessage={toastApi.show}
+                />
+              )}
+              <label className="harmony-btn" style={{ cursor: 'pointer', display: 'inline-block', marginTop: 8 }}>
                 📤 Завантажити зображення
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => e.target.files[0] && readImageFile(e.target.files[0], (dataUrl) => update(selected.id, { imageDataUrl: dataUrl }))} />
               </label>
-              {selected.imageDataUrl && <img src={selected.imageDataUrl} alt={selected.title} className="gfx-concept-preview" />}
+              {drawMode === 'pixel' && selected.imageDataUrl && <img src={selected.imageDataUrl} alt={selected.title} className="gfx-concept-preview" />}
             </>
           )}
         </div>
@@ -431,7 +443,17 @@ export default function GameArtStudio() {
             </div>
           )}
 
-          {section === 'concepts2d' && <AssetSection kind="concepts2d" label="2D-концепти" labLink={{ url: '/labs/pixel-art', label: 'Pixel Art Editor' }} project={project} onPatch={onPatch} toastApi={toastApi} />}
+          {section === 'concepts2d' && (
+            <AssetSection
+              kind="concepts2d"
+              label="2D-концепти"
+              labLink={activeTrackId === 'game-art-pixel-art' ? { url: '/labs/pixel-art', label: 'Pixel Art Editor' } : null}
+              project={project}
+              onPatch={onPatch}
+              toastApi={toastApi}
+              drawMode={activeTrackId === 'game-art-pixel-art' ? 'pixel' : 'paint'}
+            />
+          )}
           {section === 'models3d' && <AssetSection kind="models3d" label="3D-моделі" labLink={{ url: '/labs/3d', label: '3D Lab' }} project={project} onPatch={onPatch} />}
           {section === 'textures' && <AssetSection kind="textures" label="PBR-текстури" project={project} onPatch={onPatch} />}
           {section === 'requirements' && <RequirementsSection project={project} onPatch={onPatch} />}
