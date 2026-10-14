@@ -148,16 +148,31 @@ import { LESSONS as brandingPresentation } from './lessons/branding-presentation
 import { LESSONS as brandingProcess } from './lessons/branding-process.js'
 import { LESSONS as brandingPortfolio } from './lessons/branding-portfolio.js'
 import { LESSONS as motionBasics } from './lessons/motion-basics.js'
+import { LESSONS as motionBasics2 } from './lessons/motion-basics-2.js'
+import { LESSONS as motionInterfaceTools } from './lessons/motion-interface-tools.js'
 import { LESSONS as motionPrinciples } from './lessons/motion-principles.js'
 import { LESSONS as motionTimingEasing } from './lessons/motion-timing-easing.js'
+import { LESSONS as motionTimingEasing2 } from './lessons/motion-timing-easing-2.js'
+import { LESSONS as motionKeyframesPractice } from './lessons/motion-keyframes-practice.js'
 import { LESSONS as motionUi } from './lessons/motion-ui.js'
+import { LESSONS as motionUi2 } from './lessons/motion-ui-2.js'
 import { LESSONS as motionTypography } from './lessons/motion-typography.js'
+import { LESSONS as motionTypography2 } from './lessons/motion-typography-2.js'
 import { LESSONS as motionShapeLogo } from './lessons/motion-shape-logo.js'
+import { LESSONS as motionShapeLogo2 } from './lessons/motion-shape-logo-2.js'
+import { LESSONS as motionMasksComposition } from './lessons/motion-masks-composition.js'
+import { LESSONS as motionEffects } from './lessons/motion-effects.js'
+import { LESSONS as motionLogoAnimation } from './lessons/motion-logo-animation.js'
 import { LESSONS as motionStoryboard } from './lessons/motion-storyboard.js'
+import { LESSONS as motionStoryboard2 } from './lessons/motion-storyboard-2.js'
+import { LESSONS as motionAdsSocial } from './lessons/motion-ads-social.js'
 import { LESSONS as motionSound } from './lessons/motion-sound.js'
+import { LESSONS as motionSound2 } from './lessons/motion-sound-2.js'
 import { LESSONS as motionToolsExport } from './lessons/motion-tools-export.js'
+import { LESSONS as motionToolsExport2 } from './lessons/motion-tools-export-2.js'
 import { LESSONS as motionProcess } from './lessons/motion-process.js'
 import { LESSONS as motionPortfolio } from './lessons/motion-portfolio.js'
+import { LESSONS as motionPortfolio2 } from './lessons/motion-portfolio-2.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -287,16 +302,31 @@ export const MODULES = [
   ...brandingProcess,
   ...brandingPortfolio,
   ...motionBasics,
+  ...motionBasics2,
+  ...motionInterfaceTools,
   ...motionPrinciples,
   ...motionTimingEasing,
+  ...motionTimingEasing2,
+  ...motionKeyframesPractice,
   ...motionUi,
+  ...motionUi2,
   ...motionTypography,
+  ...motionTypography2,
   ...motionShapeLogo,
+  ...motionShapeLogo2,
+  ...motionMasksComposition,
+  ...motionEffects,
+  ...motionLogoAnimation,
   ...motionStoryboard,
+  ...motionStoryboard2,
+  ...motionAdsSocial,
   ...motionSound,
+  ...motionSound2,
   ...motionToolsExport,
+  ...motionToolsExport2,
   ...motionProcess,
   ...motionPortfolio,
+  ...motionPortfolio2,
 ]
 
 export function getModule(id) {

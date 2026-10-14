@@ -1498,12 +1498,24 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .branding-mockup-label { font-size: 11.5px; color: var(--muted); }
 
 /* Motion Design Studio — канвас + таймлайн + keyframes (motionEngine.js) */
+.motion-topbar-sticky { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; }
+.motion-autosave-note { font-size: 11.5px; color: var(--muted); flex-basis: 100%; }
 .motion-anim-stage { display: flex; flex-direction: column; gap: 12px; }
+.motion-howto { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; margin: 0; }
 .motion-anim-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
-.motion-anim-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
-.motion-canvas-wrap { background: #0E0E11; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; flex: 1 1 260px; min-width: 160px; width: 100%; }
+/* Канва й таймлайн — ОДНА первинна колонка, завжди разом: таймлайн
+   більше не може опинитись «нижче за прокруткою» за панеллю
+   властивостей, бо панель властивостей тепер окремий блок ПІСЛЯ цієї
+   пари, а не поруч у тому самому рядку. */
+.motion-anim-primary { display: flex; flex-direction: column; gap: 10px; }
+.motion-canvas-wrap { position: relative; background: #0E0E11; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; width: 100%; margin: 0 auto; }
 .motion-canvas-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: default; }
-.motion-props-panel { flex: 1 1 220px; min-width: 200px; display: flex; flex-direction: column; gap: 10px; }
+.motion-time-badge {
+  position: absolute; top: 8px; left: 8px; z-index: 2; background: rgba(0,0,0,.6); color: #fff;
+  font-size: 12px; font-variant-numeric: tabular-nums; padding: 3px 8px; border-radius: 999px; pointer-events: none;
+}
+.motion-props-panel { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.motion-warning { background: rgba(230,160,40,.12); border: 1px solid rgba(230,160,40,.4); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 13px; color: var(--ink); }
 /* На етапі «Анімація» канвасу потрібно набагато більше простору, ніж
    текстовим формам інших етапів — підказка переноситься під центральну
    колонку на повну ширину замість того, щоб стискати канвас у вузьку

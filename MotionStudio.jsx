@@ -52,6 +52,7 @@ function IdeaStage({ project, onPatch }) {
   return (
     <div className="branding-form">
       <p className="cl-section-title">Ідея та сценарій</p>
+      <p className="cl-tab-desc">Це перший, текстовий етап — тут нічого не малюється. Заповни поля нижче (можна коротко), тоді переходь на етап «🎬 Анімація» ліворуч — там вже реальний канвас, де будуєш і рухаєш об'єкти.</p>
       <TextField label="Мета ролика" value={i.goal} onCommit={set('goal')} placeholder="Навіщо цей ролик існує" />
       <TextField label="Сценарій" value={i.scenario} onCommit={set('scenario')} textarea placeholder="Що відбувається від початку до кінця" />
       <TextField label="Цільова аудиторія" value={i.audience} onCommit={set('audience')} />
@@ -76,6 +77,7 @@ function StoryboardStage({ project, onPatch }) {
   return (
     <div className="branding-form">
       <p className="cl-section-title">Розкадровка</p>
+      <p className="cl-tab-desc">Теж текстовий етап — плануєш послідовність кадрів словами, перш ніж будувати їх на канвасі. Натисни «+ Новий кадр», опиши, що відбувається, і онови тривалість. Коли план готовий — переходь на «🎬 Анімація», щоб це реально побудувати й заанімувати.</p>
       <p className="cl-tab-desc">Орієнтовна загальна тривалість за кадрами: {(totalMs / 1000).toFixed(1)}с</p>
       <button className="harmony-btn" onClick={addFrame}>+ Новий кадр</button>
       {frames.map((f, idx) => (
@@ -442,9 +444,20 @@ function AnimationStage({ project, onPatch, toastApi }) {
   })
 
   const longestKf = maxKeyframeTime(objects)
+  // Якщо на обраному об'єкті є хоча б 1 ключовий кадр на якійсь
+  // властивості, але ніде немає 2+ — об'єкт виглядає «готовим», але
+  // рухатись йому нічим (нема між чим інтерполювати). Це найчастіша
+  // причина скарги «анімація не працює» — тому підказка має бути явною,
+  // а не захованою в документації.
+  const kfCounts = selected ? Object.values(selected.keyframes).map((kfs) => (kfs || []).length) : []
+  const hasAnyKf = kfCounts.some((n) => n >= 1)
+  const hasMotion = kfCounts.some((n) => n >= 2)
 
   return (
     <div className="motion-anim-stage">
+      <p className="cl-tab-desc motion-howto">
+        <strong>Як це працює:</strong> додай фігуру → клікни по шкалі часу внизу, щоб обрати момент → перемісти/зміни фігуру (чи введи число в полі праворуч) — ключовий кадр з'явиться в цю мить автоматично. Один кадр = нічого не рухається. Перейди в ІНШУ мить часу і зміни об'єкт ще раз — це додасть другий кадр, і між ними з'явиться рух. Натисни ▶, щоб перевірити.
+      </p>
       <div className="motion-anim-toolbar">
         <button className="cl-mini-btn" onClick={() => addShape('rect')}>▭ Прямокутник</button>
         <button className="cl-mini-btn" onClick={() => addShape('ellipse')}>◯ Еліпс</button>
@@ -453,8 +466,9 @@ function AnimationStage({ project, onPatch, toastApi }) {
         {selected && <button className="cl-mini-btn" onClick={deleteSelected}>🗑 Видалити</button>}
       </div>
 
-      <div className="motion-anim-row">
+      <div className="motion-anim-primary">
         <div className="motion-canvas-wrap" style={{ maxWidth: maxDisplayW, aspectRatio: `${project.canvas.w} / ${project.canvas.h}` }}>
+          <span className="motion-time-badge">⏱ {(time / 1000).toFixed(2)}с</span>
           <canvas
             ref={canvasRef}
             style={{ width: '100%', height: '100%' }}
@@ -465,45 +479,49 @@ function AnimationStage({ project, onPatch, toastApi }) {
           />
         </div>
 
-        <div className="motion-props-panel">
-          {!selected && <p className="cl-tab-desc">Додай чи обери об’єкт, щоб побачити властивості.</p>}
-          {selected && (
-            <>
-              <p className="cl-section-title">{selected.type === 'text' ? 'Текст' : selected.type === 'ellipse' ? 'Еліпс' : 'Прямокутник'}</p>
-              {selected.type === 'text' && (
-                <label className="gfx-field">Текст
-                  <input className="cl-text-input" value={selected.text} onChange={(e) => setBaseProp({ text: e.target.value })} />
-                </label>
-              )}
-              <label className="gfx-field">Колір
-                <input type="color" className="sketchpad-colorpicker" value={selected.fill} onChange={(e) => setBaseProp({ fill: e.target.value })} />
-              </label>
-              <label className="gfx-field">
-                Easing для нових ключових кадрів
-                <select className="cl-text-input" value={easingForNewKf} onChange={(e) => setEasingForNewKf(e.target.value)}>
-                  {EASINGS.map((e) => <option key={e.key} value={e.key}>{e.label}</option>)}
-                </select>
-              </label>
-              {['x', 'y', 'w', 'h', 'rotation', 'opacity'].map((prop) => (
-                <PropertyRow key={prop} prop={prop} obj={selected} time={time} onSet={setProp} onRemoveKf={removeKf} />
-              ))}
-            </>
-          )}
-        </div>
+        <Timeline
+          objects={objects}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          time={time}
+          duration={duration}
+          onSeek={setTime}
+          onDurationChange={(ms) => onPatch({ duration: Math.max(ms, longestKf + 200, 500) })}
+          playing={playing}
+          onTogglePlay={togglePlay}
+          onRestart={() => setTime(0)}
+        />
       </div>
 
-      <Timeline
-        objects={objects}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        time={time}
-        duration={duration}
-        onSeek={setTime}
-        onDurationChange={(ms) => onPatch({ duration: Math.max(ms, longestKf + 200, 500) })}
-        playing={playing}
-        onTogglePlay={togglePlay}
-        onRestart={() => setTime(0)}
-      />
+      <div className="motion-props-panel">
+        {!selected && <p className="cl-tab-desc">Додай чи обери об’єкт, щоб побачити властивості.</p>}
+        {selected && (
+          <>
+            <p className="cl-section-title">{selected.type === 'text' ? 'Текст' : selected.type === 'ellipse' ? 'Еліпс' : 'Прямокутник'}</p>
+            {hasAnyKf && !hasMotion && (
+              <p className="motion-warning">⚠ Поки що лише 1 ключовий кадр — об'єкт не рухається. Клікни по іншому місцю на шкалі часу внизу й зміни цю фігуру ще раз, щоб додати другий кадр.</p>
+            )}
+            {selected.type === 'text' && (
+              <label className="gfx-field">Текст
+                <input className="cl-text-input" value={selected.text} onChange={(e) => setBaseProp({ text: e.target.value })} />
+              </label>
+            )}
+            <label className="gfx-field">Колір
+              <input type="color" className="sketchpad-colorpicker" value={selected.fill} onChange={(e) => setBaseProp({ fill: e.target.value })} />
+            </label>
+            <label className="gfx-field">
+              Easing для нових ключових кадрів
+              <select className="cl-text-input" value={easingForNewKf} onChange={(e) => setEasingForNewKf(e.target.value)}>
+                {EASINGS.map((e) => <option key={e.key} value={e.key}>{e.label}</option>)}
+              </select>
+            </label>
+            {['x', 'y', 'w', 'h', 'rotation', 'opacity'].map((prop) => (
+              <PropertyRow key={prop} prop={prop} obj={selected} time={time} onSet={setProp} onRemoveKf={removeKf} />
+            ))}
+          </>
+        )}
+      </div>
+
       {objects.length > 0 && (
         <button className="cl-mini-btn" style={{ marginTop: 8 }} onClick={() => toastApi.show(`Перевірено живцем: ${(duration / 1000).toFixed(1)}с (принцип з уроку 24304)`)}>
           ✓ Позначити: перевірено відтворенням
@@ -611,13 +629,14 @@ export default function MotionStudio() {
       <div className="dict-breadcrumb">
         <Link to="/academy/motion-design">Motion Design Studio</Link> <span>→</span> <span>{project.name}</span>
       </div>
-      <div className="gfx-topbar">
+      <div className="gfx-topbar motion-topbar-sticky">
         <input className="cl-text-input" style={{ flex: 1, minWidth: 160 }} defaultValue={project.name} onBlur={(e) => onPatch({ name: e.target.value || 'Новий моушн-проєкт' })} placeholder="Назва проєкту" />
         <select className="cl-text-input" style={{ maxWidth: 220 }} defaultValue="" onChange={(e) => { const p = CANVAS_PRESETS.find((c) => c.id === e.target.value); if (p) onPatch({ canvas: { w: p.w, h: p.h } }) }}>
           <option value="" disabled>Розмір канви…</option>
           {CANVAS_PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
         </select>
         <button className="harmony-btn" onClick={() => { saveMotionProject(project); toastApi.show('✓ Збережено') }}>💾 Зберегти</button>
+        <span className="motion-autosave-note">Кожна зміна зберігається автоматично — ця кнопка лише підтверджує збереження назви проєкту.</span>
       </div>
 
       <div className={'branding-layout' + (stage === 'animation' ? ' branding-layout--canvas' : '')}>
