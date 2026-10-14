@@ -18,7 +18,7 @@ import {
 const STAGE_HELP = {
   research: { tip: 'Опиши мету дослідження, сформулюй запитання, додай нотатки й виведи з них інсайти. Дані тут навчальні — не видавай їх за реальне дослідження.', criteria: ['Є мета дослідження', 'Запитання не підказують відповідь', 'Інсайти відрізняються від припущень'] },
   persona: { tip: 'Заповни персону на основі дослідження (чи навчального сценарію): цілі, потреби, мотивація, бар’єри.', criteria: ['Є ціль і контекст', 'Описані потреби й бар’єри', 'Персона пов’язана з реальною проблемою'] },
-  journey: { tip: 'Додай етапи шляху користувача (кнопка «+ Етап»): дія, думки, емоція, проблема, можливість, пріоритет на кожен рядок.', criteria: ['Є щонайменше 3 етапи', 'Позначені проблемні точки', 'Є хоч одна можливість покращення'] },
+  journey: { tip: 'Додай етапи шляху користувача (кнопка «+ Етап»): дія, думки, емоція, проблема, можливість, пріоритет на кожен рядок, і постав рівень емоції емодзі-кнопками — з нього будується крива емоцій.', criteria: ['Є щонайменше 3 етапи', 'Позначені проблемні точки', 'Є хоч одна можливість покращення'] },
   problem: { tip: 'Відрізни симптом від справжньої проблеми, сформулюй Problem Statement і How Might We.', criteria: ['Problem Statement сформульовано', 'Є бодай одне How Might We'] },
   ia: { tip: 'Додай розділи сайту/застосунку з рівнем вкладеності (0 — корінь, 1 — підрозділ, 2 — під-підрозділ).', criteria: ['Є щонайменше 5 розділів', 'Структура має більше ніж 1 рівень'] },
   flow: { tip: 'Додай блоки (Початок/Дія/Рішення/Завершення/Помилка), перетягни їх, потім клікни по одному й по другому блоку — зʼявиться з’єднання. «Перевірити потік» показує, чи немає тупиків.', criteria: ['Є блок «Початок»', 'Є блок «Завершення»', 'Усі блоки з’єднані, немає тупиків (перевір кнопкою)'] },
@@ -119,11 +119,89 @@ const JOURNEY_COLS = [
   { key: 'opportunity', label: 'Можливість' },
 ]
 const PRIORITIES = ['Низький', 'Середній', 'Високий']
+const EMOTION_SCALE = [
+  { score: 1, emoji: '😡', label: 'Дуже негативна' },
+  { score: 2, emoji: '🙁', label: 'Негативна' },
+  { score: 3, emoji: '😐', label: 'Нейтральна' },
+  { score: 4, emoji: '🙂', label: 'Позитивна' },
+  { score: 5, emoji: '😄', label: 'Дуже позитивна' },
+]
+const JOURNEY_CHART = { w: 820, h: 200 }
+
+// Крива емоцій — реальний графік, намальований з emotionScore, який сам
+// користувач проставив на кожному етапі (кнопки-емодзі нижче), а не
+// автоматично «розпізнаний» з вільного тексту поля «Емоція»: оцінювати
+// емоційний тон чужого тексту автоматично — саме та фальшива аналітика,
+// яку ця студія свідомо не робить ніде.
+function JourneyEmotionChart({ rows }) {
+  const canvasRef = useRef(null)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    canvas.width = JOURNEY_CHART.w
+    canvas.height = JOURNEY_CHART.h
+    const ctx = canvas.getContext('2d')
+    const PAD = { l: 46, r: 20, t: 16, b: 34 }
+    const w = canvas.width - PAD.l - PAD.r
+    const h = canvas.height - PAD.t - PAD.b
+    ctx.fillStyle = '#1C1C24'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    const yFor = (score) => PAD.t + ((5 - score) / 4) * h
+    const xFor = (i) => (rows.length <= 1 ? PAD.l + w / 2 : PAD.l + (i / (rows.length - 1)) * w)
+
+    ctx.font = '13px sans-serif'
+    ctx.textBaseline = 'middle'
+    for (const level of EMOTION_SCALE) {
+      const y = yFor(level.score)
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)'
+      ctx.beginPath()
+      ctx.moveTo(PAD.l, y)
+      ctx.lineTo(PAD.l + w, y)
+      ctx.stroke()
+      ctx.textAlign = 'center'
+      ctx.fillStyle = '#9D9DA8'
+      ctx.fillText(level.emoji, 20, y)
+    }
+
+    if (rows.length > 0) {
+      ctx.strokeStyle = '#6B62FF'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      rows.forEach((r, i) => {
+        const x = xFor(i)
+        const y = yFor(r.emotionScore || 3)
+        if (i === 0) ctx.moveTo(x, y)
+        else ctx.lineTo(x, y)
+      })
+      ctx.stroke()
+
+      rows.forEach((r, i) => {
+        const x = xFor(i)
+        const y = yFor(r.emotionScore || 3)
+        ctx.fillStyle = '#6B62FF'
+        ctx.beginPath()
+        ctx.arc(x, y, 5, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#F5F5F7'
+        ctx.textAlign = i === 0 ? 'left' : i === rows.length - 1 ? 'right' : 'center'
+        ctx.font = '12px sans-serif'
+        const label = (r.stage || `Етап ${i + 1}`).slice(0, 14)
+        ctx.fillText(label, x, canvas.height - PAD.b + 18)
+      })
+    }
+  })
+  return (
+    <div className="motion-canvas-wrap" style={{ maxWidth: JOURNEY_CHART.w, aspectRatio: `${JOURNEY_CHART.w} / ${JOURNEY_CHART.h}`, marginBottom: 16 }}>
+      <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+    </div>
+  )
+}
 
 function JourneyStage({ project, onPatch }) {
   const rows = project.journey.rows
   function add() {
-    onPatch({ journey: { rows: [...rows, { id: crypto.randomUUID(), stage: '', action: '', thoughts: '', emotion: '', painPoint: '', opportunity: '', priority: 'Середній' }] } })
+    onPatch({ journey: { rows: [...rows, { id: crypto.randomUUID(), stage: '', action: '', thoughts: '', emotion: '', emotionScore: 3, painPoint: '', opportunity: '', priority: 'Середній' }] } })
   }
   function update(id, patch) { onPatch({ journey: { rows: rows.map((r) => (r.id === id ? { ...r, ...patch } : r)) } }) }
   function remove(id) { onPatch({ journey: { rows: rows.filter((r) => r.id !== id) } }) }
@@ -140,6 +218,13 @@ function JourneyStage({ project, onPatch }) {
       <p className="cl-section-title">User Journey Map</p>
       <button className="harmony-btn" onClick={add}>+ Етап</button>
       {rows.length === 0 && <p className="cl-tab-desc">Ще немає жодного етапу.</p>}
+      {rows.length > 0 && (
+        <>
+          <p className="cl-section-title" style={{ marginTop: 16 }}>Крива емоцій</p>
+          <p className="cl-tab-desc">Будується з рівня емоції, який ти проставляєш на кожному етапі нижче — студія не вгадує емоцію з тексту.</p>
+          <JourneyEmotionChart rows={rows} />
+        </>
+      )}
       {rows.map((r, i) => (
         <div key={r.id} className="branding-name-card ux-journey-row">
           <div className="gfx-row" style={{ alignItems: 'center' }}>
@@ -151,6 +236,21 @@ function JourneyStage({ project, onPatch }) {
           {JOURNEY_COLS.map((c) => (
             <TextField key={c.key} label={c.label} value={r[c.key]} onCommit={(v) => update(r.id, { [c.key]: v })} />
           ))}
+          <label className="gfx-field">Рівень емоції (для графіка)
+            <div className="gfx-row" style={{ gap: 4, marginTop: 4 }}>
+              {EMOTION_SCALE.map((level) => (
+                <button
+                  key={level.score}
+                  type="button"
+                  className={'cl-mini-btn' + ((r.emotionScore || 3) === level.score ? ' active' : '')}
+                  title={level.label}
+                  onClick={() => update(r.id, { emotionScore: level.score })}
+                >
+                  {level.emoji}
+                </button>
+              ))}
+            </div>
+          </label>
           <label className="gfx-field">Пріоритет
             <select className="cl-text-input" value={r.priority} onChange={(e) => update(r.id, { priority: e.target.value })}>
               {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
