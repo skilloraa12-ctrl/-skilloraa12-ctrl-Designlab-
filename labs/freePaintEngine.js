@@ -21,6 +21,13 @@ export const BRUSH_TYPES = [
   { key: 'chalk', label: 'Крейда', icon: '▦' },
   { key: 'ink', label: 'Туш', icon: '✒' },
   { key: 'hatch', label: 'Штрихування', icon: '▨' },
+  { key: 'spray', label: 'Балончик', icon: '∴' },
+  { key: 'texture', label: 'Текстура', icon: '▧' },
+  { key: 'paint', label: 'Фарба', icon: '⬤' },
+  { key: 'lace', label: 'Ажур', icon: '❋' },
+  { key: 'grass', label: 'Трава', icon: '🌿' },
+  { key: 'fur', label: 'Хутро', icon: '≋' },
+  { key: 'hair', label: 'Волосся', icon: '〰' },
 ]
 
 export const SHAPE_TYPES = [
@@ -144,6 +151,129 @@ function stampDab(ctx, x, y, { size, color, opacity, erase, brushType }) {
     ctx.beginPath()
     ctx.arc(x, y, r * 0.6, 0, Math.PI * 2)
     ctx.fill()
+  } else if (brushType === 'spray') {
+    // Балончик: випадкові крапки по колу, густіше ближче до центра — аерограф.
+    const dots = Math.max(6, Math.round(size * 1.4))
+    ctx.fillStyle = ink
+    for (let i = 0; i < dots; i++) {
+      const a = Math.random() * Math.PI * 2
+      const d = Math.sqrt(Math.random()) * r
+      const s = 0.6 + Math.random() * 1.2
+      ctx.globalAlpha = opacity * (0.2 + Math.random() * 0.4)
+      ctx.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, s, s)
+    }
+  } else if (brushType === 'texture') {
+    // Текстура: нерівні грудкуваті плями випадкової форми — зерно полотна/штукатурки.
+    const blobs = Math.max(4, Math.round(size * 0.35))
+    ctx.fillStyle = ink
+    for (let i = 0; i < blobs; i++) {
+      const a = Math.random() * Math.PI * 2
+      const d = Math.random() * r * 0.8
+      const br = r * (0.18 + Math.random() * 0.35)
+      ctx.globalAlpha = opacity * (0.25 + Math.random() * 0.35)
+      ctx.beginPath()
+      ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d, br, br * (0.6 + Math.random() * 0.6), Math.random() * Math.PI, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  } else if (brushType === 'paint') {
+    // Фарба/гуаш: густий непрозорий мазок із ледь помітними світлішими й
+    // темнішими крапками пігменту — нерівномірність густої фарби.
+    ctx.globalAlpha = opacity
+    ctx.fillStyle = ink
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+    ctx.fill()
+    const flecks = Math.max(2, Math.round(size * 0.25))
+    for (let i = 0; i < flecks; i++) {
+      const a = Math.random() * Math.PI * 2
+      const d = Math.random() * r * 0.75
+      const s = r * (0.15 + Math.random() * 0.25)
+      ctx.globalAlpha = opacity * 0.18
+      ctx.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#000000'
+      ctx.beginPath()
+      ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, s, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  } else if (brushType === 'lace') {
+    // Ажур: розетка з дрібних крапок навколо центра — мереживний візерунок.
+    ctx.fillStyle = ink
+    const petals = 6
+    const pr = r * 0.8
+    for (let i = 0; i < petals; i++) {
+      const a = (i / petals) * Math.PI * 2
+      ctx.globalAlpha = opacity * 0.85
+      ctx.beginPath()
+      ctx.arc(x + Math.cos(a) * pr, y + Math.sin(a) * pr, Math.max(1, r * 0.14), 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.globalAlpha = opacity * 0.6
+    ctx.beginPath()
+    ctx.arc(x, y, Math.max(1, r * 0.12), 0, Math.PI * 2)
+    ctx.fill()
+  } else if (brushType === 'grass') {
+    // Трава: кілька тонких вигнутих стеблинок, здебільшого вгору з розкидом.
+    const blades = Math.max(2, Math.round(size * 0.3))
+    ctx.strokeStyle = ink
+    ctx.lineCap = 'round'
+    for (let i = 0; i < blades; i++) {
+      const baseA = -Math.PI / 2 + (Math.random() - 0.5) * 1.4
+      const len = r * (0.7 + Math.random() * 0.9)
+      const bx = x + (Math.random() - 0.5) * r * 0.6
+      const by = y + (Math.random() - 0.5) * r * 0.6
+      const lean = (Math.random() - 0.5) * 0.6
+      ctx.globalAlpha = opacity * (0.5 + Math.random() * 0.4)
+      ctx.lineWidth = Math.max(0.6, size * 0.05)
+      ctx.beginPath()
+      ctx.moveTo(bx, by)
+      ctx.quadraticCurveTo(
+        bx + Math.cos(baseA) * len * 0.5,
+        by + Math.sin(baseA) * len * 0.5,
+        bx + Math.cos(baseA + lean) * len,
+        by + Math.sin(baseA + lean) * len
+      )
+      ctx.stroke()
+    }
+  } else if (brushType === 'fur') {
+    // Хутро: багато коротких тонких ворсинок у різні боки — пухнаста текстура.
+    const hairs = Math.max(5, Math.round(size * 0.6))
+    ctx.strokeStyle = ink
+    ctx.lineCap = 'round'
+    for (let i = 0; i < hairs; i++) {
+      const a = Math.random() * Math.PI * 2
+      const d = Math.random() * r * 0.5
+      const len = r * (0.3 + Math.random() * 0.5)
+      const sx = x + Math.cos(a) * d
+      const sy = y + Math.sin(a) * d
+      ctx.globalAlpha = opacity * (0.3 + Math.random() * 0.4)
+      ctx.lineWidth = Math.max(0.5, size * 0.04)
+      ctx.beginPath()
+      ctx.moveTo(sx, sy)
+      ctx.lineTo(sx + Math.cos(a) * len, sy + Math.sin(a) * len)
+      ctx.stroke()
+    }
+  } else if (brushType === 'hair') {
+    // Волосся: довші хвилясті пасма, впорядкованіші й витягнутіші, ніж хутро.
+    const strands = Math.max(2, Math.round(size * 0.22))
+    ctx.strokeStyle = ink
+    ctx.lineCap = 'round'
+    for (let i = 0; i < strands; i++) {
+      const a = (Math.random() - 0.5) * 0.9 - Math.PI / 2
+      const len = r * (1.4 + Math.random() * 1.1)
+      const sx = x + (Math.random() - 0.5) * r * 0.7
+      const sy = y + (Math.random() - 0.5) * r * 0.7
+      const wig = (Math.random() - 0.5) * len * 0.35
+      ctx.globalAlpha = opacity * (0.4 + Math.random() * 0.35)
+      ctx.lineWidth = Math.max(0.5, size * 0.035)
+      ctx.beginPath()
+      ctx.moveTo(sx, sy)
+      ctx.quadraticCurveTo(
+        sx + Math.cos(a) * len * 0.5 + wig,
+        sy + Math.sin(a) * len * 0.5,
+        sx + Math.cos(a) * len,
+        sy + Math.sin(a) * len
+      )
+      ctx.stroke()
+    }
   } else {
     // 'hard' — чіткий круглий штамп, базовий пензель.
     ctx.globalAlpha = opacity
@@ -153,6 +283,17 @@ function stampDab(ctx, x, y, { size, color, opacity, erase, brushType }) {
     ctx.fill()
   }
   ctx.restore()
+}
+
+// Відстань між штампами вздовж мазка — своя для кожного типу пензля, щоб
+// великі мотиви (ажур, волосся) лишались окремими, а не зливались у пляму.
+const STEP_MULT = {
+  spray: 0.2,
+  texture: 0.3,
+  lace: 0.9,
+  grass: 0.4,
+  fur: 0.3,
+  hair: 0.55,
 }
 
 // Мазок від (x0,y0) до (x1,y1): для твердого/м'якого пензля — швидкий
@@ -180,7 +321,8 @@ export function strokeSegment(ctx, x0, y0, x1, y1, opts) {
     return
   }
   const dist = Math.hypot(x1 - x0, y1 - y0)
-  const step = Math.max(1, size * 0.16)
+  const stepMult = STEP_MULT[brushType] ?? 0.16
+  const step = Math.max(1, size * stepMult)
   const count = Math.max(1, Math.ceil(dist / step))
   for (let i = 0; i <= count; i++) {
     const t = i / count
