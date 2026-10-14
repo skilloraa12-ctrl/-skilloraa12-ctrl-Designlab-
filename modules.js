@@ -173,6 +173,19 @@ import { LESSONS as motionToolsExport2 } from './lessons/motion-tools-export-2.j
 import { LESSONS as motionProcess } from './lessons/motion-process.js'
 import { LESSONS as motionPortfolio } from './lessons/motion-portfolio.js'
 import { LESSONS as motionPortfolio2 } from './lessons/motion-portfolio-2.js'
+import { LESSONS as uxDesignBasics } from './lessons/ux-basics.js'
+import { LESSONS as uxDesignResearch } from './lessons/ux-research.js'
+import { LESSONS as uxDesignAnalysis } from './lessons/ux-analysis.js'
+import { LESSONS as uxDesignProblem } from './lessons/ux-problem.js'
+import { LESSONS as uxDesignPersona } from './lessons/ux-persona.js'
+import { LESSONS as uxDesignJourney } from './lessons/ux-journey.js'
+import { LESSONS as uxDesignIa } from './lessons/ux-ia.js'
+import { LESSONS as uxDesignFlow } from './lessons/ux-flow.js'
+import { LESSONS as uxDesignWireframe } from './lessons/ux-wireframe.js'
+import { LESSONS as uxDesignPrototype } from './lessons/ux-prototype.js'
+import { LESSONS as uxDesignTesting } from './lessons/ux-testing.js'
+import { LESSONS as uxDesignIteration } from './lessons/ux-iteration.js'
+import { LESSONS as uxDesignCasePortfolio } from './lessons/ux-case-portfolio.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -327,6 +340,19 @@ export const MODULES = [
   ...motionProcess,
   ...motionPortfolio,
   ...motionPortfolio2,
+  ...uxDesignBasics,
+  ...uxDesignResearch,
+  ...uxDesignAnalysis,
+  ...uxDesignProblem,
+  ...uxDesignPersona,
+  ...uxDesignJourney,
+  ...uxDesignIa,
+  ...uxDesignFlow,
+  ...uxDesignWireframe,
+  ...uxDesignPrototype,
+  ...uxDesignTesting,
+  ...uxDesignIteration,
+  ...uxDesignCasePortfolio,
 ]
 
 export function getModule(id) {

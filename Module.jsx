@@ -4,6 +4,7 @@ import { getModule, MODULES } from './modules.js'
 import { getSubcategory } from './subcategories.js'
 import { useProgress } from './ProgressContext.jsx'
 import { createEmptyMotionProject } from './motionProject.js'
+import { createEmptyUxProject } from './uxProject.js'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import GameDesignStudio from './GameDesignStudio.jsx'
@@ -39,10 +40,29 @@ const MOTION_SUBCAT_STAGE = {
   'motion-portfolio': 'presentation',
 }
 
+// Кожен урок UX Design веде в конкретний етап реальної UX Design
+// Studio — підкатегорія уроку буквально повторює крок UX-процесу
+// (uxProject.js: UX_STAGES), тож мапінг тут прямий, 1-в-1.
+const UX_SUBCAT_STAGE = {
+  'ux-basics': 'research',
+  'ux-research': 'research',
+  'ux-analysis': 'research',
+  'ux-problem': 'problem',
+  'ux-persona': 'persona',
+  'ux-journey': 'journey',
+  'ux-ia': 'ia',
+  'ux-flow': 'flow',
+  'ux-wireframe': 'wireframe',
+  'ux-prototype': 'prototype',
+  'ux-testing': 'testing',
+  'ux-iteration': 'audit',
+  'ux-case-portfolio': 'presentation',
+}
+
 export default function Module() {
   const { id } = useParams()
   const module = getModule(id)
-  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject } = useProgress()
+  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject } = useProgress()
   const navigate = useNavigate()
   const [sketchOpen, setSketchOpen] = useState(false)
   const [presentationOpen, setPresentationOpen] = useState(false)
@@ -58,6 +78,9 @@ export default function Module() {
   // Design Studio — замість посилання на спільний, однаковий для всіх
   // уроків Motion Lab.
   const usesMotionStudio = module.level === 'motion-design'
+  // UX Design відкриває справжню UX Design Studio (research/persona/
+  // journey/flow/wireframe/prototype/...) замість загального ескізу.
+  const usesUxStudio = module.level === 'ux-design'
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -219,6 +242,18 @@ export default function Module() {
                 }}
               >
                 🎬 Відкрити «Motion Design Studio»
+              </button>
+            ) : usesUxStudio ? (
+              <button
+                className="complete-btn"
+                onClick={() => {
+                  const stage = UX_SUBCAT_STAGE[module.subcategory] || 'research'
+                  const existing = uxProjects[0]
+                  const id = existing ? existing.id : saveUxProject(createEmptyUxProject('Новий UX-проєкт'))
+                  navigate(`/ux-studio/${id}`, { state: { stage } })
+                }}
+              >
+                🧠 Відкрити «UX Design Studio»
               </button>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>

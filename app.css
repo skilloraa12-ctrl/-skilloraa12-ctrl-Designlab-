@@ -1551,6 +1551,22 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .motion-layer-controls .cl-mini-btn { margin-left: 0; padding: 2px 6px; }
 .motion-layer-controls .cl-mini-btn:disabled { opacity: .3; cursor: not-allowed; }
 .motion-anim-toolbar .cl-mini-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* UX Design Studio — список-редактори (дослідження/тестування),
+   User Journey, інформаційна архітектура, UX Audit. Канва User Flow /
+   Wireframes / Прев'ю прототипу перевикористовують .motion-anim-* та
+   .motion-canvas-wrap класи Motion Studio (той самий layout-патерн). */
+.ux-list-editor { display: flex; flex-direction: column; gap: 6px; }
+.ux-list-row { display: flex; align-items: center; gap: 8px; }
+.ux-list-row .cl-text-input { flex: 1; }
+.ux-journey-row { display: flex; flex-direction: column; gap: 10px; }
+.ux-ia-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.ux-audit-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.ux-audit-check { display: flex; align-items: center; gap: 8px; flex: 1; font-size: 13.5px; cursor: pointer; }
+.ux-audit-row .cl-text-input { max-width: 220px; }
+.ux-screen-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.ux-flow-canvas { background: #fff; }
+
 @media (max-width: 860px) {
   .branding-stages { width: 100%; flex-direction: row; flex-wrap: wrap; }
   .branding-side { width: 100%; }

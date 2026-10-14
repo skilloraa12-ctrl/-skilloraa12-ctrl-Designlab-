@@ -17,6 +17,7 @@ const EMPTY_STATE = {
   graphicProjects: [],
   brandProjects: [],
   motionProjects: [],
+  uxProjects: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -233,6 +234,44 @@ export function ProgressProvider({ children }) {
     return newId
   }, [])
 
+  // Єдина модель UX-проєкту (UX Design Studio) — та сама логіка злиття
+  // за полями: кожен етап (Дослідження, Персона, User Journey, User
+  // Flow, Wireframes, Прототип, Тестування, UX Audit, Презентація)
+  // пише у той самий запис, тож персона, створена на своєму етапі,
+  // одразу видна в автозведенні UX-кейсу.
+  const saveUxProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.uxProjects.find((p) => p.id === id)
+      const now = new Date().toISOString()
+      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
+      return {
+        ...prev,
+        uxProjects: exists
+          ? prev.uxProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.uxProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removeUxProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, uxProjects: prev.uxProjects.filter((p) => p.id !== id) }))
+  }, [])
+
+  const duplicateUxProject = useCallback((id) => {
+    let newId = null
+    setState((prev) => {
+      const src = prev.uxProjects.find((p) => p.id === id)
+      if (!src) return prev
+      newId = crypto.randomUUID()
+      const now = new Date().toISOString()
+      const copy = { ...src, id: newId, name: src.name + ' (копія)', createdAt: now, updatedAt: now }
+      return { ...prev, uxProjects: [copy, ...prev.uxProjects] }
+    })
+    return newId
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -287,6 +326,7 @@ export function ProgressProvider({ children }) {
     graphicProjects: state.graphicProjects, saveGraphicProject, removeGraphicProject,
     brandProjects: state.brandProjects, saveBrandProject, removeBrandProject, duplicateBrandProject,
     motionProjects: state.motionProjects, saveMotionProject, removeMotionProject, duplicateMotionProject,
+    uxProjects: state.uxProjects, saveUxProject, removeUxProject, duplicateUxProject,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,

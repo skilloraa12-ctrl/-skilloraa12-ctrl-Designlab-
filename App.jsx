@@ -8,6 +8,7 @@ import AcademyDirection from './AcademyDirection.jsx'
 import AcademySubcategory from './AcademySubcategory.jsx'
 import BrandingStudio from './BrandingStudio.jsx'
 import MotionStudio from './MotionStudio.jsx'
+import UXStudio from './UXStudio.jsx'
 import Module from './Module.jsx'
 import ProgressPage from './Progress.jsx'
 import Glossary from './Glossary.jsx'
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/academy/:direction/:subcategory" element={<RequireAuth><AcademySubcategory /></RequireAuth>} />
           <Route path="/branding-studio/:projectId" element={<RequireAuth><BrandingStudio /></RequireAuth>} />
           <Route path="/motion-studio/:projectId" element={<RequireAuth><MotionStudio /></RequireAuth>} />
+          <Route path="/ux-studio/:projectId" element={<RequireAuth><UXStudio /></RequireAuth>} />
           <Route path="/module/:id" element={<RequireAuth><Module /></RequireAuth>} />
           <Route path="/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
           <Route path="/glossary" element={<Glossary />} />
