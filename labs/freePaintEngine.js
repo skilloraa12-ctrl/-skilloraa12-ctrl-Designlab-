@@ -28,7 +28,115 @@ export const BRUSH_TYPES = [
   { key: 'grass', label: 'Трава', icon: '🌿' },
   { key: 'fur', label: 'Хутро', icon: '≋' },
   { key: 'hair', label: 'Волосся', icon: '〰' },
+  { key: 'neon', label: 'Неон', icon: '⚡' },
 ]
+
+// Варіанти (підтипи) кожного пензля — обирається рядком під типами
+// пензлів. Кожен варіант реально змінює рендеринг (множники розміру/
+// прозорості/розкиду, інший візерунок чи фіксований колір матеріалу),
+// а не просто перейменовує той самий штрих.
+export const BRUSH_VARIANTS = {
+  hard: [
+    { key: 'thin', label: 'Тонка', sizeMul: 0.45 },
+    { key: 'medium', label: 'Середня', sizeMul: 0.85 },
+    { key: 'thick', label: 'Товста', sizeMul: 1.4 },
+    { key: 'cartoon', label: 'Мультяшний контур', sizeMul: 1.15, outline: true },
+  ],
+  soft: [
+    { key: 'light', label: 'Легка', alphaMul: 0.45, blurMul: 0.7 },
+    { key: 'medium', label: 'Середня', alphaMul: 0.85, blurMul: 1 },
+    { key: 'wide', label: 'Широка', sizeMul: 1.7, blurMul: 1.1 },
+    { key: 'airbrush', label: 'Аерограф', alphaMul: 0.3, blurMul: 2.4 },
+  ],
+  pencil: [
+    { key: 'hb', label: 'HB', alphaMul: 0.55 },
+    { key: '2b', label: '2B', alphaMul: 0.95, speckMul: 1.5 },
+    { key: 'colored', label: 'Кольоровий', softEdge: true },
+    { key: 'mechanical', label: 'Механічний', sizeMul: 0.5, speckMul: 0.4 },
+  ],
+  watercolor: [
+    { key: 'wetfill', label: 'Мокра заливка', alphaMul: 0.28, spreadMul: 1.3 },
+    { key: 'gradient', label: 'Градієнт', gradient: true },
+    { key: 'grainy', label: 'Зерниста', grainy: true },
+    { key: 'wetwet', label: 'По вологому', alphaMul: 0.12, spreadMul: 1.9 },
+  ],
+  chalk: [
+    { key: 'coarse', label: 'Груба', speckMul: 1.5, speckSize: 1.7 },
+    { key: 'pastel', label: 'Пастель', alphaMul: 0.5 },
+    { key: 'charcoal', label: 'Вугілля', alphaMul: 0.95, speckSize: 0.75 },
+    { key: 'wax', label: 'Воскова', alphaMul: 0.8, speckMul: 0.6, speckSize: 2.2 },
+  ],
+  ink: [
+    { key: 'pen', label: 'Перо', widthVary: true },
+    { key: 'liner', label: 'Лайнер', sizeMul: 0.55 },
+    { key: 'brush', label: 'Кисть', widthVary: true, sizeMul: 1.3 },
+    { key: 'drybrush', label: 'Суха кисть', dry: true },
+  ],
+  hatch: [
+    { key: 'diagonal', label: 'Діагональне', angleDeg: 45 },
+    { key: 'cross', label: 'Перехресне', cross: true },
+    { key: 'vertical', label: 'Вертикальне', angleDeg: 90 },
+    { key: 'freehand', label: 'Від руки', angleDeg: 45, jitter: true },
+  ],
+  spray: [
+    { key: 'normal', label: 'Звичайний' },
+    { key: 'thinNozzle', label: 'Тонке сопло', spreadMul: 0.5, dotMul: 0.6 },
+    { key: 'wide', label: 'Широкий', spreadMul: 1.7 },
+    { key: 'drips', label: 'З патьоками', drips: true },
+  ],
+  texture: [
+    { key: 'paper', label: 'Папір' },
+    { key: 'linear', label: 'Лінійний растр', linear: true },
+    { key: 'grain', label: 'Зерно', fine: true },
+    { key: 'squares', label: 'Квадрати', squares: true },
+  ],
+  paint: [
+    { key: 'oil', label: 'Масло' },
+    { key: 'gouache', label: 'Гуаш', flat: true },
+    { key: 'acrylic', label: 'Акрил', glossy: true },
+    { key: 'relief', label: 'Рельєфний мазок', relief: true },
+  ],
+  lace: [
+    { key: 'leaves', label: 'Листочки', shape: 'leaf' },
+    { key: 'chevron', label: 'Шеврон', shape: 'chevron' },
+    { key: 'mesh', label: 'Сітка-кружалець', shape: 'mesh' },
+    { key: 'rhombus', label: 'Ромби', shape: 'rhombus' },
+    { key: 'waves', label: 'Хвилі', shape: 'wave' },
+  ],
+  grass: [
+    { key: 'lawn', label: 'Газон', lenMul: 0.55, densMul: 1.3 },
+    { key: 'tall', label: 'Висока', lenMul: 1.9 },
+    { key: 'flowers', label: 'З квітами', flowers: true },
+    { key: 'autumn', label: 'Осіння', autumn: true },
+  ],
+  fur: [
+    { key: 'ginger', label: 'Руде', fixedColor: '#c1662b' },
+    { key: 'silky', label: 'Довге шовковисте', lenMul: 1.9, silky: true },
+    { key: 'gray', label: 'Сіре', fixedColor: '#9a9a9a' },
+    { key: 'fluffyWhite', label: 'Пухнасте біле', fixedColor: '#f0f0f0' },
+    { key: 'tiger', label: 'Тигрове', tiger: true },
+  ],
+  hair: [
+    { key: 'straight', label: 'Пряме' },
+    { key: 'lightWave', label: 'Легка хвиля', waveMul: 0.6 },
+    { key: 'wavy', label: 'Хвилясте', waveMul: 1.4 },
+    { key: 'curly', label: 'Кучеряве', curl: true, curlSize: 1 },
+    { key: 'smallCurls', label: 'Дрібні кучері', curl: true, curlSize: 0.5 },
+  ],
+  neon: [
+    { key: 'green', label: 'Зелений', fixedColor: '#39ff8a' },
+    { key: 'pink', label: 'Рожевий', fixedColor: '#ff3fb0' },
+    { key: 'blue', label: 'Блакитний', fixedColor: '#39c8ff' },
+    { key: 'tube', label: 'Трубка', tube: true },
+    { key: 'electric', label: 'Електрика', jitterLine: true },
+  ],
+}
+
+export function getVariant(brushType, variantKey) {
+  const list = BRUSH_VARIANTS[brushType]
+  if (!list) return {}
+  return list.find((v) => v.key === variantKey) || list[0]
+}
 
 export const SHAPE_TYPES = [
   { key: 'line', label: 'Лінія' },
@@ -112,174 +220,350 @@ function drawTaperedBlade(ctx, bx, by, angle, len, baseWidth, curveAmount) {
 // Один штамп пензля в точці (x,y) — форма штампа залежить від brushType:
 // кожен тип дає реально інший малюнок пікселів (перевірено в Playwright),
 // а не той самий штрих перефарбований.
-function stampDab(ctx, x, y, { size, color, opacity, erase, brushType, dirAngle }) {
-  const r = size / 2
+function stampDab(ctx, x, y, { size, color, opacity, erase, brushType, dirAngle, variant: variantKey }) {
+  const variant = getVariant(brushType, variantKey)
+  const r = (size * (variant.sizeMul ?? 1)) / 2
+  const opacityMul = variant.alphaMul ?? 1
   ctx.save()
   ctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over'
-  const ink = erase ? '#000000' : color
+  const ink = erase ? '#000000' : (variant.fixedColor || color)
   if (brushType === 'pencil') {
     // Зерниста текстура: багато дрібних крапок у випадковому місці
     // всередині радіуса з випадковою прозорістю — графітне зерно.
-    const specks = Math.max(3, Math.round(size * 0.7))
+    if (variant.softEdge) {
+      ctx.globalAlpha = opacity * opacityMul * 0.1
+      ctx.fillStyle = ink
+      ctx.beginPath()
+      ctx.arc(x, y, r * 0.9, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    const specks = Math.max(3, Math.round(size * 0.7 * (variant.speckMul ?? 1)))
     for (let i = 0; i < specks; i++) {
       const a = Math.random() * Math.PI * 2
       const d = Math.random() * r
-      ctx.globalAlpha = opacity * (0.12 + Math.random() * 0.35)
+      ctx.globalAlpha = opacity * opacityMul * (0.12 + Math.random() * 0.35)
       ctx.fillStyle = ink
       ctx.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, 1, 1)
     }
   } else if (brushType === 'watercolor') {
     // М'яка напівпрозора пляма з невеликим дрейфом центра — мазки, що
     // накладаючись одне на одного, дають ефект розмитої акварелі.
-    ctx.globalAlpha = opacity * 0.14
-    ctx.fillStyle = ink
-    const jx = (Math.random() - 0.5) * r * 0.5
-    const jy = (Math.random() - 0.5) * r * 0.5
-    ctx.beginPath()
-    ctx.arc(x + jx, y + jy, r * (0.8 + Math.random() * 0.35), 0, Math.PI * 2)
-    ctx.fill()
+    const spreadMul = variant.spreadMul ?? 1
+    if (variant.gradient) {
+      ctx.globalAlpha = opacity * opacityMul * 0.1
+      ctx.fillStyle = ink
+      ctx.beginPath()
+      ctx.arc(x, y, r * 1.1 * spreadMul, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.globalAlpha = opacity * opacityMul * 0.22
+      ctx.beginPath()
+      ctx.arc(x, y, r * 0.55, 0, Math.PI * 2)
+      ctx.fill()
+    } else {
+      ctx.globalAlpha = opacity * opacityMul * 0.14
+      ctx.fillStyle = ink
+      const jx = (Math.random() - 0.5) * r * 0.5
+      const jy = (Math.random() - 0.5) * r * 0.5
+      ctx.beginPath()
+      ctx.arc(x + jx, y + jy, r * spreadMul * (0.8 + Math.random() * 0.35), 0, Math.PI * 2)
+      ctx.fill()
+    }
+    if (variant.grainy) {
+      const specks = Math.max(3, Math.round(size * 0.4))
+      ctx.fillStyle = ink
+      for (let i = 0; i < specks; i++) {
+        const a = Math.random() * Math.PI * 2
+        const d = Math.random() * r
+        ctx.globalAlpha = opacity * 0.15
+        ctx.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, 1, 1)
+      }
+    }
   } else if (brushType === 'chalk') {
     // Крупніша, рідша крапкова текстура, ніж олівець — крейдяна зернистість.
-    const specks = Math.max(4, Math.round(size * 0.9))
+    const speckSize = variant.speckSize ?? 1
+    const specks = Math.max(4, Math.round(size * 0.9 * (variant.speckMul ?? 1)))
     for (let i = 0; i < specks; i++) {
       const a = Math.random() * Math.PI * 2
       const d = Math.random() * r
-      const s = 1 + Math.random() * 1.6
-      ctx.globalAlpha = opacity * (0.25 + Math.random() * 0.4)
+      const s = (1 + Math.random() * 1.6) * speckSize
+      ctx.globalAlpha = opacity * opacityMul * (0.25 + Math.random() * 0.4)
       ctx.fillStyle = ink
       ctx.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, s, s)
     }
   } else if (brushType === 'hatch') {
-    // Паралельне штрихування під 45° замість суцільної заливки.
-    ctx.globalAlpha = opacity * 0.55
+    // Штрихування: один чи два набори паралельних ліній під заданим
+    // кутом — «Перехресне» додає другий набір упоперек першого.
+    const angle = ((variant.angleDeg ?? 45) * Math.PI) / 180
     ctx.strokeStyle = ink
     ctx.lineWidth = Math.max(1, size * 0.12)
-    for (let i = -1; i <= 1; i++) {
-      const off = i * size * 0.32
-      ctx.beginPath()
-      ctx.moveTo(x - r + off, y + r)
-      ctx.lineTo(x + r + off, y - r)
-      ctx.stroke()
+    const drawSet = (ang) => {
+      const dx = Math.cos(ang), dy = Math.sin(ang)
+      const offA = ang + Math.PI / 2
+      for (let i = -1; i <= 1; i++) {
+        const jitter = variant.jitter ? (Math.random() - 0.5) * size * 0.15 : 0
+        const off = i * size * 0.32 + jitter
+        ctx.globalAlpha = opacity * 0.55 * (variant.jitter ? (0.7 + Math.random() * 0.3) : 1)
+        ctx.beginPath()
+        ctx.moveTo(x - dx * r + Math.cos(offA) * off, y - dy * r + Math.sin(offA) * off)
+        ctx.lineTo(x + dx * r + Math.cos(offA) * off, y + dy * r + Math.sin(offA) * off)
+        ctx.stroke()
+      }
     }
+    drawSet(angle)
+    if (variant.cross) drawSet(angle + Math.PI / 2)
   } else if (brushType === 'ink') {
-    // Чіткий суцільний штамп без розмиття — туш/перо.
-    ctx.globalAlpha = opacity
-    ctx.fillStyle = ink
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, Math.PI * 2)
-    ctx.fill()
+    // Чіткий суцільний штамп; «Перо»/«Кисть» злегка варіюють товщину за
+    // штампом (імітація натиску), «Суха кисть» — рвана зерниста текстура.
+    if (variant.dry) {
+      const specks = Math.max(6, Math.round(size * 1.1))
+      ctx.fillStyle = ink
+      for (let i = 0; i < specks; i++) {
+        const a = Math.random() * Math.PI * 2
+        const d = Math.random() * r
+        const s = 0.8 + Math.random() * 1.4
+        ctx.globalAlpha = opacity * (0.3 + Math.random() * 0.5)
+        ctx.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, s, s)
+      }
+    } else {
+      const rr = variant.widthVary ? r * (0.7 + Math.random() * 0.5) : r
+      ctx.globalAlpha = opacity
+      ctx.fillStyle = ink
+      ctx.beginPath()
+      ctx.arc(x, y, rr, 0, Math.PI * 2)
+      ctx.fill()
+    }
   } else if (brushType === 'soft') {
-    ctx.globalAlpha = opacity
+    ctx.globalAlpha = opacity * opacityMul
     ctx.shadowColor = ink
-    ctx.shadowBlur = r * 0.8
+    ctx.shadowBlur = r * 0.8 * (variant.blurMul ?? 1)
     ctx.fillStyle = ink
     ctx.beginPath()
     ctx.arc(x, y, r * 0.6, 0, Math.PI * 2)
     ctx.fill()
   } else if (brushType === 'spray') {
     // Балончик: випадкові крапки по колу, густіше ближче до центра — аерограф.
+    const spreadMul = variant.spreadMul ?? 1
+    const dotMul = variant.dotMul ?? 1
     const dots = Math.max(6, Math.round(size * 1.4))
     ctx.fillStyle = ink
     for (let i = 0; i < dots; i++) {
       const a = Math.random() * Math.PI * 2
-      const d = Math.sqrt(Math.random()) * r
-      const s = 0.6 + Math.random() * 1.2
+      const d = Math.sqrt(Math.random()) * r * spreadMul
+      const s = (0.6 + Math.random() * 1.2) * dotMul
       ctx.globalAlpha = opacity * (0.2 + Math.random() * 0.4)
       ctx.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, s, s)
     }
-  } else if (brushType === 'texture') {
-    // Текстура: нерівні грудкуваті плями випадкової форми — зерно полотна/штукатурки.
-    const blobs = Math.max(4, Math.round(size * 0.35))
-    ctx.fillStyle = ink
-    for (let i = 0; i < blobs; i++) {
-      const a = Math.random() * Math.PI * 2
-      const d = Math.random() * r * 0.8
-      const br = r * (0.18 + Math.random() * 0.35)
-      ctx.globalAlpha = opacity * (0.25 + Math.random() * 0.35)
+    if (variant.drips && Math.random() < 0.08) {
+      const dripLen = r * (1.5 + Math.random() * 2)
+      ctx.globalAlpha = opacity * 0.5
+      ctx.strokeStyle = ink
+      ctx.lineWidth = 1 + Math.random()
       ctx.beginPath()
-      ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d, br, br * (0.6 + Math.random() * 0.6), Math.random() * Math.PI, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.moveTo(x, y)
+      ctx.lineTo(x, y + dripLen)
+      ctx.stroke()
+    }
+  } else if (brushType === 'texture') {
+    // Текстура: нерівні грудкуваті плями (папір/зерно) або впорядкований
+    // лінійний/квадратний растр — геть інший принцип розкладки.
+    if (variant.linear) {
+      ctx.strokeStyle = ink
+      ctx.lineWidth = Math.max(0.6, size * 0.03)
+      const lines = Math.max(3, Math.round(size * 0.3))
+      for (let i = 0; i < lines; i++) {
+        const off = (i / lines - 0.5) * r * 2
+        ctx.globalAlpha = opacity * (0.2 + Math.random() * 0.3)
+        ctx.beginPath()
+        ctx.moveTo(x - r, y + off)
+        ctx.lineTo(x + r, y + off + (Math.random() - 0.5) * 2)
+        ctx.stroke()
+      }
+    } else if (variant.squares) {
+      const n = Math.max(3, Math.round(size * 0.25))
+      ctx.fillStyle = ink
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2
+        const d = Math.random() * r * 0.8
+        const s = r * (0.12 + Math.random() * 0.18)
+        ctx.globalAlpha = opacity * (0.2 + Math.random() * 0.3)
+        ctx.fillRect(x + Math.cos(a) * d - s / 2, y + Math.sin(a) * d - s / 2, s, s)
+      }
+    } else {
+      const fine = variant.fine
+      const blobs = Math.max(4, Math.round(size * (fine ? 0.6 : 0.35)))
+      ctx.fillStyle = ink
+      for (let i = 0; i < blobs; i++) {
+        const a = Math.random() * Math.PI * 2
+        const d = Math.random() * r * 0.8
+        const br = r * (fine ? 0.08 + Math.random() * 0.14 : 0.18 + Math.random() * 0.35)
+        ctx.globalAlpha = opacity * (0.25 + Math.random() * 0.35)
+        ctx.beginPath()
+        ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d, br, br * (0.6 + Math.random() * 0.6), Math.random() * Math.PI, 0, Math.PI * 2)
+        ctx.fill()
+      }
     }
   } else if (brushType === 'paint') {
     // Фарба/гуаш: кілька витягнутих уздовж мазка еліпсів із напрямком
     // ворсу пензля — читається як рельєфні гребені густої фарби, а не
-    // рівне коло з випадковими цятками.
+    // рівне коло з випадковими цятками. «Гуаш» — пласкіше, «Акрил» — з
+    // глянцевим відблиском, «Рельєфний мазок» — товщі гребені.
     const dir = dirAngle ?? 0
-    const ridges = 3
+    const ridges = variant.relief ? 4 : (variant.flat ? 1 : 3)
     for (let i = 0; i < ridges; i++) {
       const off = (i - (ridges - 1) / 2) * r * 0.5
       const perp = dir + Math.PI / 2
       const ox = x + Math.cos(perp) * off
       const oy = y + Math.sin(perp) * off
-      ctx.globalAlpha = opacity * (0.75 + Math.random() * 0.2)
+      ctx.globalAlpha = opacity * (variant.flat ? 0.95 : (0.75 + Math.random() * 0.2))
       ctx.fillStyle = ink
       ctx.save()
       ctx.translate(ox, oy)
       ctx.rotate(dir)
       ctx.beginPath()
-      ctx.ellipse(0, 0, r * (0.55 + Math.random() * 0.15), r * 0.4, 0, 0, Math.PI * 2)
+      ctx.ellipse(0, 0, r * (0.55 + Math.random() * 0.15), r * (variant.relief ? 0.48 : 0.4), 0, 0, Math.PI * 2)
       ctx.fill()
       ctx.restore()
     }
-    // темніша тінь знизу-збоку для відчуття товщини мазка
-    ctx.globalAlpha = opacity * 0.14
+    ctx.globalAlpha = opacity * (variant.relief ? 0.22 : 0.14)
     ctx.fillStyle = '#000000'
     ctx.beginPath()
     ctx.ellipse(x + r * 0.15, y + r * 0.25, r * 0.85, r * 0.5, dir, 0, Math.PI * 2)
     ctx.fill()
+    if (variant.glossy) {
+      ctx.globalAlpha = opacity * 0.25
+      ctx.fillStyle = '#ffffff'
+      ctx.save()
+      ctx.translate(x - r * 0.2, y - r * 0.3)
+      ctx.rotate(dir)
+      ctx.beginPath()
+      ctx.ellipse(0, 0, r * 0.3, r * 0.1, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+    }
   } else if (brushType === 'lace') {
-    // Ажур: ряд з'єднаних дрібних дуг (фестонів) з акцентними вузликами
-    // між ними — справжній мереживний край, а не розкидані крапки.
-    const perp = (dirAngle ?? 0) + Math.PI / 2
-    const scallopR = Math.max(1.5, r * 0.45)
+    // Ажур: кілька справжніх мереживних мотивів — фестони-«сітка»,
+    // листочки, шеврон-зигзаг, ромби чи суцільна хвиля — а не крапки.
+    const dir = dirAngle ?? 0
+    const perp = dir + Math.PI / 2
+    const shape = variant.shape || 'mesh'
     ctx.strokeStyle = ink
     ctx.fillStyle = ink
-    ctx.lineWidth = Math.max(0.8, r * 0.1)
-    ctx.globalAlpha = opacity * 0.85
-    ctx.beginPath()
-    ctx.arc(x, y, scallopR, perp, perp + Math.PI)
-    ctx.stroke()
-    ctx.globalAlpha = opacity * 0.9
-    ctx.beginPath()
-    ctx.arc(x + Math.cos(perp + Math.PI / 2) * scallopR * 1.05, y + Math.sin(perp + Math.PI / 2) * scallopR * 1.05, Math.max(1, r * 0.1), 0, Math.PI * 2)
-    ctx.fill()
+    ctx.lineWidth = Math.max(0.8, r * 0.12)
+    if (shape === 'leaf') {
+      const side = Math.random() < 0.5 ? 1 : -1
+      const lx = x + Math.cos(perp) * r * 0.5 * side
+      const ly = y + Math.sin(perp) * r * 0.5 * side
+      ctx.globalAlpha = opacity * 0.85
+      ctx.save()
+      ctx.translate(lx, ly)
+      ctx.rotate(dir)
+      ctx.beginPath()
+      ctx.ellipse(0, 0, r * 0.5, r * 0.22, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+    } else if (shape === 'chevron') {
+      const w = r * 0.55
+      ctx.globalAlpha = opacity * 0.85
+      ctx.beginPath()
+      ctx.moveTo(x - Math.cos(dir) * w + Math.cos(perp) * w, y - Math.sin(dir) * w + Math.sin(perp) * w)
+      ctx.lineTo(x, y)
+      ctx.lineTo(x - Math.cos(dir) * w - Math.cos(perp) * w, y - Math.sin(dir) * w - Math.sin(perp) * w)
+      ctx.stroke()
+    } else if (shape === 'rhombus') {
+      const s = r * 0.34
+      ctx.globalAlpha = opacity * 0.85
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate(dir)
+      ctx.beginPath()
+      ctx.moveTo(0, -s); ctx.lineTo(s * 0.7, 0); ctx.lineTo(0, s); ctx.lineTo(-s * 0.7, 0)
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
+    } else if (shape === 'wave') {
+      ctx.globalAlpha = opacity * 0.9
+      const amp = r * 0.5 * (Math.random() > 0.5 ? 1 : -1)
+      ctx.beginPath()
+      ctx.moveTo(x - Math.cos(dir) * r, y - Math.sin(dir) * r)
+      ctx.quadraticCurveTo(x + Math.cos(perp) * amp, y + Math.sin(perp) * amp, x + Math.cos(dir) * r, y + Math.sin(dir) * r)
+      ctx.stroke()
+    } else {
+      // mesh/«сітка-кружалець» — ряд з'єднаних дрібних дуг-фестонів з
+      // акцентним вузликом між ними.
+      const scallopR = Math.max(1.5, r * 0.45)
+      ctx.globalAlpha = opacity * 0.85
+      ctx.beginPath()
+      ctx.arc(x, y, scallopR, perp, perp + Math.PI)
+      ctx.stroke()
+      ctx.globalAlpha = opacity * 0.9
+      ctx.beginPath()
+      ctx.arc(x + Math.cos(perp + Math.PI / 2) * scallopR * 1.05, y + Math.sin(perp + Math.PI / 2) * scallopR * 1.05, Math.max(1, r * 0.1), 0, Math.PI * 2)
+      ctx.fill()
+    }
   } else if (brushType === 'grass') {
     // Трава: звужені стеблинки-клини, що ростуть угору з розкидом і
     // легким вигином — не однакові лінії, а форма справжньої травинки.
-    const blades = Math.max(2, Math.round(size * 0.22))
-    ctx.fillStyle = ink
+    // «З квітами» додає зрідка квіткову розетку на вершині, «Осіння» —
+    // теплу змінну палітру замість єдиного кольору пензля.
+    const lenMul = variant.lenMul ?? 1
+    const blades = Math.max(2, Math.round(size * 0.22 * (variant.densMul ?? 1)))
     for (let i = 0; i < blades; i++) {
       const baseA = -Math.PI / 2 + (Math.random() - 0.5) * 1.1
-      const len = r * (0.9 + Math.random() * 1.1)
+      const len = r * (0.9 + Math.random() * 1.1) * lenMul
       const bx = x + (Math.random() - 0.5) * r * 0.7
       const by = y + r * 0.35 + Math.random() * r * 0.2
       const curve = (Math.random() - 0.5) * len * 0.45
+      let bladeInk = ink
+      if (variant.autumn) {
+        const pal = ['#c1662b', '#d99a2b', '#b4472e', '#8a6a2a']
+        bladeInk = pal[Math.floor(Math.random() * pal.length)]
+      }
       ctx.globalAlpha = opacity * (0.6 + Math.random() * 0.35)
+      ctx.fillStyle = bladeInk
       drawTaperedBlade(ctx, bx, by, baseA, len, Math.max(1, size * 0.1), curve)
+      if (variant.flowers && Math.random() < 0.12) {
+        const tipX = bx + Math.cos(baseA) * len
+        const tipY = by + Math.sin(baseA) * len
+        ctx.globalAlpha = opacity * 0.85
+        ctx.fillStyle = '#f2d24b'
+        for (let p = 0; p < 5; p++) {
+          const pa = (p / 5) * Math.PI * 2
+          ctx.beginPath()
+          ctx.arc(tipX + Math.cos(pa) * r * 0.12, tipY + Math.sin(pa) * r * 0.12, Math.max(0.8, r * 0.07), 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
     }
   } else if (brushType === 'fur') {
-    // Хутро: густі короткі звужені ворсинки, що лежать упоперек мазка
-    // (як шерсть, яку «розчісує» рух пензля), з невеликим розкидом кутів.
+    // Хутро: густі короткі звужені ворсинки, що лежать упоперек мазка.
+    // Іменовані колірні варіанти (руде/сіре/біле) фіксують свій відтінок
+    // матеріалу; «Тигрове» чергує смугасте забарвлення за позицією.
     const dir = (dirAngle ?? -Math.PI / 2) + Math.PI / 2
+    const lenMul = variant.lenMul ?? 1
     const hairs = Math.max(6, Math.round(size * 0.55))
-    ctx.fillStyle = ink
     for (let i = 0; i < hairs; i++) {
-      const a = dir + (Math.random() - 0.5) * 1.3
-      const len = r * (0.45 + Math.random() * 0.55)
+      const a = dir + (Math.random() - 0.5) * (variant.silky ? 0.7 : 1.3)
+      const len = r * (0.45 + Math.random() * 0.55) * lenMul
       const d = (Math.random() - 0.5) * r * 1.1
       const perp0 = dir - Math.PI / 2
       const sx = x + Math.cos(perp0) * d
       const sy = y + Math.sin(perp0) * d
-      const curve = (Math.random() - 0.5) * len * 0.3
-      ctx.globalAlpha = opacity * (0.35 + Math.random() * 0.3)
+      const curve = (Math.random() - 0.5) * len * (variant.silky ? 0.15 : 0.3)
+      let hairInk = ink
+      if (variant.tiger) {
+        hairInk = Math.sin((x + y) * 0.25 + d * 0.4) > 0.15 ? '#2a1a0a' : (ink || '#c1662b')
+      }
+      ctx.fillStyle = hairInk
+      ctx.globalAlpha = opacity * (variant.silky ? (0.45 + Math.random() * 0.25) : (0.35 + Math.random() * 0.3))
       drawTaperedBlade(ctx, sx, sy, a, len, Math.max(0.6, size * 0.045), curve)
     }
   } else if (brushType === 'hair') {
     // Волосся: небагато довгих плавних пасм, що течуть уздовж напрямку
-    // мазка з м'яким вигином, плюс тонкий світліший блиск на кожному —
-    // чітко відрізняється від густого радіального хутра чи трави.
+    // мазка, плюс тонкий світліший блиск на кожному. «Кучеряве»/«Дрібні
+    // кучері» замінюють плавний вигин на кілька хвиль уздовж пасма.
     const dir = dirAngle ?? -Math.PI / 2
     const strands = Math.max(2, Math.round(size * 0.14))
+    const waveMul = variant.waveMul ?? 1
     for (let i = 0; i < strands; i++) {
       const a = dir + (Math.random() - 0.5) * 0.35
       const len = r * (1.8 + Math.random() * 1.3)
@@ -287,31 +571,69 @@ function stampDab(ctx, x, y, { size, color, opacity, erase, brushType, dirAngle 
       const perp = dir + Math.PI / 2
       const sx = x + Math.cos(perp) * off
       const sy = y + Math.sin(perp) * off
-      const curve = (Math.random() - 0.5) * len * 0.3
-      const tipX = sx + Math.cos(a) * len
-      const tipY = sy + Math.sin(a) * len
-      const midX = sx + Math.cos(a) * len * 0.5 + Math.cos(perp) * curve
-      const midY = sy + Math.sin(a) * len * 0.5 + Math.sin(perp) * curve
       ctx.lineCap = 'round'
       ctx.strokeStyle = ink
       ctx.globalAlpha = opacity * (0.55 + Math.random() * 0.3)
       ctx.lineWidth = Math.max(0.6, size * 0.03)
-      ctx.beginPath()
-      ctx.moveTo(sx, sy)
-      ctx.quadraticCurveTo(midX, midY, tipX, tipY)
-      ctx.stroke()
-      // тонкий світліший блиск уздовж тієї ж дуги, трохи зміщений
-      ctx.strokeStyle = '#ffffff'
-      ctx.globalAlpha = opacity * 0.18
-      ctx.lineWidth = Math.max(0.4, size * 0.012)
-      ctx.beginPath()
-      ctx.moveTo(sx + Math.cos(perp) * 0.6, sy + Math.sin(perp) * 0.6)
-      ctx.quadraticCurveTo(midX + Math.cos(perp) * 0.6, midY + Math.sin(perp) * 0.6, tipX, tipY)
-      ctx.stroke()
+      if (variant.curl) {
+        const curlSize = variant.curlSize ?? 1
+        const humps = 3
+        ctx.beginPath()
+        ctx.moveTo(sx, sy)
+        for (let h = 1; h <= humps; h++) {
+          const t = h / humps
+          const bendSide = h % 2 === 0 ? 1 : -1
+          const cx2 = sx + Math.cos(a) * len * (t - 0.5 / humps) + Math.cos(perp) * r * 0.5 * curlSize * bendSide
+          const cy2 = sy + Math.sin(a) * len * (t - 0.5 / humps) + Math.sin(perp) * r * 0.5 * curlSize * bendSide
+          const ex = sx + Math.cos(a) * len * t
+          const ey = sy + Math.sin(a) * len * t
+          ctx.quadraticCurveTo(cx2, cy2, ex, ey)
+        }
+        ctx.stroke()
+      } else {
+        const curve = (Math.random() - 0.5) * len * 0.3 * waveMul
+        const tipX = sx + Math.cos(a) * len
+        const tipY = sy + Math.sin(a) * len
+        const midX = sx + Math.cos(a) * len * 0.5 + Math.cos(perp) * curve
+        const midY = sy + Math.sin(a) * len * 0.5 + Math.sin(perp) * curve
+        ctx.beginPath()
+        ctx.moveTo(sx, sy)
+        ctx.quadraticCurveTo(midX, midY, tipX, tipY)
+        ctx.stroke()
+        ctx.strokeStyle = '#ffffff'
+        ctx.globalAlpha = opacity * 0.18
+        ctx.lineWidth = Math.max(0.4, size * 0.012)
+        ctx.beginPath()
+        ctx.moveTo(sx + Math.cos(perp) * 0.6, sy + Math.sin(perp) * 0.6)
+        ctx.quadraticCurveTo(midX + Math.cos(perp) * 0.6, midY + Math.sin(perp) * 0.6, tipX, tipY)
+        ctx.stroke()
+      }
     }
-  } else {
-    // 'hard' — чіткий круглий штамп, базовий пензель.
+  } else if (brushType === 'neon') {
+    // Неон: яскраве світне ядро з розмитим сяйвом навколо (shadowBlur),
+    // а не просто насичений колір без glow.
     ctx.globalAlpha = opacity
+    ctx.shadowColor = ink
+    ctx.shadowBlur = r * (variant.tube ? 1.6 : 2.2)
+    ctx.fillStyle = ink
+    let px = x, py = y
+    if (variant.jitterLine) {
+      px += (Math.random() - 0.5) * r * 0.4
+      py += (Math.random() - 0.5) * r * 0.4
+    }
+    ctx.beginPath()
+    ctx.arc(px, py, r * (variant.tube ? 0.55 : 0.35), 0, Math.PI * 2)
+    ctx.fill()
+    ctx.shadowBlur = 0
+    ctx.globalAlpha = opacity * 0.9
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.arc(px, py, r * 0.14, 0, Math.PI * 2)
+    ctx.fill()
+  } else {
+    // 'hard' — чіткий круглий штамп, базовий пензель (fallback; зазвичай
+    // hard/soft ідуть швидким path-шляхом у strokeSegment нижче).
+    ctx.globalAlpha = opacity * opacityMul
     ctx.fillStyle = ink
     ctx.beginPath()
     ctx.arc(x, y, r, 0, Math.PI * 2)
@@ -341,17 +663,31 @@ const DIR_AWARE = new Set(['paint', 'lace', 'grass', 'fur', 'hair'])
 // лінії (справжнє stamping, та сама техніка, що й у реальних
 // растрових редакторах для текстурних кистей).
 export function strokeSegment(ctx, x0, y0, x1, y1, opts) {
-  const { size, brushType = 'hard' } = opts
+  const { size, brushType = 'hard', variant: variantKey } = opts
   if (brushType === 'hard' || brushType === 'soft') {
     const { color, opacity, erase } = opts
+    const variant = getVariant(brushType, variantKey)
+    const w = size * (variant.sizeMul ?? 1)
+    const a = opacity * (variant.alphaMul ?? 1)
     ctx.save()
     ctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over'
-    ctx.globalAlpha = opacity
-    ctx.strokeStyle = color
-    ctx.lineWidth = size
+    if (variant.outline) {
+      // «Мультяшний контур»: товстіша темна обведена лінія під кольоровим
+      // мазком — як обведені контури в мультиплікаційному малюнку.
+      ctx.globalAlpha = Math.min(1, a * 1.2)
+      ctx.strokeStyle = '#1a1a1a'
+      ctx.lineWidth = w * 1.5
+      ctx.beginPath()
+      ctx.moveTo(x0, y0)
+      ctx.lineTo(x1, y1)
+      ctx.stroke()
+    }
+    ctx.globalAlpha = a
+    ctx.strokeStyle = erase ? color : (variant.fixedColor || color)
+    ctx.lineWidth = w
     if (brushType === 'soft') {
-      ctx.shadowColor = erase ? '#000000' : color
-      ctx.shadowBlur = size * 0.4
+      ctx.shadowColor = erase ? '#000000' : (variant.fixedColor || color)
+      ctx.shadowBlur = size * 0.4 * (variant.blurMul ?? 1)
     }
     ctx.beginPath()
     ctx.moveTo(x0, y0)

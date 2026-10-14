@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  BRUSH_SIZES, BRUSH_TYPES, SHAPE_TYPES, DEFAULT_PALETTE, setupCanvas, loadImageToCanvas,
+  BRUSH_SIZES, BRUSH_TYPES, BRUSH_VARIANTS, SHAPE_TYPES, DEFAULT_PALETTE, setupCanvas, loadImageToCanvas,
   strokeSegment, dot, drawShape, drawText, canvasToDataUrl, pointFromEvent,
   drawColorWheel, pickFromWheel, hsvToHex,
 } from './freePaintEngine.js'
@@ -61,7 +61,13 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const textBaseRef = useRef(null)
 
   const [tool, setTool] = useState('brush')
-  const [brushType, setBrushType] = useState('hard')
+  const [brushType, setBrushTypeRaw] = useState('hard')
+  const [variant, setVariant] = useState(BRUSH_VARIANTS.hard[0].key)
+  function setBrushType(key) {
+    setBrushTypeRaw(key)
+    const list = BRUSH_VARIANTS[key]
+    setVariant(list ? list[0].key : null)
+  }
   const [color, setColor] = useState('#1a1a1a')
   const [palette, setPalette] = useState(DEFAULT_PALETTE)
   const [size, setSize] = useState(12)
@@ -172,7 +178,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     pushUndo(captureSnapshot())
     drawingRef.current = true
     lastPointRef.current = p
-    dot(ctx, p.x, p.y, { size, color, opacity, brushType, erase: tool === 'eraser' })
+    dot(ctx, p.x, p.y, { size, color, opacity, brushType, variant, erase: tool === 'eraser' })
   }
 
   function move(e) {
@@ -186,7 +192,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
       return
     }
     const last = lastPointRef.current
-    strokeSegment(ctx, last.x, last.y, p.x, p.y, { size, color, opacity, brushType, erase: tool === 'eraser' })
+    strokeSegment(ctx, last.x, last.y, p.x, p.y, { size, color, opacity, brushType, variant, erase: tool === 'eraser' })
     lastPointRef.current = p
   }
 
@@ -240,6 +246,16 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
           {BRUSH_TYPES.map((b) => (
             <button key={b.key} type="button" className={'cl-mini-btn' + (brushType === b.key ? ' active' : '')} onClick={() => setBrushType(b.key)} title={b.label}>
               {b.icon} {b.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {(tool === 'brush' || tool === 'eraser') && BRUSH_VARIANTS[brushType] && (
+        <div className="cl-btn-row fpc-variant-row">
+          {BRUSH_VARIANTS[brushType].map((v) => (
+            <button key={v.key} type="button" className={'cl-mini-btn' + (variant === v.key ? ' active' : '')} onClick={() => setVariant(v.key)}>
+              {v.label}
             </button>
           ))}
         </div>
