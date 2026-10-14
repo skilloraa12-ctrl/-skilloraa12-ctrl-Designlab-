@@ -6,7 +6,7 @@ import LabToast from './labs/LabToast.jsx'
 import NotFound from './NotFound.jsx'
 import { MOTION_STAGES, CANVAS_PRESETS } from './motionProject.js'
 import {
-  EASINGS, defaultObject, defaultShadow, defaultStroke, valueAt, objectAt, upsertKeyframe, removeKeyframe,
+  EASINGS, defaultObject, defaultShadow, defaultStroke, layerLabel, valueAt, objectAt, upsertKeyframe, removeKeyframe,
   hitTest, hitHandle, drawObject, drawHandles, resizeObj, rotateObj, maxKeyframeTime,
 } from './motionEngine.js'
 
@@ -308,37 +308,95 @@ function AnimationStage({ project, onPatch, toastApi }) {
   const canvasRef = useRef(null)
   const dragRef = useRef(null)
   const playRef = useRef(null)
+  // Історія для реального Undo/Redo — стек попередніх станів objects.
+  // Ведеться тут (а не в ProgressContext), бо стосується лише
+  // редагування сцени, не всього проєкту.
+  const historyRef = useRef({ past: [], future: [] })
   const objects = project.objects
   const [selectedId, setSelectedId] = useState(objects[0]?.id || null)
   const [time, setTime] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [easingForNewKf, setEasingForNewKf] = useState('easeOut')
+  // «Перегляд результату» — чистий режим без панелі інструментів,
+  // властивостей і ручок виділення: тільки канва (більша) й таймлайн,
+  // як вимагає чесний критерій «перегляд без допоміжних елементів
+  // редактора».
+  const [previewMode, setPreviewMode] = useState(false)
   const duration = project.duration
 
   const selected = objects.find((o) => o.id === selectedId) || null
+  const visibleObjects = objects.filter((o) => !o.hidden)
   // Канва має РЕАГУВАТИ на реальну доступну ширину центральної колонки
   // (aspect-ratio + width:100%), а не мати фіксовану піксельну ширину —
   // інакше на вузькому вікні вона просто вилазить за межі панелі й
-  // ламає весь layout (обрізаний текст, горизонтальний скрол).
-  const maxDisplayW = Math.min(project.canvas.w, 560)
+  // ламає весь layout (обрізаний текст, горизонтальний скрол). У режимі
+  // перегляду панель властивостей зникає, тож канві можна дати більше.
+  const maxDisplayW = Math.min(project.canvas.w, previewMode ? 900 : 560)
 
-  function commitObjects(next) { onPatch({ objects: next }) }
+  function commitObjects(next, { record = true } = {}) {
+    if (record) {
+      historyRef.current = { past: [...historyRef.current.past, objects], future: [] }
+    }
+    onPatch({ objects: next })
+  }
+
+  function undo() {
+    const { past, future } = historyRef.current
+    if (past.length === 0) return
+    const prev = past[past.length - 1]
+    historyRef.current = { past: past.slice(0, -1), future: [objects, ...future] }
+    onPatch({ objects: prev })
+  }
+  function redo() {
+    const { past, future } = historyRef.current
+    if (future.length === 0) return
+    const next = future[0]
+    historyRef.current = { past: [...past, objects], future: future.slice(1) }
+    onPatch({ objects: next })
+  }
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (!(e.ctrlKey || e.metaKey)) return
+      if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
+      else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); redo() }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [objects])
 
   function addShape(type) {
     const o = defaultObject(type, { x: project.canvas.w / 2 - 80, y: project.canvas.h / 2 - 45 })
     commitObjects([...objects, o])
     setSelectedId(o.id)
   }
-  function deleteSelected() {
-    if (!selected) return
-    commitObjects(objects.filter((o) => o.id !== selected.id))
-    setSelectedId(null)
+  function deleteObject(id) {
+    commitObjects(objects.filter((o) => o.id !== id))
+    if (selectedId === id) setSelectedId(null)
   }
-  function duplicateSelected() {
-    if (!selected) return
-    const copy = { ...selected, id: crypto.randomUUID(), x: selected.x + 16, y: selected.y + 16 }
+  function duplicateObject(id) {
+    const src = objects.find((o) => o.id === id)
+    if (!src) return
+    const copy = { ...src, id: crypto.randomUUID(), x: src.x + 16, y: src.y + 16 }
     commitObjects([...objects, copy])
     setSelectedId(copy.id)
+  }
+  function deleteSelected() { if (selected) deleteObject(selected.id) }
+  function duplicateSelected() { if (selected) duplicateObject(selected.id) }
+  function toggleHidden(id) {
+    commitObjects(objects.map((o) => (o.id === id ? { ...o, hidden: !o.hidden } : o)))
+  }
+  // «Шари»: порядок у масиві objects = порядок малювання (останній —
+  // згори). Кнопки ▲/▼ у списку доріжок міняють місцями сусідні
+  // елементи — це і є реальне керування порядком шарів.
+  function moveLayer(id, dir) {
+    const idx = objects.findIndex((o) => o.id === id)
+    const swapWith = idx + dir
+    if (idx < 0 || swapWith < 0 || swapWith >= objects.length) return
+    const next = [...objects]
+    ;[next[idx], next[swapWith]] = [next[swapWith], next[idx]]
+    commitObjects(next)
   }
 
   function pos(e) {
@@ -350,18 +408,19 @@ function AnimationStage({ project, onPatch, toastApi }) {
   }
 
   function start(e) {
+    if (previewMode) return
     if (!selected) {
-      const hit = hitTest(objects, pos(e))
+      const hit = hitTest(visibleObjects, pos(e))
       if (hit) setSelectedId(hit.id)
       return
     }
     const p = pos(e)
     const frame = objectAt(selected, time)
-    const h = hitHandle(frame, p)
-    if (h === 'rotate') { dragRef.current = { mode: 'rotate', orig: frame }; return }
-    if (h) { dragRef.current = { mode: 'resize', handle: h, orig: frame }; return }
-    const hit = hitTest(objects.map((o) => objectAt(o, time)), p)
-    if (hit && hit.id === selected.id) { dragRef.current = { mode: 'move', orig: frame, startP: p }; return }
+    const h = selected.hidden ? null : hitHandle(frame, p)
+    if (h === 'rotate') { dragRef.current = { mode: 'rotate', orig: frame, beforeObjects: objects }; return }
+    if (h) { dragRef.current = { mode: 'resize', handle: h, orig: frame, beforeObjects: objects }; return }
+    const hit = hitTest(visibleObjects.map((o) => objectAt(o, time)), p)
+    if (hit && hit.id === selected.id) { dragRef.current = { mode: 'move', orig: frame, startP: p, beforeObjects: objects }; return }
     if (hit) { setSelectedId(hit.id); return }
     setSelectedId(null)
   }
@@ -382,10 +441,18 @@ function AnimationStage({ project, onPatch, toastApi }) {
     for (const prop of ['x', 'y', 'w', 'h', 'rotation']) {
       if (next[prop] !== drag.orig[prop]) updated = upsertKeyframe(updated, prop, time, next[prop], easingForNewKf)
     }
-    commitObjects(objects.map((o) => (o.id === updated.id ? updated : o)))
+    // Не записуємо кожен проміжний рух миші в історію — лише фінальний
+    // результат, коли drag завершується (end()). Інакше Ctrl+Z скасовував
+    // би по 1 пікселю замість цілої дії.
+    commitObjects(objects.map((o) => (o.id === updated.id ? updated : o)), { record: false })
   }
 
-  function end() { dragRef.current = null }
+  function end() {
+    if (dragRef.current?.beforeObjects) {
+      historyRef.current = { past: [...historyRef.current.past, dragRef.current.beforeObjects], future: [] }
+    }
+    dragRef.current = null
+  }
 
   function setProp(prop, value) {
     if (!selected) return
@@ -436,10 +503,10 @@ function AnimationStage({ project, onPatch, toastApi }) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = '#17171A'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    for (const o of objects) {
+    for (const o of visibleObjects) {
       const frame = objectAt(o, time)
       drawObject(ctx, frame)
-      if (o.id === selectedId) drawHandles(ctx, frame)
+      if (!previewMode && o.id === selectedId) drawHandles(ctx, frame)
     }
   })
 
@@ -455,15 +522,26 @@ function AnimationStage({ project, onPatch, toastApi }) {
 
   return (
     <div className="motion-anim-stage">
-      <p className="cl-tab-desc motion-howto">
-        <strong>Як це працює:</strong> додай фігуру → клікни по шкалі часу внизу, щоб обрати момент → перемісти/зміни фігуру (чи введи число в полі праворуч) — ключовий кадр з'явиться в цю мить автоматично. Один кадр = нічого не рухається. Перейди в ІНШУ мить часу і зміни об'єкт ще раз — це додасть другий кадр, і між ними з'явиться рух. Натисни ▶, щоб перевірити.
-      </p>
+      {!previewMode && (
+        <p className="cl-tab-desc motion-howto">
+          <strong>Як це працює:</strong> додай фігуру → клікни по шкалі часу внизу, щоб обрати момент → перемісти/зміни фігуру (чи введи число в полі праворуч) — ключовий кадр з'явиться в цю мить автоматично. Один кадр = нічого не рухається. Перейди в ІНШУ мить часу і зміни об'єкт ще раз — це додасть другий кадр, і між ними з'явиться рух. Натисни ▶, щоб перевірити.
+        </p>
+      )}
       <div className="motion-anim-toolbar">
-        <button className="cl-mini-btn" onClick={() => addShape('rect')}>▭ Прямокутник</button>
-        <button className="cl-mini-btn" onClick={() => addShape('ellipse')}>◯ Еліпс</button>
-        <button className="cl-mini-btn" onClick={() => addShape('text')}>T Текст</button>
-        {selected && <button className="cl-mini-btn" onClick={duplicateSelected}>⧉ Дублювати</button>}
-        {selected && <button className="cl-mini-btn" onClick={deleteSelected}>🗑 Видалити</button>}
+        {!previewMode && (
+          <>
+            <button className="cl-mini-btn" onClick={() => addShape('rect')}>▭ Прямокутник</button>
+            <button className="cl-mini-btn" onClick={() => addShape('ellipse')}>◯ Еліпс</button>
+            <button className="cl-mini-btn" onClick={() => addShape('text')}>T Текст</button>
+            {selected && <button className="cl-mini-btn" onClick={duplicateSelected}>⧉ Дублювати</button>}
+            {selected && <button className="cl-mini-btn" onClick={deleteSelected}>🗑 Видалити</button>}
+            <button className="cl-mini-btn" onClick={undo} disabled={historyRef.current.past.length === 0} title="Ctrl+Z">↶ Скасувати</button>
+            <button className="cl-mini-btn" onClick={redo} disabled={historyRef.current.future.length === 0} title="Ctrl+Shift+Z">↷ Повторити</button>
+          </>
+        )}
+        <button className="cl-mini-btn" style={{ marginLeft: previewMode ? 0 : 'auto' }} onClick={() => setPreviewMode((v) => !v)}>
+          {previewMode ? '✎ До редагування' : '👁 Перегляд результату'}
+        </button>
       </div>
 
       <div className="motion-anim-primary">
@@ -472,10 +550,10 @@ function AnimationStage({ project, onPatch, toastApi }) {
           <canvas
             ref={canvasRef}
             style={{ width: '100%', height: '100%' }}
-            onPointerDown={start}
-            onPointerMove={move}
-            onPointerUp={end}
-            onPointerLeave={end}
+            onPointerDown={previewMode ? undefined : start}
+            onPointerMove={previewMode ? undefined : move}
+            onPointerUp={previewMode ? undefined : end}
+            onPointerLeave={previewMode ? undefined : end}
           />
         </div>
 
@@ -490,39 +568,46 @@ function AnimationStage({ project, onPatch, toastApi }) {
           playing={playing}
           onTogglePlay={togglePlay}
           onRestart={() => setTime(0)}
+          editable={!previewMode}
+          onToggleHidden={toggleHidden}
+          onMoveLayer={moveLayer}
+          onDeleteObject={deleteObject}
+          onDuplicateObject={duplicateObject}
         />
       </div>
 
-      <div className="motion-props-panel">
-        {!selected && <p className="cl-tab-desc">Додай чи обери об’єкт, щоб побачити властивості.</p>}
-        {selected && (
-          <>
-            <p className="cl-section-title">{selected.type === 'text' ? 'Текст' : selected.type === 'ellipse' ? 'Еліпс' : 'Прямокутник'}</p>
-            {hasAnyKf && !hasMotion && (
-              <p className="motion-warning">⚠ Поки що лише 1 ключовий кадр — об'єкт не рухається. Клікни по іншому місцю на шкалі часу внизу й зміни цю фігуру ще раз, щоб додати другий кадр.</p>
-            )}
-            {selected.type === 'text' && (
-              <label className="gfx-field">Текст
-                <input className="cl-text-input" value={selected.text} onChange={(e) => setBaseProp({ text: e.target.value })} />
+      {!previewMode && (
+        <div className="motion-props-panel">
+          {!selected && <p className="cl-tab-desc">Додай чи обери об’єкт, щоб побачити властивості.</p>}
+          {selected && (
+            <>
+              <p className="cl-section-title">{layerLabel(selected)}</p>
+              {hasAnyKf && !hasMotion && (
+                <p className="motion-warning">⚠ Поки що лише 1 ключовий кадр — об'єкт не рухається. Клікни по іншому місцю на шкалі часу внизу й зміни цю фігуру ще раз, щоб додати другий кадр.</p>
+              )}
+              {selected.type === 'text' && (
+                <label className="gfx-field">Текст
+                  <input className="cl-text-input" value={selected.text} onChange={(e) => setBaseProp({ text: e.target.value })} />
+                </label>
+              )}
+              <label className="gfx-field">Колір
+                <input type="color" className="sketchpad-colorpicker" value={selected.fill} onChange={(e) => setBaseProp({ fill: e.target.value })} />
               </label>
-            )}
-            <label className="gfx-field">Колір
-              <input type="color" className="sketchpad-colorpicker" value={selected.fill} onChange={(e) => setBaseProp({ fill: e.target.value })} />
-            </label>
-            <label className="gfx-field">
-              Easing для нових ключових кадрів
-              <select className="cl-text-input" value={easingForNewKf} onChange={(e) => setEasingForNewKf(e.target.value)}>
-                {EASINGS.map((e) => <option key={e.key} value={e.key}>{e.label}</option>)}
-              </select>
-            </label>
-            {['x', 'y', 'w', 'h', 'rotation', 'opacity'].map((prop) => (
-              <PropertyRow key={prop} prop={prop} obj={selected} time={time} onSet={setProp} onRemoveKf={removeKf} />
-            ))}
-          </>
-        )}
-      </div>
+              <label className="gfx-field">
+                Easing для нових ключових кадрів
+                <select className="cl-text-input" value={easingForNewKf} onChange={(e) => setEasingForNewKf(e.target.value)}>
+                  {EASINGS.map((e) => <option key={e.key} value={e.key}>{e.label}</option>)}
+                </select>
+              </label>
+              {['x', 'y', 'w', 'h', 'rotation', 'opacity'].map((prop) => (
+                <PropertyRow key={prop} prop={prop} obj={selected} time={time} onSet={setProp} onRemoveKf={removeKf} />
+              ))}
+            </>
+          )}
+        </div>
+      )}
 
-      {objects.length > 0 && (
+      {!previewMode && objects.length > 0 && (
         <button className="cl-mini-btn" style={{ marginTop: 8 }} onClick={() => toastApi.show(`Перевірено живцем: ${(duration / 1000).toFixed(1)}с (принцип з уроку 24304)`)}>
           ✓ Позначити: перевірено відтворенням
         </button>
@@ -562,13 +647,21 @@ function PropertyRow({ prop, obj, time, onSet, onRemoveKf }) {
   )
 }
 
-function Timeline({ objects, selectedId, onSelect, time, duration, onSeek, onDurationChange, playing, onTogglePlay, onRestart }) {
+function Timeline({
+  objects, selectedId, onSelect, time, duration, onSeek, onDurationChange, playing, onTogglePlay, onRestart,
+  editable = true, onToggleHidden, onMoveLayer, onDeleteObject, onDuplicateObject,
+}) {
   const trackRef = useRef(null)
   function seekFromEvent(e) {
     const rect = trackRef.current.getBoundingClientRect()
     const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width))
     onSeek(Math.round(ratio * duration))
   }
+  // Доріжки показуються зверху вниз у порядку шарів: верхній рядок —
+  // об'єкт, що малюється найостаннішим (тобто попереду, на вершині
+  // канваси). «▲» у списку рухає об'єкт до кінця масиву objects
+  // (= вище/попереду), «▼» — до початку (= нижче/позаду).
+  const layered = [...objects].reverse()
   return (
     <div className="motion-timeline">
       <div className="motion-timeline-controls">
@@ -585,19 +678,34 @@ function Timeline({ objects, selectedId, onSelect, time, duration, onSeek, onDur
       </div>
       <div className="motion-timeline-tracks">
         {objects.length === 0 && <p className="cl-tab-desc">Додай об’єкт на канвасі, щоб побачити доріжку.</p>}
-        {objects.map((o) => {
+        {layered.map((o, displayIdx) => {
           const allKfTimes = new Set()
           for (const prop of ['x', 'y', 'w', 'h', 'rotation', 'opacity']) {
             for (const k of o.keyframes[prop] || []) allKfTimes.add(k.t)
           }
+          const isTop = displayIdx === 0
+          const isBottom = displayIdx === layered.length - 1
           return (
-            <div key={o.id} className={'motion-track' + (o.id === selectedId ? ' active' : '')} onClick={() => onSelect(o.id)}>
-              <span className="motion-track-label">{o.type === 'text' ? `“${o.text}”` : o.type === 'ellipse' ? 'Еліпс' : 'Прямокутник'}</span>
+            <div key={o.id} className={'motion-track' + (o.id === selectedId ? ' active' : '') + (o.hidden ? ' motion-track--hidden' : '')} onClick={() => onSelect(o.id)}>
+              {editable && (
+                <div className="motion-layer-controls" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" className="cl-mini-btn" title={o.hidden ? 'Показати шар' : 'Сховати шар'} onClick={() => onToggleHidden(o.id)}>{o.hidden ? '🚫' : '👁'}</button>
+                  <button type="button" className="cl-mini-btn" title="Підняти шар" disabled={isTop} onClick={() => onMoveLayer(o.id, 1)}>▲</button>
+                  <button type="button" className="cl-mini-btn" title="Опустити шар" disabled={isBottom} onClick={() => onMoveLayer(o.id, -1)}>▼</button>
+                </div>
+              )}
+              <span className="motion-track-label">{layerLabel(o)}</span>
               <div className="motion-track-lane">
                 {[...allKfTimes].map((t) => (
                   <span key={t} className="motion-kf-dot" style={{ left: `${(t / duration) * 100}%` }} title={`${(t / 1000).toFixed(2)}с`} />
                 ))}
               </div>
+              {editable && (
+                <div className="motion-layer-controls" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" className="cl-mini-btn" title="Дублювати" onClick={() => onDuplicateObject(o.id)}>⧉</button>
+                  <button type="button" className="cl-mini-btn" title="Видалити" onClick={() => onDeleteObject(o.id)}>🗑</button>
+                </div>
+              )}
             </div>
           )
         })}

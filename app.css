@@ -1542,6 +1542,15 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .motion-track-label { font-size: 12px; min-width: 90px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .motion-track-lane { position: relative; flex: 1; height: 14px; background: var(--surface-1); border-radius: 3px; }
 .motion-kf-dot { position: absolute; top: 2px; width: 10px; height: 10px; background: var(--accent); border-radius: 2px; transform: translateX(-50%) rotate(45deg); }
+.motion-track--hidden { opacity: .45; }
+.motion-track--hidden .motion-track-label { text-decoration: line-through; }
+/* Реальний контроль шарів прямо на доріжках таймлайна: показати/сховати,
+   підняти/опустити порядок, дублювати, видалити — без окремої
+   дубльованої панелі «Шари». */
+.motion-layer-controls { display: flex; gap: 3px; flex: none; }
+.motion-layer-controls .cl-mini-btn { margin-left: 0; padding: 2px 6px; }
+.motion-layer-controls .cl-mini-btn:disabled { opacity: .3; cursor: not-allowed; }
+.motion-anim-toolbar .cl-mini-btn:disabled { opacity: .4; cursor: not-allowed; }
 @media (max-width: 860px) {
   .branding-stages { width: 100%; flex-direction: row; flex-wrap: wrap; }
   .branding-side { width: 100%; }

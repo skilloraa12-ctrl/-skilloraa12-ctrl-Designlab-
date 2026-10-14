@@ -49,11 +49,22 @@ export function defaultStroke() {
 export function defaultObject(type, p) {
   const base = {
     id: crypto.randomUUID(), type, x: p.x, y: p.y, w: 160, h: 90, rotation: 0, opacity: 1, fill: '#6B62FF',
+    // hidden — реальне приховування шару: не малюється й не бере участі
+    // в клік-виділенні (моушн-студія навмисно спрощена: це порядок
+    // шарів + видимість, а не повноцінні групи з вкладеними
+    // трансформаціями чи клипінг-маски — цього вона чесно не підтримує).
+    hidden: false,
     shadow: defaultShadow(), stroke: defaultStroke(), keyframes: {},
   }
   if (type === 'ellipse') return { ...base, w: 120, h: 120 }
   if (type === 'text') return { ...base, w: 220, h: 50, text: 'Текст', fontSize: 28, fill: '#F4F4F6' }
   return base // rect
+}
+
+export function layerLabel(o) {
+  if (o.type === 'text') return `“${o.text}”`
+  if (o.type === 'ellipse') return 'Еліпс'
+  return 'Прямокутник'
 }
 
 // Властивості, які можна анімувати ключовими кадрами.
