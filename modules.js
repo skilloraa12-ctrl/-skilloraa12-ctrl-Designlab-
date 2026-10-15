@@ -219,6 +219,8 @@ import { LESSONS as adPrint } from './lessons/ad-print.js'
 import { LESSONS as adDigitalBanners } from './lessons/ad-digital-banners.js'
 import { LESSONS as adSocialAds } from './lessons/ad-social-ads.js'
 import { LESSONS as adOoh } from './lessons/ad-ooh.js'
+import { LESSONS as adCampaignConcept } from './lessons/ad-campaign-concept.js'
+import { LESSONS as adCtaConversion } from './lessons/ad-cta-conversion.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -419,6 +421,8 @@ export const MODULES = [
   ...adDigitalBanners,
   ...adSocialAds,
   ...adOoh,
+  ...adCampaignConcept,
+  ...adCtaConversion,
 ]
 
 export function getModule(id) {
