@@ -197,6 +197,7 @@ import { LESSONS as gameArtAnimationVfx } from './lessons/game-art-animation-vfx
 import { LESSONS as gameArtPipeline } from './lessons/game-art-pipeline.js'
 import { LESSONS as gameArtEngines } from './lessons/game-art-engines.js'
 import { LESSONS as gameArtPortfolio } from './lessons/game-art-portfolio.js'
+import { LESSONS as logoBasics } from './lessons/logo-basics.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -375,6 +376,7 @@ export const MODULES = [
   ...gameArtPipeline,
   ...gameArtEngines,
   ...gameArtPortfolio,
+  ...logoBasics,
 ]
 
 export function getModule(id) {

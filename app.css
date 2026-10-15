@@ -1749,3 +1749,24 @@ button.tool-badge--action:hover { border-color: var(--green); }
   .branding-side { width: 100%; }
   .gfx-track-panel { width: 100%; max-height: 320px; }
 }
+
+/* Logo Design Studio — SVG constructor (real elements[], not raster) */
+.logo-shape-row { margin-bottom: 12px; }
+.logo-builder-layout { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.logo-canvas-wrap { flex: 1 1 420px; min-width: 300px; }
+.logo-bg-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+.logo-canvas-svg { width: 100%; max-width: 420px; aspect-ratio: 1 / 1; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; touch-action: none; }
+.logo-layers-wrap { flex: 1 1 220px; min-width: 200px; }
+.logo-props-wrap { flex: 1 1 260px; min-width: 240px; }
+.logo-prop-field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+.logo-prop-field input[type="range"] { width: 100%; }
+.logo-static-svg { border: 1px solid var(--line); border-radius: var(--radius-sm); display: block; }
+.logo-variation-grid { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+.logo-variation-card { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.logo-scale-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-top: 10px; }
+.logo-scale-card { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.logo-scale-frame { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line); border-radius: var(--radius-sm); }
+
+@media (max-width: 860px) {
+  .logo-canvas-wrap, .logo-layers-wrap, .logo-props-wrap { flex: 1 1 100%; }
+}

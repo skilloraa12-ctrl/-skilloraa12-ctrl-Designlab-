@@ -19,6 +19,7 @@ const EMPTY_STATE = {
   motionProjects: [],
   uxProjects: [],
   gameArtProjects: [],
+  logoProjects: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -306,6 +307,39 @@ export function ProgressProvider({ children }) {
     return newId
   }, [])
 
+  const saveLogoProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.logoProjects.find((p) => p.id === id)
+      const now = new Date().toISOString()
+      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
+      return {
+        ...prev,
+        logoProjects: exists
+          ? prev.logoProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.logoProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removeLogoProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, logoProjects: prev.logoProjects.filter((p) => p.id !== id) }))
+  }, [])
+
+  const duplicateLogoProject = useCallback((id) => {
+    let newId = null
+    setState((prev) => {
+      const src = prev.logoProjects.find((p) => p.id === id)
+      if (!src) return prev
+      newId = crypto.randomUUID()
+      const now = new Date().toISOString()
+      const copy = { ...src, id: newId, name: src.name + ' (копія)', createdAt: now, updatedAt: now }
+      return { ...prev, logoProjects: [copy, ...prev.logoProjects] }
+    })
+    return newId
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -362,6 +396,7 @@ export function ProgressProvider({ children }) {
     motionProjects: state.motionProjects, saveMotionProject, removeMotionProject, duplicateMotionProject,
     uxProjects: state.uxProjects, saveUxProject, removeUxProject, duplicateUxProject,
     gameArtProjects: state.gameArtProjects, saveGameArtProject, removeGameArtProject, duplicateGameArtProject,
+    logoProjects: state.logoProjects, saveLogoProject, removeLogoProject, duplicateLogoProject,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,

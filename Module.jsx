@@ -6,6 +6,7 @@ import { useProgress } from './ProgressContext.jsx'
 import { createEmptyMotionProject } from './motionProject.js'
 import { createEmptyUxProject } from './uxProject.js'
 import { createEmptyGameArtProject, GAME_ART_SUBCAT_SECTION } from './gameArtProject.js'
+import { createEmptyLogoProject, LOGO_SUBCAT_SECTION } from './logoProject.js'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import GameDesignStudio from './GameDesignStudio.jsx'
@@ -63,7 +64,7 @@ const UX_SUBCAT_STAGE = {
 export default function Module() {
   const { id } = useParams()
   const module = getModule(id)
-  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject } = useProgress()
+  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject, logoProjects, saveLogoProject } = useProgress()
   const navigate = useNavigate()
   const [sketchOpen, setSketchOpen] = useState(false)
   const [presentationOpen, setPresentationOpen] = useState(false)
@@ -85,6 +86,9 @@ export default function Module() {
   // Game Art відкриває справжню Game Art Studio (асети/рев'ю/версії)
   // замість загального ескізу.
   const usesGameArtStudio = module.level === 'game-art'
+  // Logo Design відкриває справжню Logo Design Studio (SVG-конструктор/
+  // кольорові варіанти/перевірка масштабу) замість загального ескізу.
+  const usesLogoStudio = module.level === 'logo-design'
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -270,6 +274,18 @@ export default function Module() {
                 }}
               >
                 🎨 Відкрити «Game Art Studio»
+              </button>
+            ) : usesLogoStudio ? (
+              <button
+                className="complete-btn"
+                onClick={() => {
+                  const section = LOGO_SUBCAT_SECTION[module.subcategory] || 'builder'
+                  const existing = logoProjects[0]
+                  const id = existing ? existing.id : saveLogoProject(createEmptyLogoProject('Новий проєкт логотипа'))
+                  navigate(`/logo-design-studio/${id}`, { state: { section, subcategory: module.subcategory } })
+                }}
+              >
+                🏷️ Відкрити «Logo Design Studio»
               </button>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>
