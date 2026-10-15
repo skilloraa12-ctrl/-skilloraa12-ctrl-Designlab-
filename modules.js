@@ -204,6 +204,8 @@ import { LESSONS as logoMarksSymbols } from './lessons/logo-marks-symbols.js'
 import { LESSONS as logoGeometry } from './lessons/logo-geometry.js'
 import { LESSONS as logoColor } from './lessons/logo-color.js'
 import { LESSONS as logoNegativeSpace } from './lessons/logo-negative-space.js'
+import { LESSONS as logoVariations } from './lessons/logo-variations.js'
+import { LESSONS as logoMonochrome } from './lessons/logo-monochrome.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -389,6 +391,8 @@ export const MODULES = [
   ...logoGeometry,
   ...logoColor,
   ...logoNegativeSpace,
+  ...logoVariations,
+  ...logoMonochrome,
 ]
 
 export function getModule(id) {
