@@ -198,6 +198,8 @@ import { LESSONS as gameArtPipeline } from './lessons/game-art-pipeline.js'
 import { LESSONS as gameArtEngines } from './lessons/game-art-engines.js'
 import { LESSONS as gameArtPortfolio } from './lessons/game-art-portfolio.js'
 import { LESSONS as logoBasics } from './lessons/logo-basics.js'
+import { LESSONS as logoResearchBrief } from './lessons/logo-research-brief.js'
+import { LESSONS as logoTypography } from './lessons/logo-typography.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -377,6 +379,8 @@ export const MODULES = [
   ...gameArtEngines,
   ...gameArtPortfolio,
   ...logoBasics,
+  ...logoResearchBrief,
+  ...logoTypography,
 ]
 
 export function getModule(id) {
