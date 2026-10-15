@@ -206,6 +206,8 @@ import { LESSONS as logoColor } from './lessons/logo-color.js'
 import { LESSONS as logoNegativeSpace } from './lessons/logo-negative-space.js'
 import { LESSONS as logoVariations } from './lessons/logo-variations.js'
 import { LESSONS as logoMonochrome } from './lessons/logo-monochrome.js'
+import { LESSONS as logoApplication } from './lessons/logo-application.js'
+import { LESSONS as logoGuidelines } from './lessons/logo-guidelines.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -393,6 +395,8 @@ export const MODULES = [
   ...logoNegativeSpace,
   ...logoVariations,
   ...logoMonochrome,
+  ...logoApplication,
+  ...logoGuidelines,
 ]
 
 export function getModule(id) {
