@@ -237,6 +237,8 @@ import { LESSONS as threeDCameraComposition } from './lessons/3d-camera-composit
 import { LESSONS as threeDSceneComposition } from './lessons/3d-scene-composition.js'
 import { LESSONS as threeDRenderingExport } from './lessons/3d-rendering-export.js'
 import { LESSONS as threeDAnimationBasics } from './lessons/3d-animation-basics.js'
+import { LESSONS as threeDPracticalApplications } from './lessons/3d-practical-applications.js'
+import { LESSONS as threeDCritiquePortfolio } from './lessons/3d-critique-portfolio.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -455,6 +457,8 @@ export const MODULES = [
   ...threeDSceneComposition,
   ...threeDRenderingExport,
   ...threeDAnimationBasics,
+  ...threeDPracticalApplications,
+  ...threeDCritiquePortfolio,
 ]
 
 export function getModule(id) {
