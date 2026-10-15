@@ -233,6 +233,8 @@ import { LESSONS as threeDUvUnwrapping } from './lessons/3d-uv-unwrapping.js'
 import { LESSONS as threeDMaterialsPbr } from './lessons/3d-materials-pbr.js'
 import { LESSONS as threeDTexturing } from './lessons/3d-texturing.js'
 import { LESSONS as threeDLighting } from './lessons/3d-lighting.js'
+import { LESSONS as threeDCameraComposition } from './lessons/3d-camera-composition.js'
+import { LESSONS as threeDSceneComposition } from './lessons/3d-scene-composition.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -447,6 +449,8 @@ export const MODULES = [
   ...threeDMaterialsPbr,
   ...threeDTexturing,
   ...threeDLighting,
+  ...threeDCameraComposition,
+  ...threeDSceneComposition,
 ]
 
 export function getModule(id) {
