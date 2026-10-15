@@ -21,6 +21,7 @@ const EMPTY_STATE = {
   gameArtProjects: [],
   logoProjects: [],
   adProjects: [],
+  threeDProjects: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -374,6 +375,39 @@ export function ProgressProvider({ children }) {
     return newId
   }, [])
 
+  const saveThreeDProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.threeDProjects.find((p) => p.id === id)
+      const now = new Date().toISOString()
+      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
+      return {
+        ...prev,
+        threeDProjects: exists
+          ? prev.threeDProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.threeDProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removeThreeDProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, threeDProjects: prev.threeDProjects.filter((p) => p.id !== id) }))
+  }, [])
+
+  const duplicateThreeDProject = useCallback((id) => {
+    let newId = null
+    setState((prev) => {
+      const src = prev.threeDProjects.find((p) => p.id === id)
+      if (!src) return prev
+      newId = crypto.randomUUID()
+      const now = new Date().toISOString()
+      const copy = { ...src, id: newId, name: src.name + ' (копія)', createdAt: now, updatedAt: now }
+      return { ...prev, threeDProjects: [copy, ...prev.threeDProjects] }
+    })
+    return newId
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -432,6 +466,7 @@ export function ProgressProvider({ children }) {
     gameArtProjects: state.gameArtProjects, saveGameArtProject, removeGameArtProject, duplicateGameArtProject,
     logoProjects: state.logoProjects, saveLogoProject, removeLogoProject, duplicateLogoProject,
     adProjects: state.adProjects, saveAdProject, removeAdProject, duplicateAdProject,
+    threeDProjects: state.threeDProjects, saveThreeDProject, removeThreeDProject, duplicateThreeDProject,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,

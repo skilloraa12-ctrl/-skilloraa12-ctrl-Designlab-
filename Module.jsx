@@ -8,6 +8,7 @@ import { createEmptyUxProject } from './uxProject.js'
 import { createEmptyGameArtProject, GAME_ART_SUBCAT_SECTION } from './gameArtProject.js'
 import { createEmptyLogoProject, LOGO_SUBCAT_SECTION } from './logoProject.js'
 import { createEmptyAdProject, AD_SUBCAT_SECTION } from './adProject.js'
+import { createEmptyThreeDProject, THREED_SUBCAT_SECTION } from './threeDProject.js'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import GameDesignStudio from './GameDesignStudio.jsx'
@@ -65,7 +66,7 @@ const UX_SUBCAT_STAGE = {
 export default function Module() {
   const { id } = useParams()
   const module = getModule(id)
-  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject, logoProjects, saveLogoProject, adProjects, saveAdProject } = useProgress()
+  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject, logoProjects, saveLogoProject, adProjects, saveAdProject, threeDProjects, saveThreeDProject } = useProgress()
   const navigate = useNavigate()
   const [sketchOpen, setSketchOpen] = useState(false)
   const [presentationOpen, setPresentationOpen] = useState(false)
@@ -94,6 +95,10 @@ export default function Module() {
   // (конструктор оголошення/перевірка форматів/A-B-варіанти) замість
   // загального ескізу.
   const usesAdStudio = module.level === 'advertising-design'
+  // 3D Design відкриває справжню 3D Design Studio (облік об'єктів/сцен
+  // побудованих у 3D Lab, матеріали, вимоги, рев'ю, версії) замість
+  // загального ескізу.
+  const usesThreeDStudio = module.level === '3d-design'
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -303,6 +308,18 @@ export default function Module() {
                 }}
               >
                 📢 Відкрити «Advertising Design Studio»
+              </button>
+            ) : usesThreeDStudio ? (
+              <button
+                className="complete-btn"
+                onClick={() => {
+                  const section = THREED_SUBCAT_SECTION[module.subcategory] || 'objects'
+                  const existing = threeDProjects[0]
+                  const id = existing ? existing.id : saveThreeDProject(createEmptyThreeDProject('Новий 3D-проєкт'))
+                  navigate(`/3d-design-studio/${id}`, { state: { section, subcategory: module.subcategory } })
+                }}
+              >
+                🧊 Відкрити «3D Design Studio»
               </button>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>
