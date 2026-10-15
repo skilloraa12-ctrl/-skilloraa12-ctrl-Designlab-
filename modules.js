@@ -208,6 +208,8 @@ import { LESSONS as logoVariations } from './lessons/logo-variations.js'
 import { LESSONS as logoMonochrome } from './lessons/logo-monochrome.js'
 import { LESSONS as logoApplication } from './lessons/logo-application.js'
 import { LESSONS as logoGuidelines } from './lessons/logo-guidelines.js'
+import { LESSONS as logoCritiqueRedesign } from './lessons/logo-critique-redesign.js'
+import { LESSONS as logoClientPresentation } from './lessons/logo-client-presentation.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -397,6 +399,8 @@ export const MODULES = [
   ...logoMonochrome,
   ...logoApplication,
   ...logoGuidelines,
+  ...logoCritiqueRedesign,
+  ...logoClientPresentation,
 ]
 
 export function getModule(id) {
