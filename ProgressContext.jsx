@@ -20,6 +20,7 @@ const EMPTY_STATE = {
   uxProjects: [],
   gameArtProjects: [],
   logoProjects: [],
+  adProjects: [],
   streak: { count: 0, lastDay: null },
   achievements: [],
 }
@@ -340,6 +341,39 @@ export function ProgressProvider({ children }) {
     return newId
   }, [])
 
+  const saveAdProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.adProjects.find((p) => p.id === id)
+      const now = new Date().toISOString()
+      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
+      return {
+        ...prev,
+        adProjects: exists
+          ? prev.adProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.adProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removeAdProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, adProjects: prev.adProjects.filter((p) => p.id !== id) }))
+  }, [])
+
+  const duplicateAdProject = useCallback((id) => {
+    let newId = null
+    setState((prev) => {
+      const src = prev.adProjects.find((p) => p.id === id)
+      if (!src) return prev
+      newId = crypto.randomUUID()
+      const now = new Date().toISOString()
+      const copy = { ...src, id: newId, name: src.name + ' (копія)', createdAt: now, updatedAt: now }
+      return { ...prev, adProjects: [copy, ...prev.adProjects] }
+    })
+    return newId
+  }, [])
+
   const resetProgress = useCallback(() => {
     setState(EMPTY_STATE)
   }, [])
@@ -397,6 +431,7 @@ export function ProgressProvider({ children }) {
     uxProjects: state.uxProjects, saveUxProject, removeUxProject, duplicateUxProject,
     gameArtProjects: state.gameArtProjects, saveGameArtProject, removeGameArtProject, duplicateGameArtProject,
     logoProjects: state.logoProjects, saveLogoProject, removeLogoProject, duplicateLogoProject,
+    adProjects: state.adProjects, saveAdProject, removeAdProject, duplicateAdProject,
     streak: state.streak.count,
     unlocked: state.achievements,
     resetProgress,

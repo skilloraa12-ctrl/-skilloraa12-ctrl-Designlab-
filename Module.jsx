@@ -7,6 +7,7 @@ import { createEmptyMotionProject } from './motionProject.js'
 import { createEmptyUxProject } from './uxProject.js'
 import { createEmptyGameArtProject, GAME_ART_SUBCAT_SECTION } from './gameArtProject.js'
 import { createEmptyLogoProject, LOGO_SUBCAT_SECTION } from './logoProject.js'
+import { createEmptyAdProject, AD_SUBCAT_SECTION } from './adProject.js'
 import Quiz from './Quiz.jsx'
 import SketchPad from './SketchPad.jsx'
 import GameDesignStudio from './GameDesignStudio.jsx'
@@ -64,7 +65,7 @@ const UX_SUBCAT_STAGE = {
 export default function Module() {
   const { id } = useParams()
   const module = getModule(id)
-  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject, logoProjects, saveLogoProject } = useProgress()
+  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject, logoProjects, saveLogoProject, adProjects, saveAdProject } = useProgress()
   const navigate = useNavigate()
   const [sketchOpen, setSketchOpen] = useState(false)
   const [presentationOpen, setPresentationOpen] = useState(false)
@@ -89,6 +90,10 @@ export default function Module() {
   // Logo Design відкриває справжню Logo Design Studio (SVG-конструктор/
   // кольорові варіанти/перевірка масштабу) замість загального ескізу.
   const usesLogoStudio = module.level === 'logo-design'
+  // Advertising Design відкриває справжню Advertising Design Studio
+  // (конструктор оголошення/перевірка форматів/A-B-варіанти) замість
+  // загального ескізу.
+  const usesAdStudio = module.level === 'advertising-design'
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -286,6 +291,18 @@ export default function Module() {
                 }}
               >
                 🏷️ Відкрити «Logo Design Studio»
+              </button>
+            ) : usesAdStudio ? (
+              <button
+                className="complete-btn"
+                onClick={() => {
+                  const section = AD_SUBCAT_SECTION[module.subcategory] || 'builder'
+                  const existing = adProjects[0]
+                  const id = existing ? existing.id : saveAdProject(createEmptyAdProject('Новий рекламний проєкт'))
+                  navigate(`/advertising-design-studio/${id}`, { state: { section, subcategory: module.subcategory } })
+                }}
+              >
+                📢 Відкрити «Advertising Design Studio»
               </button>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>

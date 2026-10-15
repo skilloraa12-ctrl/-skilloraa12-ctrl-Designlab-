@@ -11,6 +11,7 @@ import MotionStudio from './MotionStudio.jsx'
 import UXStudio from './UXStudio.jsx'
 import GameArtStudio from './GameArtStudio.jsx'
 import LogoDesignStudio from './LogoDesignStudio.jsx'
+import AdvertisingDesignStudio from './AdvertisingDesignStudio.jsx'
 import Module from './Module.jsx'
 import ProgressPage from './Progress.jsx'
 import Glossary from './Glossary.jsx'
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/ux-studio/:projectId" element={<RequireAuth><UXStudio /></RequireAuth>} />
           <Route path="/game-art-studio/:projectId" element={<RequireAuth><GameArtStudio /></RequireAuth>} />
           <Route path="/logo-design-studio/:projectId" element={<RequireAuth><LogoDesignStudio /></RequireAuth>} />
+          <Route path="/advertising-design-studio/:projectId" element={<RequireAuth><AdvertisingDesignStudio /></RequireAuth>} />
           <Route path="/module/:id" element={<RequireAuth><Module /></RequireAuth>} />
           <Route path="/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
           <Route path="/glossary" element={<Glossary />} />
