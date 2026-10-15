@@ -227,6 +227,8 @@ import { LESSONS as adCritique } from './lessons/ad-critique.js'
 import { LESSONS as adPortfolio } from './lessons/ad-portfolio.js'
 import { LESSONS as threeDBasics } from './lessons/3d-basics.js'
 import { LESSONS as threeDPrimitivesModeling } from './lessons/3d-primitives-modeling.js'
+import { LESSONS as threeDTopology } from './lessons/3d-topology.js'
+import { LESSONS as threeDModelingTechniques } from './lessons/3d-modeling-techniques.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -435,6 +437,8 @@ export const MODULES = [
   ...adPortfolio,
   ...threeDBasics,
   ...threeDPrimitivesModeling,
+  ...threeDTopology,
+  ...threeDModelingTechniques,
 ]
 
 export function getModule(id) {
