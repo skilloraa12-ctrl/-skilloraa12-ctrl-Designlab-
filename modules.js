@@ -211,6 +211,8 @@ import { LESSONS as logoGuidelines } from './lessons/logo-guidelines.js'
 import { LESSONS as logoCritiqueRedesign } from './lessons/logo-critique-redesign.js'
 import { LESSONS as logoClientPresentation } from './lessons/logo-client-presentation.js'
 import { LESSONS as logoPortfolio } from './lessons/logo-portfolio.js'
+import { LESSONS as adBasics } from './lessons/ad-basics.js'
+import { LESSONS as adBriefStrategy } from './lessons/ad-brief-strategy.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -403,6 +405,8 @@ export const MODULES = [
   ...logoCritiqueRedesign,
   ...logoClientPresentation,
   ...logoPortfolio,
+  ...adBasics,
+  ...adBriefStrategy,
 ]
 
 export function getModule(id) {
