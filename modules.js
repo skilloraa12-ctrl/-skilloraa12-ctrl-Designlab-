@@ -229,6 +229,8 @@ import { LESSONS as threeDBasics } from './lessons/3d-basics.js'
 import { LESSONS as threeDPrimitivesModeling } from './lessons/3d-primitives-modeling.js'
 import { LESSONS as threeDTopology } from './lessons/3d-topology.js'
 import { LESSONS as threeDModelingTechniques } from './lessons/3d-modeling-techniques.js'
+import { LESSONS as threeDUvUnwrapping } from './lessons/3d-uv-unwrapping.js'
+import { LESSONS as threeDMaterialsPbr } from './lessons/3d-materials-pbr.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -439,6 +441,8 @@ export const MODULES = [
   ...threeDPrimitivesModeling,
   ...threeDTopology,
   ...threeDModelingTechniques,
+  ...threeDUvUnwrapping,
+  ...threeDMaterialsPbr,
 ]
 
 export function getModule(id) {
