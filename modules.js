@@ -213,6 +213,8 @@ import { LESSONS as logoClientPresentation } from './lessons/logo-client-present
 import { LESSONS as logoPortfolio } from './lessons/logo-portfolio.js'
 import { LESSONS as adBasics } from './lessons/ad-basics.js'
 import { LESSONS as adBriefStrategy } from './lessons/ad-brief-strategy.js'
+import { LESSONS as adCopywriting } from './lessons/ad-copywriting.js'
+import { LESSONS as adComposition } from './lessons/ad-composition.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -407,6 +409,8 @@ export const MODULES = [
   ...logoPortfolio,
   ...adBasics,
   ...adBriefStrategy,
+  ...adCopywriting,
+  ...adComposition,
 ]
 
 export function getModule(id) {
