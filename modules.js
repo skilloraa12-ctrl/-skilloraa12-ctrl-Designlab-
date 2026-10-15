@@ -215,6 +215,8 @@ import { LESSONS as adBasics } from './lessons/ad-basics.js'
 import { LESSONS as adBriefStrategy } from './lessons/ad-brief-strategy.js'
 import { LESSONS as adCopywriting } from './lessons/ad-copywriting.js'
 import { LESSONS as adComposition } from './lessons/ad-composition.js'
+import { LESSONS as adPrint } from './lessons/ad-print.js'
+import { LESSONS as adDigitalBanners } from './lessons/ad-digital-banners.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -411,6 +413,8 @@ export const MODULES = [
   ...adBriefStrategy,
   ...adCopywriting,
   ...adComposition,
+  ...adPrint,
+  ...adDigitalBanners,
 ]
 
 export function getModule(id) {
