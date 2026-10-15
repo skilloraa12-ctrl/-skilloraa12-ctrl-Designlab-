@@ -449,29 +449,38 @@ function stampDab(ctx, x, y, { size, color, opacity, erase, brushType, dirAngle,
     ctx.strokeStyle = ink
     ctx.fillStyle = ink
     ctx.lineWidth = Math.max(0.8, r * 0.12)
+    // Фаза вздовж мазка, виведена з позиції (а не з Math.random()) — щоб
+    // сусідні штампи чергувались/хвилювались узгоджено й читались як один
+    // безперервний візерунок, а не випадковий розкид окремих мотивів.
+    const phase = (x * Math.cos(dir) + y * Math.sin(dir)) * 0.35
     if (shape === 'leaf') {
-      const side = Math.random() < 0.5 ? 1 : -1
-      const lx = x + Math.cos(perp) * r * 0.5 * side
-      const ly = y + Math.sin(perp) * r * 0.5 * side
-      ctx.globalAlpha = opacity * 0.85
+      const side = Math.sin(phase) >= 0 ? 1 : -1
+      const lx = x + Math.cos(perp) * r * 0.45 * side
+      const ly = y + Math.sin(perp) * r * 0.45 * side
+      ctx.globalAlpha = opacity * 0.9
       ctx.save()
       ctx.translate(lx, ly)
       ctx.rotate(dir)
       ctx.beginPath()
-      ctx.ellipse(0, 0, r * 0.5, r * 0.22, 0, 0, Math.PI * 2)
+      ctx.ellipse(0, 0, r * 0.6, r * 0.28, 0, 0, Math.PI * 2)
       ctx.fill()
+      ctx.lineWidth = Math.max(0.6, r * 0.06)
+      ctx.strokeStyle = ink
+      ctx.globalAlpha = opacity * 0.5
+      ctx.stroke()
       ctx.restore()
     } else if (shape === 'chevron') {
-      const w = r * 0.55
-      ctx.globalAlpha = opacity * 0.85
+      const w = r * 0.7
+      ctx.lineWidth = Math.max(1, r * 0.16)
+      ctx.globalAlpha = opacity * 0.9
       ctx.beginPath()
       ctx.moveTo(x - Math.cos(dir) * w + Math.cos(perp) * w, y - Math.sin(dir) * w + Math.sin(perp) * w)
       ctx.lineTo(x, y)
       ctx.lineTo(x - Math.cos(dir) * w - Math.cos(perp) * w, y - Math.sin(dir) * w - Math.sin(perp) * w)
       ctx.stroke()
     } else if (shape === 'rhombus') {
-      const s = r * 0.34
-      ctx.globalAlpha = opacity * 0.85
+      const s = r * 0.42
+      ctx.globalAlpha = opacity * 0.9
       ctx.save()
       ctx.translate(x, y)
       ctx.rotate(dir)
@@ -479,10 +488,15 @@ function stampDab(ctx, x, y, { size, color, opacity, erase, brushType, dirAngle,
       ctx.moveTo(0, -s); ctx.lineTo(s * 0.7, 0); ctx.lineTo(0, s); ctx.lineTo(-s * 0.7, 0)
       ctx.closePath()
       ctx.fill()
+      ctx.lineWidth = Math.max(0.6, r * 0.06)
+      ctx.strokeStyle = ink
+      ctx.globalAlpha = opacity * 0.5
+      ctx.stroke()
       ctx.restore()
     } else if (shape === 'wave') {
+      ctx.lineWidth = Math.max(1.2, r * 0.2)
       ctx.globalAlpha = opacity * 0.9
-      const amp = r * 0.5 * (Math.random() > 0.5 ? 1 : -1)
+      const amp = r * 0.6 * Math.sin(phase)
       ctx.beginPath()
       ctx.moveTo(x - Math.cos(dir) * r, y - Math.sin(dir) * r)
       ctx.quadraticCurveTo(x + Math.cos(perp) * amp, y + Math.sin(perp) * amp, x + Math.cos(dir) * r, y + Math.sin(dir) * r)
@@ -658,10 +672,42 @@ const STEP_MULT = {
 // пензля, хутро «розчісується» мазком, волосся й ажур течуть за лінією).
 const DIR_AWARE = new Set(['paint', 'lace', 'grass', 'fur', 'hair'])
 
+// «Мультяшний контур»: малює ВЕСЬ накопичений шлях мазка як один
+// суцільний path (а не окреме обведення на кожен крихітний сегмент руху
+// миші). Якщо обводити по сегментах, кожен новий сегмент перемальовує
+// товще темне обведення поверх уже намальованої кольорової заливки в
+// місцях, де мазок перетинає сам себе (петлі, швидкі рухи) — виходить
+// рвана мішанина. Один ctx.stroke() на весь шлях природно зливає
+// самоперетини без цього ефекту.
+export function strokeCartoonPath(ctx, points, { size, color, opacity, erase }) {
+  if (points.length < 1) return
+  const draw = (lineWidth, strokeColor, alpha) => {
+    ctx.save()
+    ctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over'
+    ctx.globalAlpha = alpha
+    ctx.strokeStyle = strokeColor
+    ctx.lineWidth = lineWidth
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.beginPath()
+    ctx.moveTo(points[0].x, points[0].y)
+    if (points.length === 1) {
+      ctx.lineTo(points[0].x + 0.01, points[0].y)
+    } else {
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y)
+    }
+    ctx.stroke()
+    ctx.restore()
+  }
+  draw(size * 1.15 * 1.5, '#1a1a1a', Math.min(1, opacity * 1.2))
+  draw(size * 1.15, erase ? color : color, opacity)
+}
+
 // Мазок від (x0,y0) до (x1,y1): для твердого/м'якого пензля — швидкий
 // суцільний path-стрік; для текстурних пензлів — серія штампів уздовж
 // лінії (справжнє stamping, та сама техніка, що й у реальних
-// растрових редакторах для текстурних кистей).
+// растрових редакторах для текстурних кистей). Контур «Мультяшний» не
+// проходить тут — він малюється одним шляхом через strokeCartoonPath.
 export function strokeSegment(ctx, x0, y0, x1, y1, opts) {
   const { size, brushType = 'hard', variant: variantKey } = opts
   if (brushType === 'hard' || brushType === 'soft') {
@@ -671,17 +717,6 @@ export function strokeSegment(ctx, x0, y0, x1, y1, opts) {
     const a = opacity * (variant.alphaMul ?? 1)
     ctx.save()
     ctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over'
-    if (variant.outline) {
-      // «Мультяшний контур»: товстіша темна обведена лінія під кольоровим
-      // мазком — як обведені контури в мультиплікаційному малюнку.
-      ctx.globalAlpha = Math.min(1, a * 1.2)
-      ctx.strokeStyle = '#1a1a1a'
-      ctx.lineWidth = w * 1.5
-      ctx.beginPath()
-      ctx.moveTo(x0, y0)
-      ctx.lineTo(x1, y1)
-      ctx.stroke()
-    }
     ctx.globalAlpha = a
     ctx.strokeStyle = erase ? color : (variant.fixedColor || color)
     ctx.lineWidth = w
@@ -697,7 +732,25 @@ export function strokeSegment(ctx, x0, y0, x1, y1, opts) {
     return
   }
   const dist = Math.hypot(x1 - x0, y1 - y0)
-  const stepMult = STEP_MULT[brushType] ?? 0.16
+  const variant = getVariant(brushType, variantKey)
+  if (brushType === 'lace' && variant.shape && variant.shape !== 'mesh') {
+    // Листочки/шеврон/ромби/хвилі — суцільна тонка стрічка-основа під
+    // мотивом, щоб ряд мотивів читався як цілісне мереживне обрамлення,
+    // а не розрізнені штампи з проміжками.
+    const { color, opacity, erase } = opts
+    ctx.save()
+    ctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over'
+    ctx.globalAlpha = opacity * 0.5
+    ctx.strokeStyle = erase ? color : color
+    ctx.lineWidth = Math.max(1, size * 0.1)
+    ctx.beginPath()
+    ctx.moveTo(x0, y0)
+    ctx.lineTo(x1, y1)
+    ctx.stroke()
+    ctx.restore()
+  }
+  const laceDense = brushType === 'lace' && variant.shape && variant.shape !== 'mesh'
+  const stepMult = laceDense ? 0.4 : (STEP_MULT[brushType] ?? 0.16)
   const step = Math.max(1, size * stepMult)
   const count = Math.max(1, Math.ceil(dist / step))
   const dirOpts = DIR_AWARE.has(brushType)

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   BRUSH_SIZES, BRUSH_TYPES, BRUSH_VARIANTS, SHAPE_TYPES, DEFAULT_PALETTE, setupCanvas, loadImageToCanvas,
-  strokeSegment, dot, drawShape, drawText, canvasToDataUrl, pointFromEvent,
+  strokeSegment, strokeCartoonPath, dot, drawShape, drawText, canvasToDataUrl, pointFromEvent,
   drawColorWheel, pickFromWheel, hsvToHex,
 } from './freePaintEngine.js'
 
@@ -59,6 +59,8 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const shapeBaseRef = useRef(null)
   const shapeStartRef = useRef(null)
   const textBaseRef = useRef(null)
+  const cartoonBaseRef = useRef(null)
+  const cartoonPointsRef = useRef([])
 
   const [tool, setTool] = useState('brush')
   const [brushType, setBrushTypeRaw] = useState('hard')
@@ -175,9 +177,19 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
       drawingRef.current = true
       return
     }
-    pushUndo(captureSnapshot())
+    const snap = captureSnapshot()
+    pushUndo(snap)
     drawingRef.current = true
     lastPointRef.current = p
+    if (brushType === 'hard' && variant === 'cartoon') {
+      // Контур малюється одним суцільним шляхом на весь мазок (не по
+      // сегментах), щоб петлі й самоперетини не перемальовувались
+      // шматками одне поверх одного — див. strokeCartoonPath.
+      cartoonBaseRef.current = snap
+      cartoonPointsRef.current = [p]
+      strokeCartoonPath(ctx, cartoonPointsRef.current, { size, color, opacity, erase: tool === 'eraser' })
+      return
+    }
     dot(ctx, p.x, p.y, { size, color, opacity, brushType, variant, erase: tool === 'eraser' })
   }
 
@@ -189,6 +201,12 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
       ctx.putImageData(shapeBaseRef.current, 0, 0)
       const start_ = shapeStartRef.current
       drawShape(ctx, shapeType, start_.x, start_.y, p.x, p.y, { color, opacity, filled: shapeFilled, lineWidth: Math.max(2, size * 0.5) })
+      return
+    }
+    if (brushType === 'hard' && variant === 'cartoon') {
+      cartoonPointsRef.current.push(p)
+      ctx.putImageData(cartoonBaseRef.current, 0, 0)
+      strokeCartoonPath(ctx, cartoonPointsRef.current, { size, color, opacity, erase: tool === 'eraser' })
       return
     }
     const last = lastPointRef.current
