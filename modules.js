@@ -223,6 +223,8 @@ import { LESSONS as adCampaignConcept } from './lessons/ad-campaign-concept.js'
 import { LESSONS as adCtaConversion } from './lessons/ad-cta-conversion.js'
 import { LESSONS as adBrandConsistency } from './lessons/ad-brand-consistency.js'
 import { LESSONS as adSeasonalPromo } from './lessons/ad-seasonal-promo.js'
+import { LESSONS as adCritique } from './lessons/ad-critique.js'
+import { LESSONS as adPortfolio } from './lessons/ad-portfolio.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -427,6 +429,8 @@ export const MODULES = [
   ...adCtaConversion,
   ...adBrandConsistency,
   ...adSeasonalPromo,
+  ...adCritique,
+  ...adPortfolio,
 ]
 
 export function getModule(id) {
