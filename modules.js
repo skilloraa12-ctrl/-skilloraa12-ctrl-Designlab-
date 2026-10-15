@@ -225,6 +225,8 @@ import { LESSONS as adBrandConsistency } from './lessons/ad-brand-consistency.js
 import { LESSONS as adSeasonalPromo } from './lessons/ad-seasonal-promo.js'
 import { LESSONS as adCritique } from './lessons/ad-critique.js'
 import { LESSONS as adPortfolio } from './lessons/ad-portfolio.js'
+import { LESSONS as threeDBasics } from './lessons/3d-basics.js'
+import { LESSONS as threeDPrimitivesModeling } from './lessons/3d-primitives-modeling.js'
 
 export const MODULES = [
   ...webDesignBasics,
@@ -431,6 +433,8 @@ export const MODULES = [
   ...adSeasonalPromo,
   ...adCritique,
   ...adPortfolio,
+  ...threeDBasics,
+  ...threeDPrimitivesModeling,
 ]
 
 export function getModule(id) {
