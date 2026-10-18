@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useProgress } from './ProgressContext.jsx'
 import { DIRECTIONS } from './directions.js'
+import { getSubcategoriesByLevel } from './subcategories.js'
 
 const HUB = [
   { to: '/dictionary', title: 'Словник', desc: 'Що означає термін?' },
@@ -51,8 +52,9 @@ export default function Home() {
         <h3>Напрямки дизайну</h3>
       </div>
       <div className="direction-grid">
-        {DIRECTIONS.map((d) =>
-          d.id === 'web-design' || d.id === 'app-design' || d.id === 'ui-design' || d.id === 'game-design' ? (
+        {DIRECTIONS.map((d) => {
+          const hasContent = getSubcategoriesByLevel(d.id).length > 0
+          return hasContent ? (
             <Link className="direction-card" key={d.id} to={`/academy/${d.id}`}>
               <span className="direction-emoji">{d.emoji}</span>
               <div>
@@ -66,10 +68,11 @@ export default function Home() {
               <div>
                 <div className="direction-name">{d.name}</div>
                 <div className="direction-desc">{d.desc}</div>
+                <span className="lab-card-badge" style={{ marginTop: 6, display: 'inline-block' }}>У розробці</span>
               </div>
             </div>
           )
-        )}
+        })}
       </div>
     </div>
   )
