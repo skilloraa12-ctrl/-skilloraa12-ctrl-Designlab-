@@ -3,13 +3,12 @@
 // 3D Design Studio читає й пише той самий запис через
 // ProgressContext.saveThreeDProject.
 //
-// Чесна межа: 3D Design Studio НЕ дублює 3D Lab (реальний Three.js-рушій
-// на /labs/3d) як окремий, гірший рушій усередині себе — побудова самих
-// 3D-сцен відбувається в 3D Lab (той самий інструмент, що й у треку
-// 3D-моделей Game Art Studio), а 3D Design Studio зберігає реальний
-// знімок результату (JSON сцени Three.js, за потреби — скріншот) разом
-// з обліком матеріалів/текстур, вимогами, рев'ю та версіями — так само,
-// як Game Art Studio вже робить для свого треку 3D-моделей.
+// На відміну від Game Art Studio (яка посилається на 3D Lab для реальної
+// 3D-роботи), 3D Design Studio має власний повноцінний редактор з анімацією
+// (ThreeDAnimEditor.jsx, /3d-design-studio/:id/editor) — окремий від 3D Lab,
+// що й далі лишається незмінним інструментом для Game Art та інших напрямків.
+// `anim` нижче — реальна, редагована сцена з ключовими кадрами трансформації
+// для кількох обʼєктів одночасно, а не просто нотатка/знімок.
 
 export const ASSET_KINDS = [
   { key: 'objects', emoji: '🧊', label: '3D-об\'єкти та сцени' },
@@ -24,10 +23,39 @@ export const REVIEW_RUBRIC_3D = [
 export const SELF_SCORE_OPTIONS = ['Потребує роботи', 'Непогано', 'Відмінно']
 
 function makeAsset(kind) {
-  // note зберігає реальний JSON-знімок сцени з 3D Lab (вкладка «Експорт»)
-  // чи опис стану роботи — той самий підхід, що й у models3d-треку Game
-  // Art Studio, а не вигаданий окремий 3D-рушій усередині цієї студії.
+  // note лишається вільним текстовим полем (референси, опис матеріалу,
+  // технічні вимоги) — сама 3D-сцена з анімацією живе окремо в полі `anim`,
+  // редагованому через ThreeDAnimEditor, а не тут.
   return { id: crypto.randomUUID(), kind, title: '', note: '', imageDataUrl: null }
+}
+
+// Один обʼєкт анімованої сцени: примітив + базова трансформація/матеріал
+// (використовується, коли на обʼєкті ще немає жодного ключового кадру) і
+// список ключових кадрів (кожен — { time (сек), position, rotation (°), scale }).
+export function makeAnimObject(type = 'box', idFn = () => crypto.randomUUID()) {
+  return {
+    id: idFn(),
+    name: null,
+    type,
+    position: { x: 0, y: 0.65, z: 0 },
+    rotation: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
+    material: { color: '#3E37E0', metalness: 0.2, roughness: 0.5, wireframe: false, opacity: 1 },
+    keyframes: [],
+  }
+}
+
+export function makeKeyframeFromObject(obj, time) {
+  return {
+    time,
+    position: { ...obj.position },
+    rotation: { ...obj.rotation },
+    scale: { ...obj.scale },
+  }
+}
+
+export function createEmptyAnimScene() {
+  return { duration: 5, fps: 30, objects: [] }
 }
 
 export function createEmptyThreeDProject(name) {
@@ -38,6 +66,7 @@ export function createEmptyThreeDProject(name) {
     createdAt: now,
     updatedAt: now,
     assets: { objects: [], materials: [], requirements: [] },
+    anim: createEmptyAnimScene(),
     review: {
       rubricSet: '3d',
       items: REVIEW_RUBRIC_3D.map((criterion) => ({ id: crypto.randomUUID(), criterion, selfScore: '', note: '' })),

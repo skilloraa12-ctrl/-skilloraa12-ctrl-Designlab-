@@ -783,6 +783,24 @@ button.tool-badge--action:hover { border-color: var(--green); }
   .l3d-viewport { height: 280px; }
 }
 
+/* ---------- 3D Design: Anim Editor timeline ---------- */
+.tl-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.tl-settings { display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; margin-left: auto; }
+.tl-settings label { display: flex; align-items: center; gap: 6px; }
+.tl-settings input[type="number"] { width: 60px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); color: var(--ink); padding: 5px 7px; font-size: 12px; }
+.tl-scrubber-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.tl-scrubber-row input[type="range"] { flex: 1; }
+.tl-time-label { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+.tl-tracks { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; background: var(--surface); }
+.tl-track-row { display: flex; align-items: center; gap: 8px; }
+.tl-track-label { width: 150px; flex: none; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; border: none; background: none; color: var(--ink); text-align: left; padding: 4px 6px; border-radius: var(--radius-sm); }
+.tl-track-label:hover { background: var(--surface-2); }
+.tl-track-label.active { color: var(--accent-2); font-weight: 600; }
+.tl-track-lane { position: relative; flex: 1; height: 24px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--line); cursor: pointer; }
+.tl-keyframe { position: absolute; top: 50%; width: 11px; height: 11px; transform: translate(-50%, -50%) rotate(45deg); background: var(--accent-2); border: 1px solid var(--ink); cursor: pointer; padding: 0; }
+.tl-keyframe:hover { background: var(--accent); }
+.tl-playhead { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #ffd23f; pointer-events: none; }
+
 /* ---------- Pixel Art Lab ---------- */
 .pxa-canvas-wrap {
   display: flex; justify-content: center; align-items: flex-start;

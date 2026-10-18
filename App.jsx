@@ -13,6 +13,7 @@ import GameArtStudio from './GameArtStudio.jsx'
 import LogoDesignStudio from './LogoDesignStudio.jsx'
 import AdvertisingDesignStudio from './AdvertisingDesignStudio.jsx'
 import ThreeDDesignStudio from './ThreeDDesignStudio.jsx'
+import ThreeDAnimEditor from './ThreeDAnimEditor.jsx'
 import Module from './Module.jsx'
 import ProgressPage from './Progress.jsx'
 import Glossary from './Glossary.jsx'
@@ -76,6 +77,7 @@ export default function App() {
           <Route path="/logo-design-studio/:projectId" element={<RequireAuth><LogoDesignStudio /></RequireAuth>} />
           <Route path="/advertising-design-studio/:projectId" element={<RequireAuth><AdvertisingDesignStudio /></RequireAuth>} />
           <Route path="/3d-design-studio/:projectId" element={<RequireAuth><ThreeDDesignStudio /></RequireAuth>} />
+          <Route path="/3d-design-studio/:projectId/editor" element={<RequireAuth><ThreeDAnimEditor /></RequireAuth>} />
           <Route path="/module/:id" element={<RequireAuth><Module /></RequireAuth>} />
           <Route path="/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
           <Route path="/glossary" element={<Glossary />} />

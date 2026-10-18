@@ -4,7 +4,7 @@ import { useProgress } from './ProgressContext.jsx'
 import { useLabToast } from './labs/useLabToast.js'
 import LabToast from './labs/LabToast.jsx'
 import NotFound from './NotFound.jsx'
-import { ASSET_KINDS, SELF_SCORE_OPTIONS, makeEmptyAsset, THREED_SUBCAT_SECTION } from './threeDProject.js'
+import { ASSET_KINDS, SELF_SCORE_OPTIONS, makeEmptyAsset, THREED_SUBCAT_SECTION, createEmptyAnimScene } from './threeDProject.js'
 import { MODULES } from './modules.js'
 import { getSubcategoriesByLevel } from './subcategories.js'
 
@@ -13,13 +13,14 @@ import { getSubcategoriesByLevel } from './subcategories.js'
 // усі панелі читають і пишуть той самий запис через
 // saveThreeDProject({ id, ...patch }).
 //
-// Чесна межа: сама побудова 3D-сцен відбувається в 3D Lab (реальний
-// Three.js-рушій на /labs/3d) — ця студія НЕ дублює його як гірший
-// рушій усередині себе, а дає структуру навколо результату: реальний
-// JSON-знімок сцени з 3D Lab (вкладка «Експорт» → Copy JSON), за
-// потреби скріншот, облік матеріалів/текстур, вимоги проєкту, чесне
-// рев'ю й реальна історія версій — той самий принцип, що вже працює
-// для треку 3D-моделей у Game Art Studio.
+// На відміну від треку 3D-моделей у Game Art Studio (що посилається на
+// 3D Lab), побудова сцени тут відбувається у власному повноцінному
+// редакторі з анімацією — ThreeDAnimEditor.jsx на /3d-design-studio/:id/
+// editor, окремому від 3D Lab (3D Lab і далі лишається незмінним
+// інструментом для Game Art та інших напрямків). Ця сторінка показує
+// реальний стан сцени проєкту (кількість обʼєктів/анімованих обʼєктів/
+// тривалість) і веде до редактора, а також веде облік матеріалів/текстур,
+// вимог проєкту, чесне рев'ю й реальну історію версій.
 
 const TRACKS = getSubcategoriesByLevel('3d-design')
 
@@ -30,7 +31,7 @@ const SECTIONS = [
 ]
 
 const SECTION_HELP = {
-  objects: { tip: 'Побудуй сцену чи об\'єкт у 3D Lab, на вкладці «Експорт» скопіюй JSON сцени (Copy JSON) і встав його в поле «Нотатка» — це реальний знімок геометрії/позицій/матеріалів, а не вигадана назва файлу. Скріншот із тієї самої вкладки можна завантажити як зображення запису.', criteria: ['Є назва об\'єкта чи сцени', 'Є JSON сцени з 3D Lab або чітка нотатка про стан роботи'] },
+  objects: { tip: 'Відкрий повноцінний 3D-редактор з анімацією нижче: постав примітиви, задай їм ключові кадри позиції/обертання/масштабу на спільному таймлайні, перевір відтворення і експортуй відео (WebM) чи glTF з анімацією. Нижче можеш також лишити текстову нотатку чи скріншот — для референсів чи опису задуму.', criteria: ['У редакторі є хоча б один обʼєкт сцени', 'Хоча б один обʼєкт має щонайменше 2 ключові кадри (реальна анімація, а не статична поза)'] },
   materials: { tip: 'Опиши матеріал і PBR-карти (Albedo/Roughness/Metallic/Normal), які готуєш для об\'єкта — сам файл текстури зберігається в зовнішній програмі (Substance Painter, GIMP, Krita) чи в налаштуваннях матеріалу 3D Lab, тут лише облік і опис.', criteria: ['Є назва матеріалу', 'Вказано, для якого об\'єкта він призначений'] },
   requirements: { tip: 'Занеси технічне завдання проєкту як чекліст: формат експорту (glTF/FBX/OBJ), ліміт полігонів, роздільність текстур, цільовий рушій чи застосунок.', criteria: ['Є щонайменше 3 пункти вимог'] },
   review: { tip: 'Обери рубрику й чесно постав собі самооцінку по кожному критерію (чи це справді «відмінно», чи ще «потребує роботи»), залиш коментар із поясненням.', criteria: ['Є самооцінка щонайменше по половині критеріїв'] },
@@ -86,7 +87,7 @@ function readImageFile(file, cb) {
   reader.readAsDataURL(file)
 }
 
-function AssetSection({ kind, label, labLink, project, onPatch, toastApi }) {
+function AssetSection({ kind, label, editorCta, project, onPatch, toastApi }) {
   const items = project.assets[kind]
   const [selectedId, setSelectedId] = useState(items[0]?.id || null)
   const selected = items.find((a) => a.id === selectedId) || null
@@ -110,11 +111,8 @@ function AssetSection({ kind, label, labLink, project, onPatch, toastApi }) {
   return (
     <div className="branding-form">
       <p className="cl-section-title">{label}</p>
-      {labLink && (
-        <p className="cl-tab-desc">
-          Реальний інструмент для побудови: <Link to={labLink.url} className="gfx-link">{labLink.label} →</Link>
-        </p>
-      )}
+      {editorCta}
+      <p className="cl-section-title" style={{ fontSize: 12, opacity: 0.8 }}>Текстові нотатки (необовʼязково)</p>
       <button className="harmony-btn" onClick={add}>+ Додати запис</button>
       {items.length === 0 && <p className="cl-tab-desc">Ще немає жодного запису.</p>}
       <div className="ux-list-editor" style={{ marginTop: 12 }}>
@@ -136,7 +134,7 @@ function AssetSection({ kind, label, labLink, project, onPatch, toastApi }) {
             value={selected.note}
             onCommit={(v) => update(selected.id, { note: v })}
             textarea
-            placeholder={kind === 'objects' ? 'JSON сцени з 3D Lab (Експорт → Copy JSON), або опис стану роботи' : 'PBR-карти, опис матеріалу, для якого об\'єкта призначений'}
+            placeholder={kind === 'objects' ? 'Референси, опис задуму сцени, або нотатка про стан роботи' : 'PBR-карти, опис матеріалу, для якого об\'єкта призначений'}
           />
           {kind === 'objects' && (
             <>
@@ -305,6 +303,7 @@ export default function ThreeDDesignStudio() {
   const activeTrack = TRACKS.find((t) => t.id === activeTrackId)
 
   if (!project) return <NotFound />
+  const anim = project.anim || createEmptyAnimScene()
 
   function onPatch(patch) {
     saveThreeDProject({ id: project.id, ...patch })
@@ -383,7 +382,23 @@ export default function ThreeDDesignStudio() {
             </div>
           )}
 
-          {section === 'objects' && <AssetSection kind="objects" label="3D-об'єкти та сцени" labLink={{ url: '/labs/3d', label: '3D Lab' }} project={project} onPatch={onPatch} toastApi={toastApi} />}
+          {section === 'objects' && (
+            <AssetSection
+              kind="objects"
+              label="3D-об'єкти та сцени"
+              project={project}
+              onPatch={onPatch}
+              toastApi={toastApi}
+              editorCta={
+                <div className="gfx-row" style={{ marginBottom: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Link to={`/3d-design-studio/${project.id}/editor`} className="harmony-btn active">🎬 Відкрити 3D-редактор з анімацією →</Link>
+                  <span className="cl-tab-desc" style={{ margin: 0 }}>
+                    {anim.objects.length} обʼєктів у сцені · {anim.objects.filter((o) => o.keyframes.length > 0).length} з анімацією · {anim.duration}с
+                  </span>
+                </div>
+              }
+            />
+          )}
           {section === 'materials' && <AssetSection kind="materials" label="Матеріали та текстури" project={project} onPatch={onPatch} toastApi={toastApi} />}
           {section === 'requirements' && <RequirementsSection project={project} onPatch={onPatch} />}
           {section === 'review' && <ReviewSection project={project} onPatch={onPatch} />}
