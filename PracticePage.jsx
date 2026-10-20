@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
 import { getModule } from './modules.js'
+import { useAuth } from './AuthContext.jsx'
 import { useProgress } from './ProgressContext.jsx'
 import { getPracticeTask } from './practice/practiceTasks.js'
 import { createEmptyPracticeProject } from './practice/practiceProject.js'
+import { loadPracticeProject, savePracticeProjectRemote } from './practice/practiceSupabase.js'
 import PracticeShell from './practice/PracticeShell.jsx'
 import VectorStudio from './practice/editors/VectorStudio.jsx'
 
@@ -18,22 +20,31 @@ const EDITORS = {
 export default function PracticePage() {
   const { id } = useParams()
   const module = getModule(id)
-  const { practiceProjects, savePracticeProject, xp, level } = useProgress()
+  const { user } = useAuth()
+  const { xp, level, addPracticeXp } = useProgress()
   const task = module ? getPracticeTask(module) : null
-  const existing = task ? practiceProjects.find((p) => p.taskId === task.taskId) : null
-  const [localProject, setLocalProject] = useState(null)
 
-  // Перший візит на це завдання: записи ще нема в ProgressContext, тож
-  // створюємо його побічним ефектом (не під час рендеру — інакше React
-  // попереджає "setState під час рендеру іншого компонента").
+  const [practiceProject, setPracticeProject] = useState(null)
+  const [loaded, setLoaded] = useState(false)
+  const saveTimer = useRef(null)
+
+  // Завантаження: спершу з Supabase (practice_projects, FR-DAT-002), а
+  // якщо таблиці/запису ще немає — новий проєкт лише в памʼяті браузера
+  // (practiceSupabase.js сам розрізняє ці випадки лише через console.warn,
+  // для UI вони однакові: "почни заново").
   useEffect(() => {
-    if (task && !existing && !localProject) {
-      const fresh = createEmptyPracticeProject(task)
-      setLocalProject(fresh)
-      savePracticeProject(fresh)
-    }
+    let active = true
+    setLoaded(false)
+    setPracticeProject(null)
+    if (!task || !user) return
+    loadPracticeProject(user.id, task.taskId).then((remote) => {
+      if (!active) return
+      setPracticeProject(remote || createEmptyPracticeProject(task))
+      setLoaded(true)
+    })
+    return () => { active = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task?.taskId, existing, localProject])
+  }, [task?.taskId, user?.id])
 
   if (!module) return <Navigate to="/academy" replace />
 
@@ -47,13 +58,24 @@ export default function PracticePage() {
     )
   }
 
-  const practiceProject = existing || localProject
-  if (!practiceProject) return <p style={{ padding: 24, color: 'var(--muted)' }}>Завантаження…</p>
+  if (!loaded || !practiceProject) return <p style={{ padding: 24, color: 'var(--muted)' }}>Завантаження…</p>
 
   const editorInfo = EDITORS[task.editor]
 
   function onPatch(patch) {
-    savePracticeProject({ ...practiceProject, ...patch, id: practiceProject.id })
+    setPracticeProject((prev) => {
+      const next = { ...prev, ...patch }
+      // XP з практики рахується в загальний рівень (щоб версії v2/v3
+      // розблоковувались і від практики, не лише від пройдених уроків) —
+      // але лише на ПРИРІСТ earnedXp цього конкретного завдання, щоб
+      // повторне проходження не нараховувало те саме ще раз.
+      if (typeof patch.earnedXp === 'number' && patch.earnedXp > (prev.earnedXp || 0)) {
+        addPracticeXp(patch.earnedXp - (prev.earnedXp || 0))
+      }
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => savePracticeProjectRemote(user.id, next), 2000)
+      return next
+    })
   }
 
   return (

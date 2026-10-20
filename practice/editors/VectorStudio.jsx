@@ -164,6 +164,18 @@ export default function VectorStudio({ project, onChange }) {
     patchObjects(next)
   }
 
+  function saveVariant() {
+    const entry = { id: uid(), objects: structuredClone(project.objects), savedAt: new Date().toISOString() }
+    onChange({ ...project, variants: [entry, ...(project.variants || [])] })
+  }
+  function loadVariant(entry) {
+    patchObjects(structuredClone(entry.objects))
+    setSelectedId(null)
+  }
+  function removeVariant(id) {
+    onChange({ ...project, variants: (project.variants || []).filter((v) => v.id !== id) })
+  }
+
   function addPaletteColor(hex) {
     if (project.palette.includes(hex)) return
     onChange({ ...project, palette: [...project.palette, hex] })
@@ -270,6 +282,7 @@ export default function VectorStudio({ project, onChange }) {
         <div className="practice-bottom-tabs">
           <button className={bottomTab === 'layers' ? 'active' : ''} onClick={() => setBottomTab('layers')}>Шари</button>
           <button className={bottomTab === 'palette' ? 'active' : ''} onClick={() => setBottomTab('palette')}>Палітра</button>
+          <button className={bottomTab === 'variants' ? 'active' : ''} onClick={() => setBottomTab('variants')}>Варіанти</button>
         </div>
         {bottomTab === 'layers' && (
           <div className="practice-layers">
@@ -296,6 +309,20 @@ export default function VectorStudio({ project, onChange }) {
               ))}
             </div>
             <input type="color" className="cl-swatch-input" onChange={(e) => addPaletteColor(e.target.value)} />
+          </div>
+        )}
+        {bottomTab === 'variants' && (
+          <div className="practice-layers">
+            {(project.variants || []).length === 0 && <p className="cl-tab-desc">Ще немає збережених варіантів поточного стану полотна.</p>}
+            {(project.variants || []).map((v, i) => (
+              <div key={v.id} className="ux-list-row">
+                <button className="cl-mini-btn" style={{ flex: 1, textAlign: 'left' }} onClick={() => loadVariant(v)}>
+                  Варіант {(project.variants.length - i)} · {v.objects.length} об’єкт(ів) · {new Date(v.savedAt).toLocaleTimeString('uk-UA')}
+                </button>
+                <button className="cl-mini-btn" onClick={() => removeVariant(v.id)}>×</button>
+              </div>
+            ))}
+            <button className="harmony-btn" style={{ marginTop: 6 }} onClick={saveVariant}>📌 Зберегти варіант</button>
           </div>
         )}
         <button className="harmony-btn" style={{ marginLeft: 'auto' }} onClick={exportSvg}>⬇ Експорт SVG</button>

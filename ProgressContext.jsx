@@ -15,7 +15,7 @@ const EMPTY_STATE = {
   savedColors: [],
   savedGradients: [],
   graphicProjects: [],
-  practiceProjects: [],
+  practiceXp: 0,
   brandProjects: [],
   motionProjects: [],
   uxProjects: [],
@@ -163,28 +163,21 @@ export function ProgressProvider({ children }) {
     setState((prev) => ({ ...prev, graphicProjects: prev.graphicProjects.filter((p) => p.id !== id) }))
   }, [])
 
-  // Практика (вкладка «Практика», ТЗ практичних редакторів) — той самий
-  // принцип злиття за полями, що й у Logo/Motion/UX/... Studio: onPatch
-  // передає лише змінені поля, savePracticeProject домерджує їх до
-  // наявного запису за id.
-  const savePracticeProject = useCallback((project) => {
-    const id = project.id || crypto.randomUUID()
-    setState((prev) => {
-      const exists = prev.practiceProjects.find((p) => p.id === id)
-      const now = new Date().toISOString()
-      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
-      return {
-        ...prev,
-        practiceProjects: exists
-          ? prev.practiceProjects.map((p) => (p.id === id ? record : p))
-          : [record, ...prev.practiceProjects],
-      }
-    })
-    return id
-  }, [])
-
-  const removePracticeProject = useCallback((id) => {
-    setState((prev) => ({ ...prev, practiceProjects: prev.practiceProjects.filter((p) => p.id !== id) }))
+  // Практика (вкладка «Практика») — сам прогрес (project/status/спроби/
+  // знімки) живе в окремій таблиці Supabase practice_projects
+  // (supabase/practice.sql, practice/practiceSupabase.js), а НЕ тут:
+  // кожне завдання зберігається незалежно й часто (автозбереження), на
+  // відміну від graphicProjects/logoProjects/... які все ще йдуть одним
+  // спільним progress.data. Тут лишається лише practiceXp — один
+  // наростаючий підсумок, щоб XP з практики так само впливав на
+  // загальний рівень (і розблокування версій v2/v3), не дублюючи самі
+  // проєкти вдруге. PracticePage.jsx викликає addPracticeXp лише на
+  // ПРИРІСТ earned_xp конкретного завдання відносно попереднього
+  // збереженого значення — повторне проходження того самого завдання з
+  // тим самим чи гіршим результатом не додає XP ще раз.
+  const addPracticeXp = useCallback((delta) => {
+    if (!delta) return
+    setState((prev) => ({ ...prev, practiceXp: prev.practiceXp + delta }))
   }, [])
 
   // Єдина модель брендингового проєкту (Branding Studio) — усі інструменти
@@ -444,12 +437,7 @@ export function ProgressProvider({ children }) {
   const completedCount = completedIds.length
   const total = MODULES.length
   const quizPassedCount = Object.values(state.quizPassed).filter(Boolean).length
-  // earnedXp на practiceProject проставляється лише в момент проходження
-  // (ТЗ FR-TASK-003) — повторне проходження того самого завдання не додає
-  // XP ще раз, бо earnedXp на записі просто перезаписується тим самим чи
-  // новим значенням, а не підсумовується по спробах.
-  const practiceXp = state.practiceProjects.reduce((s, p) => s + (p.earnedXp || 0), 0)
-  const xp = completedCount * 100 + quizPassedCount * 20 + practiceXp
+  const xp = completedCount * 100 + quizPassedCount * 20 + state.practiceXp
   const level = Math.floor(xp / 500) + 1
 
   const levelDone = useMemo(() => {
@@ -490,7 +478,7 @@ export function ProgressProvider({ children }) {
     savedColors: state.savedColors, saveColor, removeColor,
     savedGradients: state.savedGradients, saveGradient, removeGradient,
     graphicProjects: state.graphicProjects, saveGraphicProject, removeGraphicProject,
-    practiceProjects: state.practiceProjects, savePracticeProject, removePracticeProject,
+    practiceXp: state.practiceXp, addPracticeXp,
     brandProjects: state.brandProjects, saveBrandProject, removeBrandProject, duplicateBrandProject,
     motionProjects: state.motionProjects, saveMotionProject, removeMotionProject, duplicateMotionProject,
     uxProjects: state.uxProjects, saveUxProject, removeUxProject, duplicateUxProject,
