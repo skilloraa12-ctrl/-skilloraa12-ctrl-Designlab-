@@ -222,6 +222,150 @@ const FLOW_HAND_TASKS = {
       'Якщо текст замалий чи закритого кольору — зміни fill на темніший у властивостях.',
     ],
   },
+  10601: { // UI Design → «Mega Menu»
+    title: 'Складна навігація',
+    goal: 'Побудуй нав-панель із кількома пунктами меню — додай нав-панель і щонайменше 3 додаткові елементи поруч із нею.',
+    estimateMin: 12, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є нав-панель', validator: 'componentUsed', params: { type: 'nav', min: 1 }, weight: 1 },
+      { id: 'g2', text: 'Щонайменше 4 обʼєкти загалом (пункти меню)', validator: 'countObjects', params: { min: 4 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран Desktop і компонент «Нав-панель» угорі.',
+      'Додай кілька текстових написів поруч із нав-панеллю — це пункти меню.',
+      'Mega Menu зазвичай показує кілька колонок посилань, а не один рядок.',
+    ],
+  },
+  10701: { // UI Design → «Table Anatomy»
+    title: 'Анатомія таблиці',
+    goal: 'Побудуй просту таблицю зі щонайменше 3 рядків — використай «Елемент списку» для кожного рядка.',
+    estimateMin: 10, xp: 30, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 3 рядки (елементи списку)', validator: 'componentUsed', params: { type: 'listitem', min: 3 }, weight: 1 }],
+    hints: [
+      'Додай екран Desktop.',
+      'У «Компоненти» обери «Елемент списку» й додай 3 штуки одна під одною.',
+      'Вирівняй їх по X, щоб утворити рядки таблиці.',
+    ],
+  },
+  10801: { // UI Design → «Search UI»
+    title: 'Пошукова панель',
+    goal: 'Збери пошукову панель: поле вводу поруч із кнопкою.',
+    estimateMin: 10, xp: 30, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є поле вводу', validator: 'componentUsed', params: { type: 'input', min: 1 }, weight: 1 },
+      { id: 'g2', text: 'Є кнопка', validator: 'componentUsed', params: { type: 'button', min: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран.',
+      'У «Компоненти» обери «Поле вводу», розмісти його.',
+      'Додай «Кнопку» одразу праворуч від поля — це кнопка пошуку.',
+    ],
+  },
+  10901: { // UI Design → «Multi-step Forms»
+    title: 'Багатокрокова форма',
+    goal: 'Розбий форму на щонайменше 2 екрани-кроки, звʼязані переходом.',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 2 екрани', validator: 'screenCount', params: { min: 2 }, weight: 1 },
+      { id: 'g2', text: 'Є перехід між ними', validator: 'hasLink', params: { min: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Додай 2 екрани Mobile — «Крок 1» і «Крок 2».',
+      'На кожному додай поле вводу.',
+      'Інструментом «Зв’язок» зʼєднай перший екран із другим.',
+    ],
+  },
+  11001: { // UI Design → «Dashboard Layout»
+    title: 'Макет дашборда',
+    goal: 'Розклади щонайменше 3 картки даних на одному екрані.',
+    estimateMin: 12, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 3 картки', validator: 'componentUsed', params: { type: 'card', min: 3 }, weight: 1 }],
+    hints: [
+      'Додай екран Desktop.',
+      'У «Компоненти» обери «Картка» й додай 3 штуки в ряд чи сітку.',
+      'Кожна картка дашборда зазвичай показує одну метрику чи графік.',
+    ],
+  },
+  11101: { // UI Design → «Toasts»
+    title: 'Сповіщення (toast)',
+    goal: 'Додай невеликий елемент сповіщення — картку з коротким текстом.',
+    estimateMin: 8, xp: 25, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є картка-сповіщення', validator: 'componentUsed', params: { type: 'card', min: 1 }, weight: 1 },
+      { id: 'g2', text: 'Є текст усередині чи поруч', validator: 'countObjects', params: { min: 2 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран і маленьку картку в кутку.',
+      'Додай короткий текст на ній — "Збережено", "Помилка" тощо.',
+      'Toast зазвичай зʼявляється в кутку екрана й не блокує решту інтерфейсу.',
+    ],
+  },
+  5701: { // App Design → «Status Bar» (екранна структура)
+    title: 'Онбординг з трьох екранів',
+    goal: 'Побудуй онбординг щонайменше з 3 мобільних екранів, звʼязаних переходами по черзі.',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 3 екрани', validator: 'screenCount', params: { min: 3 }, weight: 1 },
+      { id: 'g2', text: 'Усі екрани досяжні від першого', validator: 'allScreensReachable', params: {}, weight: 1 },
+    ],
+    hints: [
+      'Додай 3 екрани Mobile.',
+      'На кожному додай текст-заголовок кроку.',
+      'Звʼяжи 1→2→3 інструментом «Зв’язок».',
+    ],
+  },
+  5901: { // App Design → «Adaptive Design»
+    title: 'Безпечні зони й відступи',
+    goal: 'Розклади щонайменше 3 елементи на мобільному екрані так, щоб усі інтерактивні — не менше 44×44px.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 3 обʼєкти', validator: 'countObjects', params: { min: 3 }, weight: 1 },
+      { id: 'g2', text: 'Інтерактивні елементи ≥ 44×44px', validator: 'minTapTarget', params: { px: 44 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран Mobile.',
+      'Додай кнопку чи таб — за замовчуванням вони вже відповідають розміру.',
+      'Не стискай їх меншими за 44px у властивостях.',
+    ],
+  },
+  6101: { // App Design → «Що таке Wireframe»
+    title: 'Low-fi wireframe мобільного екрана',
+    goal: 'Зроби чорно-білий (сірий) каркас мобільного екрана без кольору.',
+    estimateMin: 10, xp: 30, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є екран', validator: 'screenCount', params: { min: 1 }, weight: 1 },
+      { id: 'g2', text: 'Не більше 3 кольорів (сірі відтінки)', validator: 'colorsMax', params: { max: 3 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран Mobile.',
+      'Додавай лише прямокутники сірих відтінків — без яскравих кольорів.',
+      'Wireframe показує структуру, а не фінальний дизайн.',
+    ],
+  },
+  6201: { // App Design → «Що таке Prototype»
+    title: 'Проходження прототипу',
+    goal: 'Побудуй короткий прототип: 2 екрани зі звʼязком між ними.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 2 екрани', validator: 'screenCount', params: { min: 2 }, weight: 1 },
+      { id: 'g2', text: 'Є перехід між ними', validator: 'hasLink', params: { min: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Додай 2 екрани Mobile — "До" і "Після".',
+      'На першому додай кнопку.',
+      'Інструментом «Зв’язок» зʼєднай перший екран із другим — це і є клікабельний перехід.',
+    ],
+  },
 }
 
 // Загальна Flow-вправа для решти уроків UX/UI/Web/App.
