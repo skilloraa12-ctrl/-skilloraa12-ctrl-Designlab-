@@ -3,10 +3,20 @@
 // The key difference: threeScene.js's sync() tears down and rebuilds every
 // mesh on every call, which is fine for occasional edits but would cause
 // stutter/GC churn called 30-60x/sec during animation playback. This wrapper
-// keeps a persistent id→mesh map: syncStructure() only rebuilds a mesh when
-// its primitive type actually changes (material props are patched in place),
-// and the cheap setPose() just updates an existing mesh's transform — safe
+// keeps a persistent id→node map: syncStructure() only rebuilds a node when
+// its `type` actually changed (material/light props are patched in place),
+// and the cheap setPose() just updates an existing node's transform — safe
 // to call every animation frame.
+//
+// Nodes can be a Mesh (box/sphere/...) or a THREE.PointLight/SpotLight —
+// point/spot lights are real, animatable scene objects here, not just the
+// fixed 3-light "Освітлення" preset rig (which stays separate, same as in
+// Lab3D). A spotlight's aim direction is derived from its `rotation` field
+// (same mental model as any other object) by pointing its `.target` at a
+// computed point in front of it — Three.js itself reads the cone direction
+// from `target.position`, not from `.rotation`, which is why this indirection
+// exists; it's an in-app-only convenience, so a spotlight's aim is NOT
+// preserved by the glTF export (see ThreeDAnimEditor.jsx's export tab note).
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -19,6 +29,8 @@ const GEOMETRY_BUILDERS = {
   plane: () => new THREE.PlaneGeometry(1.3, 1.3),
 }
 
+const LIGHT_TYPES = new Set(['pointLight', 'spotLight'])
+
 export const PRIMITIVES = [
   { type: 'box', label: 'Куб', icon: '🧊' },
   { type: 'sphere', label: 'Сфера', icon: '⚪' },
@@ -26,6 +38,11 @@ export const PRIMITIVES = [
   { type: 'cylinder', label: 'Циліндр', icon: '🛢️' },
   { type: 'torus', label: 'Тор', icon: '🍩' },
   { type: 'plane', label: 'Площина', icon: '▭' },
+]
+
+export const LIGHT_KINDS = [
+  { type: 'pointLight', label: 'Точкове світло', icon: '💡' },
+  { type: 'spotLight', label: 'Прожектор', icon: '🔦' },
 ]
 
 export const LIGHT_PRESETS = [
@@ -73,9 +90,8 @@ export function createAnimScene(container) {
   const group = new THREE.Group()
   scene.add(group)
 
-  const meshMap = new Map() // id -> THREE.Mesh
+  const nodeMap = new Map() // id -> THREE.Mesh | THREE.Light
   let selectionHelper = null
-  let currentSelectedId = null
 
   const raycaster = new THREE.Raycaster()
   const pointer = new THREE.Vector2()
@@ -124,61 +140,123 @@ export function createAnimScene(container) {
     m.needsUpdate = true
   }
 
-  function removeMesh(id) {
-    const mesh = meshMap.get(id)
-    if (!mesh) return
-    group.remove(mesh)
-    mesh.geometry.dispose()
-    mesh.material.dispose()
-    meshMap.delete(id)
+  function buildLightMarker(color) {
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 8), new THREE.MeshBasicMaterial({ color }))
+    marker.userData.isMarker = true
+    return marker
+  }
+
+  function patchLight(node, light) {
+    node.color.set(light.color)
+    node.intensity = light.intensity
+    node.distance = light.distance
+    node.decay = light.decay
+    if (node.isSpotLight) {
+      node.angle = THREE.MathUtils.degToRad(light.angle)
+      node.penumbra = light.penumbra
+    }
+    const marker = node.children.find((c) => c.userData.isMarker)
+    if (marker) marker.material.color.set(light.color)
+  }
+
+  // Spotlight cone direction in Three.js is derived from target.position,
+  // not from the light's own .rotation — this computes a target point in
+  // front of the light along the rotation's forward vector, same mental
+  // model as "rotation" for any other object in this editor.
+  function applyLightAim(light, position, rotationDeg) {
+    if (!light.target) return
+    const euler = new THREE.Euler(
+      THREE.MathUtils.degToRad(rotationDeg.x),
+      THREE.MathUtils.degToRad(rotationDeg.y),
+      THREE.MathUtils.degToRad(rotationDeg.z)
+    )
+    const dir = new THREE.Vector3(0, 0, -1).applyEuler(euler)
+    light.target.position.set(position.x + dir.x * 2, position.y + dir.y * 2, position.z + dir.z * 2)
+  }
+
+  function buildNode(obj) {
+    if (obj.type === 'pointLight') {
+      const light = new THREE.PointLight(obj.light.color, obj.light.intensity, obj.light.distance, obj.light.decay)
+      light.add(buildLightMarker(obj.light.color))
+      return light
+    }
+    if (obj.type === 'spotLight') {
+      const light = new THREE.SpotLight(obj.light.color, obj.light.intensity, obj.light.distance, THREE.MathUtils.degToRad(obj.light.angle), obj.light.penumbra, obj.light.decay)
+      light.add(buildLightMarker(obj.light.color))
+      return light
+    }
+    const build = GEOMETRY_BUILDERS[obj.type] || GEOMETRY_BUILDERS.box
+    const geometry = build()
+    const material = buildMaterial(obj.material, obj.type)
+    return new THREE.Mesh(geometry, material)
+  }
+
+  function removeNode(id) {
+    const node = nodeMap.get(id)
+    if (!node) return
+    group.remove(node)
+    if (node.target) group.remove(node.target)
+    if (node.isLight) {
+      const marker = node.children.find((c) => c.userData.isMarker)
+      if (marker) {
+        marker.geometry.dispose()
+        marker.material.dispose()
+      }
+    } else {
+      node.geometry.dispose()
+      node.material.dispose()
+    }
+    nodeMap.delete(id)
   }
 
   function updateSelectionOutline(selectedId) {
-    currentSelectedId = selectedId
     if (selectionHelper) {
       selectionHelper.parent?.remove(selectionHelper)
       selectionHelper.geometry.dispose()
       selectionHelper.material.dispose()
       selectionHelper = null
     }
-    const mesh = meshMap.get(selectedId)
-    if (!mesh) return
-    selectionHelper = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), new THREE.LineBasicMaterial({ color: 0xffd23f }))
-    mesh.add(selectionHelper)
+    const node = nodeMap.get(selectedId)
+    if (!node) return
+    const target = node.isLight ? node.children.find((c) => c.userData.isMarker) : node
+    if (!target || !target.geometry) return
+    selectionHelper = new THREE.LineSegments(new THREE.EdgesGeometry(target.geometry), new THREE.LineBasicMaterial({ color: 0xffd23f }))
+    target.add(selectionHelper)
   }
 
-  // Structural sync: adds/removes meshes, rebuilds geometry only when a
-  // mesh's primitive `type` actually changed, patches material in place
-  // otherwise, and applies each object's own base transform (used outside
-  // playback — during playback, setPose() overrides this per frame instead).
+  // Structural sync: adds/removes nodes, rebuilds only when a node's `type`
+  // actually changed, patches material/light props in place otherwise, and
+  // applies each object's own base transform (used outside playback — during
+  // playback, setPose() overrides this per frame instead).
   function syncStructure(objects, selectedId) {
     const ids = new Set(objects.map((o) => o.id))
-    for (const id of [...meshMap.keys()]) {
-      if (!ids.has(id)) removeMesh(id)
+    for (const id of [...nodeMap.keys()]) {
+      if (!ids.has(id)) removeNode(id)
     }
     for (const obj of objects) {
-      let mesh = meshMap.get(obj.id)
-      if (!mesh || mesh.userData.type !== obj.type) {
-        if (mesh) removeMesh(obj.id)
-        const build = GEOMETRY_BUILDERS[obj.type] || GEOMETRY_BUILDERS.box
-        const geometry = build()
-        const material = buildMaterial(obj.material, obj.type)
-        mesh = new THREE.Mesh(geometry, material)
-        mesh.userData.type = obj.type
-        mesh.userData.id = obj.id
-        mesh.name = obj.id
-        group.add(mesh)
-        meshMap.set(obj.id, mesh)
+      let node = nodeMap.get(obj.id)
+      if (!node || node.userData.type !== obj.type) {
+        if (node) removeNode(obj.id)
+        node = buildNode(obj)
+        node.userData.type = obj.type
+        node.userData.id = obj.id
+        node.name = obj.id
+        group.add(node)
+        if (node.target) group.add(node.target)
+        nodeMap.set(obj.id, node)
+      } else if (LIGHT_TYPES.has(obj.type)) {
+        patchLight(node, obj.light)
       } else {
-        patchMaterial(mesh, obj.material)
+        patchMaterial(node, obj.material)
       }
-      mesh.position.set(obj.position.x, obj.position.y, obj.position.z)
-      mesh.rotation.set(
+      node.position.set(obj.position.x, obj.position.y, obj.position.z)
+      node.rotation.set(
         THREE.MathUtils.degToRad(obj.rotation.x),
         THREE.MathUtils.degToRad(obj.rotation.y),
         THREE.MathUtils.degToRad(obj.rotation.z)
       )
-      mesh.scale.set(obj.scale.x, obj.scale.y, obj.scale.z)
+      node.scale.set(obj.scale.x, obj.scale.y, obj.scale.z)
+      if (node.isSpotLight) applyLightAim(node, obj.position, obj.rotation)
     }
     updateSelectionOutline(selectedId)
   }
@@ -186,15 +264,16 @@ export function createAnimScene(container) {
   // Cheap per-frame transform update for animation playback — no geometry
   // or material work, safe to call every requestAnimationFrame tick.
   function setPose(id, position, rotation, scale) {
-    const mesh = meshMap.get(id)
-    if (!mesh) return
-    mesh.position.set(position.x, position.y, position.z)
-    mesh.rotation.set(
+    const node = nodeMap.get(id)
+    if (!node) return
+    node.position.set(position.x, position.y, position.z)
+    node.rotation.set(
       THREE.MathUtils.degToRad(rotation.x),
       THREE.MathUtils.degToRad(rotation.y),
       THREE.MathUtils.degToRad(rotation.z)
     )
-    mesh.scale.set(scale.x, scale.y, scale.z)
+    node.scale.set(scale.x, scale.y, scale.z)
+    if (node.isSpotLight) applyLightAim(node, position, rotation)
   }
 
   function pickAt(clientX, clientY) {
@@ -240,7 +319,7 @@ export function createAnimScene(container) {
     cancelAnimationFrame(raf)
     ro.disconnect()
     controls.dispose()
-    for (const id of [...meshMap.keys()]) removeMesh(id)
+    for (const id of [...nodeMap.keys()]) removeNode(id)
     renderer.dispose()
     if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement)
   }
@@ -257,6 +336,6 @@ export function createAnimScene(container) {
     getScene: () => scene,
     getCamera: () => camera,
     getRenderer: () => renderer,
-    getMesh: (id) => meshMap.get(id),
+    getNode: (id) => nodeMap.get(id),
   }
 }

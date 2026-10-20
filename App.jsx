@@ -58,10 +58,11 @@ import CheatsheetsPage from './CheatsheetsPage.jsx'
 export default function App() {
   const location = useLocation()
   const isWideLab = location.pathname.startsWith('/labs/ui-preview') || location.pathname.startsWith('/labs/game')
+  const isFullBleed = /^\/3d-design-studio\/[^/]+\/editor/.test(location.pathname)
   return (
     <div className="app">
       <NavBar />
-      <main className={'main' + (isWideLab ? ' main--wide' : '')}>
+      <main className={'main' + (isWideLab ? ' main--wide' : '') + (isFullBleed ? ' main--full-bleed' : '')}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />

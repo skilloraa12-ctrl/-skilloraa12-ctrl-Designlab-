@@ -29,18 +29,31 @@ function makeAsset(kind) {
   return { id: crypto.randomUUID(), kind, title: '', note: '', imageDataUrl: null }
 }
 
-// Один обʼєкт анімованої сцени: примітив + базова трансформація/матеріал
-// (використовується, коли на обʼєкті ще немає жодного ключового кадру) і
-// список ключових кадрів (кожен — { time (сек), position, rotation (°), scale }).
+export const LIGHT_TYPES = ['pointLight', 'spotLight']
+
+const LIGHT_DEFAULTS = {
+  pointLight: { color: '#ffe9b0', intensity: 1.2, distance: 0, decay: 2 },
+  spotLight: { color: '#ffe9b0', intensity: 1.5, distance: 0, decay: 2, angle: 35, penumbra: 0.3 },
+}
+
+// Один обʼєкт анімованої сцени: примітив (чи точкове/прожекторне світло) +
+// базова трансформація/матеріал (використовується, коли на обʼєкті ще немає
+// жодного ключового кадру) і список ключових кадрів (кожен — { time (сек),
+// position, rotation (°), scale, easing }). Світло анімується тим самим
+// механізмом ключових кадрів, що й геометрія — лише замість `material` у
+// нього `light` (color/intensity/distance/decay, + angle/penumbra для
+// прожектора), а напрямок прожектора задається тим самим полем rotation.
 export function makeAnimObject(type = 'box', idFn = () => crypto.randomUUID()) {
+  const isLight = LIGHT_TYPES.includes(type)
   return {
     id: idFn(),
     name: null,
     type,
-    position: { x: 0, y: 0.65, z: 0 },
+    position: isLight ? { x: 0, y: 2, z: 0 } : { x: 0, y: 0.65, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
-    material: { color: '#3E37E0', metalness: 0.2, roughness: 0.5, wireframe: false, opacity: 1 },
+    material: isLight ? null : { color: '#3E37E0', metalness: 0.2, roughness: 0.5, wireframe: false, opacity: 1 },
+    light: isLight ? { ...LIGHT_DEFAULTS[type] } : null,
     keyframes: [],
   }
 }
@@ -51,6 +64,7 @@ export function makeKeyframeFromObject(obj, time) {
     position: { ...obj.position },
     rotation: { ...obj.rotation },
     scale: { ...obj.scale },
+    easing: 'linear',
   }
 }
 
