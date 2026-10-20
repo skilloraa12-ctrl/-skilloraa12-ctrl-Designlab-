@@ -160,11 +160,56 @@ export function exportSvgValid(project) {
   return exported ? ok('SVG успішно експортовано.') : fail('Ще не натиснуто «Експорт SVG».')
 }
 
+// ---------- Flow & Layout Studio (ТЗ 7.C) ----------
+
+export function screenCount(project, { min = 1 } = {}) {
+  const n = (project.frames || []).length
+  return n >= min ? ok(`Екранів: ${n}.`) : fail(`Потрібно щонайменше ${min} екран(и), зараз ${n}.`)
+}
+
+export function hasLink(project, { min = 1 } = {}) {
+  const n = (project.links || []).length
+  return n >= min ? ok(`Звʼязків між екранами: ${n}.`) : fail(`Потрібно щонайменше ${min} звʼязок між екранами (інструмент «Зв’язок»).`)
+}
+
+export function allScreensReachable(project) {
+  const frames = project.frames || []
+  if (frames.length <= 1) return ok('Лише один екран — досяжність не застосовна.')
+  const links = project.links || []
+  const startId = frames[0].id
+  const unreachable = frames.filter((f) => f.id !== startId && !links.some((l) => l.to === f.id))
+  return unreachable.length === 0
+    ? ok('Усі екрани досяжні через звʼязки.')
+    : fail(`До цих екранів немає звʼязку: ${unreachable.map((f) => f.name).join(', ')}.`)
+}
+
+export function componentUsed(project, { type, min = 1 } = {}) {
+  const n = (project.objects || []).filter((o) => o.type === 'component' && o.componentType === type).length
+  return n >= min ? ok(`Компонент «${type}»: ${n}.`) : fail(`Потрібно щонайменше ${min} компонент(и) «${type}».`)
+}
+
+export function stateDefined(project, { type, count = 1 } = {}) {
+  const states = new Set((project.objects || []).filter((o) => o.type === 'component' && o.componentType === type).map((o) => o.state))
+  return states.size >= count
+    ? ok(`Станів компонента «${type}»: ${states.size}.`)
+    : fail(`Потрібно щонайменше ${count} різних станів компонента «${type}» (зараз ${states.size}).`)
+}
+
+export function minTapTarget(project, { px = 44 } = {}) {
+  const interactive = (project.objects || []).filter((o) => o.type === 'component' && ['button', 'checkbox', 'switch', 'tab'].includes(o.componentType))
+  if (interactive.length === 0) return fail('Немає інтерактивних компонентів для перевірки.')
+  const small = interactive.filter((o) => o.w < px || o.h < px)
+  return small.length === 0
+    ? ok(`Усі інтерактивні елементи ≥ ${px}px.`)
+    : fail(`${small.length} елемент(ів) менші за ${px}×${px}px — замалі для пальця.`)
+}
+
 export const VALIDATORS = {
   hasObject, countObjects, propertyInRange, propertyEquals, exportFormatIs, durationUnder,
   hasConnection, noDeadEnds,
   shapeCount, colorUsed, colorsMax, contrastRatio: contrastRatioCheck, alignedToGuide,
   textHasFont, fontsUsed, pathNodesMax, minSizeLegible, paletteSize, hasVariants, exportSvgValid,
+  screenCount, hasLink, allScreensReachable, componentUsed, stateDefined, minTapTarget,
 }
 
 // goals: [{ id, text, validator, params, weight }]

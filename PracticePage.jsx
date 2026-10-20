@@ -8,11 +8,12 @@ import { createEmptyPracticeProject } from './practice/practiceProject.js'
 import { loadPracticeProject, savePracticeProjectRemote } from './practice/practiceSupabase.js'
 import PracticeShell from './practice/PracticeShell.jsx'
 import VectorStudio from './practice/editors/VectorStudio.jsx'
+import FlowStudio from './practice/editors/FlowStudio.jsx'
 
 const EDITORS = {
   vector: { Component: VectorStudio, label: 'Vector Studio' },
   threeD: { Component: null, label: '3D Studio' },
-  flow: { Component: null, label: 'Flow & Layout Studio' },
+  flow: { Component: FlowStudio, label: 'Flow & Layout Studio' },
   motion: { Component: null, label: 'Motion Studio' },
   gameBoard: { Component: null, label: 'Game Systems Board' },
 }

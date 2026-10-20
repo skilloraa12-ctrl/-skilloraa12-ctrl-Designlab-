@@ -24,6 +24,10 @@ function vectorStart(artboard) {
   }
 }
 
+function flowStart() {
+  return { frames: [], objects: [], links: [], palette: [] }
+}
+
 const A4 = { w: 595, h: 842, x: 0, y: 0, bg: '#ffffff' }
 const SQUARE = { w: 400, h: 400, x: 0, y: 0, bg: '#ffffff' }
 
@@ -123,6 +127,123 @@ const HAND_TASKS = {
   },
 }
 
+// Flow & Layout Studio — по 2 вручну підібрані завдання на напрям (ТЗ
+// розділ 8), прив'язані до реальних уроків modules.js.
+const FLOW_HAND_TASKS = {
+  27081: { // UX Design → «Що таке User Flow і типи блоків потоку»
+    title: 'User flow покупки',
+    goal: 'Побудуй потік із щонайменше 3 екранів і звʼяжи їх стрілками так, щоб кожен екран був досяжний від початкового.',
+    estimateMin: 15, xp: 45, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 3 екрани', validator: 'screenCount', params: { min: 3 }, weight: 1 },
+      { id: 'g2', text: 'Щонайменше 2 звʼязки між екранами', validator: 'hasLink', params: { min: 2 }, weight: 1 },
+      { id: 'g3', text: 'Усі екрани досяжні від першого', validator: 'allScreensReachable', params: {}, weight: 1 },
+    ],
+    hints: [
+      'Додай 3 екрани кнопками-пресетами внизу (вкладка «Екрани») — напр. каталог, картка товару, кошик.',
+      'Обери інструмент «Зв’язок» (↗), клікни на перший екран, потім на другий — зʼявиться стрілка.',
+      'Перевір, що до КОЖНОГО екрана, крім першого, веде хоч одна стрілка.',
+    ],
+  },
+  27091: { // UX Design → «Low-fidelity проти mid-fidelity вайрфреймів»
+    title: 'Low-fi wireframe',
+    goal: 'Зроби простий чорно-білий вайрфрейм одного екрана — без кольорової палітри, лише форма й розташування.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є хоча б один екран', validator: 'screenCount', params: { min: 1 }, weight: 1 },
+      { id: 'g2', text: 'Не більше 3 кольорів (сіра палітра)', validator: 'colorsMax', params: { max: 3 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран (Mobile чи Desktop) кнопкою-пресетом.',
+      'Додавай лише прямокутники й текст сірими відтінками — без яскравих кольорів.',
+      'Low-fi — це про розташування блоків, а не про фінальний вигляд.',
+    ],
+  },
+  10201: { // UI Design → «Affordance»
+    title: 'Кнопка в 4 станах',
+    goal: 'Додай компонент «Кнопка» чотири рази з різними станами: Default, Hover, Pressed, Disabled.',
+    estimateMin: 10, xp: 40, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: '4 кнопки на полотні', validator: 'componentUsed', params: { type: 'button', min: 4 }, weight: 1 },
+      { id: 'g2', text: '4 різні стани', validator: 'stateDefined', params: { type: 'button', count: 4 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран, потім у вкладці «Компоненти» обери «Кнопка» й клікни на полотні 4 рази.',
+      'Обери кожну кнопку окремо й у властивостях справа зміни «Стан».',
+      'У кожної з 4 кнопок має бути свій, не повторений стан.',
+    ],
+  },
+  5801: { // App Design → «Buttons (кнопки)»
+    title: 'Нижня навігація з 4 вкладок',
+    goal: 'Додай 4 таби нижньої навігації на один мобільний екран.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є мобільний екран', validator: 'screenCount', params: { min: 1 }, weight: 1 },
+      { id: 'g2', text: '4 таби', validator: 'componentUsed', params: { type: 'tab', min: 4 }, weight: 2 },
+    ],
+    hints: [
+      'Додай екран Mobile кнопкою-пресетом.',
+      'У вкладці «Компоненти» обери «Таб» і додай 4 штуки в один ряд унизу екрана.',
+      'Розташуй таби рівномірно за шириною екрана (375px / 4 ≈ по 90px кожен).',
+    ],
+  },
+  701: { // Web Design → «Header — шапка сайту»
+    title: 'Структура сторінки',
+    goal: 'Побудуй структуру сторінки на Desktop-екрані: нав-панель угорі, хоча б один блок вмісту.',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є екран', validator: 'screenCount', params: { min: 1 }, weight: 1 },
+      { id: 'g2', text: 'Є нав-панель', validator: 'componentUsed', params: { type: 'nav', min: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран Desktop.',
+      'У вкладці «Компоненти» обери «Нав-панель» і розмісти її вгорі екрана.',
+      'Додай ще картку чи текст нижче — це вже вміст сторінки.',
+    ],
+  },
+  801: { // Web Design → «Buttons — кнопки»
+    title: 'CTA-блок',
+    goal: 'Додай кнопку розміром не менше 44×44px і текстовий підпис поруч, що проходить контраст WCAG AA.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Кнопка ≥ 44×44px', validator: 'minTapTarget', params: { px: 44 }, weight: 1 },
+      { id: 'g2', text: 'Контраст тексту ≥ 4.5:1', validator: 'contrastRatio', params: { min: 4.5 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран, потім компонент «Кнопка» — за замовчуванням вона вже 120×44px.',
+      'Додай текстовий об’єкт темним кольором — фон екрана завжди білий.',
+      'Якщо текст замалий чи закритого кольору — зміни fill на темніший у властивостях.',
+    ],
+  },
+}
+
+// Загальна Flow-вправа для решти уроків UX/UI/Web/App.
+function genericFlowTask(module) {
+  return {
+    title: `Практика: ${module.title}`,
+    goal: 'Додай екран і розмісти на ньому хоча б один компонент.',
+    estimateMin: 10, xp: 25, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є хоча б один екран', validator: 'screenCount', params: { min: 1 }, weight: 1 },
+      { id: 'g2', text: 'Є хоча б 2 обʼєкти на полотні', validator: 'countObjects', params: { min: 2 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран кнопкою-пресетом у вкладці «Екрани».',
+      'У вкладці «Компоненти» обери будь-який і клікни на полотні.',
+      'Перевір результат кнопкою «Перевірити».',
+    ],
+  }
+}
+
+const FLOW_LEVEL_PROFILE = { 'ux-design': 'ux', 'ui-design': 'ui', 'web-design': 'web', 'app-design': 'app' }
+
 // Загальна (не підігнана під урок) вправа — доступна в будь-якому уроці
 // Graphic/Logo/Branding без власноруч підібраного завдання, щоб «Практика»
 // працювала по всій програмі курсу, а не лише в кількох уроках.
@@ -144,16 +265,33 @@ function genericVectorTask(module) {
   }
 }
 
+const VECTOR_LEVELS = ['graphic-design', 'logo-design', 'branding']
+const VECTOR_PROFILE = { 'graphic-design': 'graphic', 'logo-design': 'logo', branding: 'branding' }
+
 export function getPracticeTask(module) {
-  const info = HAND_TASKS[module.id]
-  const base = info || (['graphic-design', 'logo-design', 'branding'].includes(module.level) ? genericVectorTask(module) : null)
-  if (!base) return null
-  return {
-    ...base,
-    taskId: `task-${module.id}`,
-    lessonId: module.id,
-    editor: 'vector',
-    profile: module.level === 'graphic-design' ? 'graphic' : module.level === 'logo-design' ? 'logo' : 'branding',
-    isHandAuthored: !!info,
+  if (VECTOR_LEVELS.includes(module.level)) {
+    const info = HAND_TASKS[module.id]
+    const base = info || genericVectorTask(module)
+    return {
+      ...base,
+      taskId: `task-${module.id}`,
+      lessonId: module.id,
+      editor: 'vector',
+      profile: VECTOR_PROFILE[module.level],
+      isHandAuthored: !!info,
+    }
   }
+  if (FLOW_LEVEL_PROFILE[module.level]) {
+    const info = FLOW_HAND_TASKS[module.id]
+    const base = info || genericFlowTask(module)
+    return {
+      ...base,
+      taskId: `task-${module.id}`,
+      lessonId: module.id,
+      editor: 'flow',
+      profile: FLOW_LEVEL_PROFILE[module.level],
+      isHandAuthored: !!info,
+    }
+  }
+  return null
 }
