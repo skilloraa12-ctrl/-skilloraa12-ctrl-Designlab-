@@ -337,6 +337,15 @@ export function cameraFraming(project) {
     : fail('Обери ракурс камери в панелі властивостей — за замовчуванням кадр ще не продуманий.')
 }
 
+// ---------- Motion Studio (ТЗ 7.D) ----------
+
+export function hasKeyframes(project, { min = 1, minPerObject = 2 } = {}) {
+  const n = (project.objects || []).filter((o) => (o.keyframes || []).length >= minPerObject).length
+  return n >= min
+    ? ok(`Анімованих обʼєктів: ${n}.`)
+    : fail(`Потрібно щонайменше ${min} обʼєкт(ів) із ${minPerObject}+ ключовими кадрами, зараз ${n}.`)
+}
+
 export const VALIDATORS = {
   hasObject, countObjects, propertyInRange, propertyEquals, exportFormatIs, durationUnder,
   hasConnection, noDeadEnds,
@@ -345,6 +354,7 @@ export const VALIDATORS = {
   screenCount, hasLink, allScreensReachable, componentUsed, stateDefined, minTapTarget,
   nodeCount, loopClosed, resourceSourceAndSink, formulaValid, monotonicIncreasing, tableColumnsPresent,
   polyBudget, lightCount, materialAssigned, materialColorsMax, cameraFraming,
+  hasKeyframes,
 }
 
 // goals: [{ id, text, validator, params, weight }]

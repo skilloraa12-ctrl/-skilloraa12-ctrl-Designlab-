@@ -297,6 +297,81 @@ const GAME_BOARD_HAND_TASKS = {
   },
 }
 
+function motionStart() {
+  return { objects: [], duration: 5, fps: 24, exportedFormats: [] }
+}
+
+const MOTION_HAND_TASKS = {
+  24601: { // Motion Design → «Анімація простих форм та морфінг»
+    title: 'Поява логотипа',
+    goal: 'Зроби плавну появу обʼєкта: на початку він прозорий і маленький, наприкінці — звичайного розміру й непрозорий.',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [{ id: 'g1', text: 'Обʼєкт анімовано щонайменше 2 ключами', validator: 'hasKeyframes', params: { min: 1, minPerObject: 2 }, weight: 1 }],
+    hints: [
+      'Додай фігуру чи текст на полотно.',
+      'На 0с постав малий масштаб і низьку прозорість, натисни «Додати ключ».',
+      'Перетягни повзунок часу вперед, поверни масштаб і прозорість до звичайних, знову «Додати ключ».',
+    ],
+  },
+  26101: { // Motion Design → практика ключових кадрів
+    title: 'М’яч (squash and stretch)',
+    goal: 'Анімуй стрибок м’яча щонайменше 5 ключовими кадрами — стискання при ударі, витягування в польоті.',
+    estimateMin: 15, xp: 50, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 5 ключових кадрів', validator: 'hasKeyframes', params: { min: 1, minPerObject: 5 }, weight: 1 }],
+    hints: [
+      'Додай еліпс — це буде «м’яч».',
+      'Постав ключі на різних Y (висота) по довжині таймлайна — підйом, падіння, удар.',
+      'У момент удару зменш масштаб по Y (сплющення) — це і є «squash».',
+    ],
+  },
+  31501: { // Advertising Design → стандартні розміри банерів
+    title: 'Банер з CTA',
+    goal: 'Зроби банер щонайменше з 2 обʼєктів (текст + кнопка-CTA), де кнопка анімована.',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 2 обʼєкти', validator: 'countObjects', params: { min: 2 }, weight: 1 },
+      { id: 'g2', text: 'Є анімований обʼєкт', validator: 'hasKeyframes', params: { min: 1, minPerObject: 2 }, weight: 1 },
+    ],
+    hints: [
+      'Додай текст (заголовок) і прямокутник (кнопка CTA).',
+      'Обери кнопку, постав ключ на 0с, перейди на 1с, зміни масштаб чи позицію, постав другий ключ.',
+      'Перевір відтворення кнопкою ▶ на таймлайні.',
+    ],
+  },
+  31901: { // Advertising Design → дизайн CTA
+    title: 'Анімація CTA-кнопки',
+    goal: 'Анімуй кнопку заклику до дії: легке «дихання» масштабом, щоб привернути увагу.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [{ id: 'g1', text: 'Кнопка анімована щонайменше 3 ключами', validator: 'hasKeyframes', params: { min: 1, minPerObject: 3 }, weight: 1 }],
+    hints: [
+      'Додай прямокутник як кнопку й текст усередині чи поруч.',
+      'На 0с — звичайний масштаб, на середині таймлайна — трохи більший, наприкінці — знову звичайний.',
+      'Це створює ефект «пульсації», що привертає око.',
+    ],
+  },
+}
+
+function genericMotionTask(module) {
+  return {
+    title: `Практика: ${module.title}`,
+    goal: 'Додай обʼєкт і постав йому щонайменше 2 ключові кадри.',
+    estimateMin: 10, xp: 25, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [{ id: 'g1', text: 'Обʼєкт анімовано', validator: 'hasKeyframes', params: { min: 1, minPerObject: 2 }, weight: 1 }],
+    hints: [
+      'Додай фігуру чи текст інструментами зліва.',
+      'На різних моментах таймлайна зміни позицію/масштаб/поворот і тисни «Додати ключ».',
+      'Перевір результат кнопкою «Перевірити».',
+    ],
+  }
+}
+
+const MOTION_LEVEL_PROFILE = { 'motion-design': 'motion', 'advertising-design': 'advertising' }
+
 function threeDStart() {
   return { objects: [], cameraView: 'iso', exportedFormats: [] }
 }
@@ -460,6 +535,18 @@ export function getPracticeTask(module) {
       lessonId: module.id,
       editor: 'flow',
       profile: FLOW_LEVEL_PROFILE[module.level],
+      isHandAuthored: !!info,
+    }
+  }
+  if (MOTION_LEVEL_PROFILE[module.level]) {
+    const info = MOTION_HAND_TASKS[module.id]
+    const base = info || genericMotionTask(module)
+    return {
+      ...base,
+      taskId: `task-${module.id}`,
+      lessonId: module.id,
+      editor: 'motion',
+      profile: MOTION_LEVEL_PROFILE[module.level],
       isHandAuthored: !!info,
     }
   }

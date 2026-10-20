@@ -43,8 +43,8 @@ export const DIRECTION_EDITOR = {
   'ui-design': { editor: 'flow', profile: 'ui', editorReady: true },
   'web-design': { editor: 'flow', profile: 'web', editorReady: true },
   'app-design': { editor: 'flow', profile: 'app', editorReady: true },
-  'motion-design': { editor: 'motion', profile: 'motion', editorReady: false },
-  'advertising-design': { editor: 'motion', profile: 'advertising', editorReady: false },
+  'motion-design': { editor: 'motion', profile: 'motion', editorReady: true },
+  'advertising-design': { editor: 'motion', profile: 'advertising', editorReady: true },
   'game-design': { editor: 'gameBoard', profile: 'game-design', editorReady: true },
 }
 

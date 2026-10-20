@@ -1915,3 +1915,5 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .practice-canvas--3d { align-items: stretch; justify-content: stretch; padding: 0; }
 .threed-mount { width: 100%; height: 100%; position: relative; }
 .threed-mount canvas { display: block; }
+
+.practice-layers .motion-kf-dot { border: none; padding: 0; cursor: pointer; }

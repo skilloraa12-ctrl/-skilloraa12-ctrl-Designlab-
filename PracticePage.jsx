@@ -11,12 +11,13 @@ import VectorStudio from './practice/editors/VectorStudio.jsx'
 import FlowStudio from './practice/editors/FlowStudio.jsx'
 import GameBoardStudio from './practice/editors/GameBoardStudio.jsx'
 import ThreeDStudio from './practice/editors/ThreeDStudio.jsx'
+import MotionStudio from './practice/editors/MotionStudio.jsx'
 
 const EDITORS = {
   vector: { Component: VectorStudio, label: 'Vector Studio' },
   threeD: { Component: ThreeDStudio, label: '3D Studio' },
   flow: { Component: FlowStudio, label: 'Flow & Layout Studio' },
-  motion: { Component: null, label: 'Motion Studio' },
+  motion: { Component: MotionStudio, label: 'Motion Studio' },
   gameBoard: { Component: GameBoardStudio, label: 'Game Systems Board' },
 }
 
