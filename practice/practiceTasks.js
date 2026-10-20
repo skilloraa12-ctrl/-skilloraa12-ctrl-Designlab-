@@ -366,6 +366,75 @@ const FLOW_HAND_TASKS = {
       'Інструментом «Зв’язок» зʼєднай перший екран із другим — це і є клікабельний перехід.',
     ],
   },
+  1101: { // Web Design → «Що таке Wireframe»
+    title: 'Low-fi wireframe сторінки',
+    goal: 'Зроби чорно-білий (сірий) каркас сторінки без кольору.',
+    estimateMin: 10, xp: 30, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Є екран', validator: 'screenCount', params: { min: 1 }, weight: 1 },
+      { id: 'g2', text: 'Не більше 3 кольорів (сірі відтінки)', validator: 'colorsMax', params: { max: 3 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран Desktop.',
+      'Додавай лише прямокутники сірих відтінків — без яскравих кольорів.',
+      'Wireframe показує структуру, а не фінальний дизайн.',
+    ],
+  },
+  901: { // Web Design → «Responsive Design»
+    title: 'Адаптивні екрани',
+    goal: 'Побудуй однакову сторінку у двох форматах — Desktop і Mobile.',
+    estimateMin: 12, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 2 екрани різних розмірів', validator: 'screenCount', params: { min: 2 }, weight: 1 }],
+    hints: [
+      'Додай екран Desktop із компонентами.',
+      'Додай ще екран Mobile.',
+      'На мобільному версії елементи зазвичай складаються в одну колонку, а не ряд.',
+    ],
+  },
+  1001: { // Web Design → «Що таке Component»
+    title: 'Бібліотека компонентів',
+    goal: 'Додай на екран щонайменше 3 різних обʼєкти-компоненти з бібліотеки.',
+    estimateMin: 10, xp: 30, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 3 обʼєкти', validator: 'countObjects', params: { min: 3 }, weight: 1 }],
+    hints: [
+      'Додай екран.',
+      'У «Компоненти» додай кнопку, поле вводу й картку.',
+      'Компонент — це перевикористовуваний елемент, що повторюється по всьому сайту.',
+    ],
+  },
+  1401: { // Web Design → «Що таке Accessibility»
+    title: 'Контраст і розмір тапу',
+    goal: 'Додай кнопку розміром не менше 44×44px і текст із контрастом ≥ 4.5:1.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Кнопка ≥ 44×44px', validator: 'minTapTarget', params: { px: 44 }, weight: 1 },
+      { id: 'g2', text: 'Контраст тексту ≥ 4.5:1', validator: 'contrastRatio', params: { min: 4.5 }, weight: 1 },
+    ],
+    hints: [
+      'Додай екран, потім кнопку — вона вже 120×44px за замовчуванням.',
+      'Додай текст темним кольором на білому фоні екрана.',
+      'Доступність — це не опція, а базова вимога робочого інтерфейсу.',
+    ],
+  },
+  1201: { // Web Design → «Що таке Prototype»
+    title: 'Клікабельний прототип сторінки',
+    goal: 'Побудуй 2 екрани зі звʼязком — наприклад, головна сторінка й сторінка товару.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: flowStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 2 екрани', validator: 'screenCount', params: { min: 2 }, weight: 1 },
+      { id: 'g2', text: 'Є перехід між ними', validator: 'hasLink', params: { min: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Додай 2 екрани Desktop.',
+      'На першому додай кнопку чи картку товару.',
+      'Інструментом «Зв’язок» зʼєднай перший екран із другим.',
+    ],
+  },
 }
 
 // Загальна Flow-вправа для решти уроків UX/UI/Web/App.
@@ -439,6 +508,63 @@ const GAME_BOARD_HAND_TASKS = {
       'У кожен наступний рядок впиши формулу =prev+50 (лінійний ріст) чи =prev*1.3 (експоненціальний).',
     ],
   },
+  15401: { // Game Design → «Формальні правила»
+    title: 'Формальні правила гри',
+    goal: 'Побудуй граф щонайменше з 3 вузлів-умов і вузлів-дій, що показують базові правила (умова → дозволена дія).',
+    estimateMin: 12, xp: 35, maxAttempts: 5,
+    startProject: gameBoardStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 3 вузли', validator: 'nodeCount', params: { min: 3 }, weight: 1 },
+      { id: 'g2', text: 'Є звʼязок умова → дія', validator: 'hasConnection', params: { min: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Додай вузол типу «Умова» — напр. «Є ключ».',
+      'Додай вузол типу «Дія» — напр. «Відкрити двері».',
+      'Звʼяжи «Умову» стрілкою до «Дії» — так одна дозволяє іншу.',
+    ],
+  },
+  15701: { // Game Design → «Difficulty Curve»
+    title: 'Крива складності',
+    goal: 'Заповни таблицю складності щонайменше 5 рівнів, що монотонно зростає (напр. кількість ворогів чи час на рівень).',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: gameBoardStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 5 рядків', validator: 'tableColumnsPresent', params: { min: 2 }, weight: 1 },
+      { id: 'g2', text: 'Значення зростають монотонно', validator: 'monotonicIncreasing', params: { column: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Перейди на вкладку «Баланс», додай 5 рядків.',
+      'У другій колонці постав зростаючі значення складності.',
+      'Формула =prev+N зручніша за ручне введення кожного числа.',
+    ],
+  },
+  16419: { // Game Design → «Paper Prototyping»
+    title: 'Швидкий паперовий прототип',
+    goal: 'Накидай швидкий граф основного рішення гравця — 3 вузли й реальний звʼязок між ними, без деталей.',
+    estimateMin: 8, xp: 25, maxAttempts: 5,
+    startProject: gameBoardStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 3 вузли', validator: 'nodeCount', params: { min: 3 }, weight: 1 },
+      { id: 'g2', text: 'Є звʼязок', validator: 'hasConnection', params: { min: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Paper prototyping — це швидко й грубо: не витрачай час на деталі.',
+      'Додай 3 вузли будь-яких типів.',
+      'Звʼяжи їх стрілками — навіть приблизно.',
+    ],
+  },
+  16401: { // Game Design → «Diegetic vs Non-diegetic UI»
+    title: 'Тригери інтерфейсу в грі',
+    goal: 'Додай щонайменше 2 вузли-події, що показують, коли саме зʼявляється елемент інтерфейсу.',
+    estimateMin: 8, xp: 25, maxAttempts: 5,
+    startProject: gameBoardStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 2 вузли типу «Подія»', validator: 'nodeCount', params: { min: 2 }, weight: 1 }],
+    hints: [
+      'Додай вузол типу «Подія» — напр. «Гравець отримав урон».',
+      'Додай другий — напр. «Знайдено предмет».',
+      'Diegetic UI існує у світі гри, non-diegetic — лише на екрані поверх нього.',
+    ],
+  },
 }
 
 function motionStart() {
@@ -495,6 +621,84 @@ const MOTION_HAND_TASKS = {
       'Додай прямокутник як кнопку й текст усередині чи поруч.',
       'На 0с — звичайний масштаб, на середині таймлайна — трохи більший, наприкінці — знову звичайний.',
       'Це створює ефект «пульсації», що привертає око.',
+    ],
+  },
+  24201: { // Motion Design → «Squash and Stretch та Anticipation»
+    title: 'Squash and Stretch',
+    goal: 'Анімуй фігуру щонайменше 3 ключами, де в середньому ключі вона сплющена чи витягнута (не пропорційна).',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 3 ключові кадри', validator: 'hasKeyframes', params: { min: 1, minPerObject: 3 }, weight: 1 }],
+    hints: [
+      'Додай еліпс.',
+      'На 0с — звичайний масштаб, постав ключ.',
+      'Посередині таймлайна зменш масштаб по одній осі (сплющення) — це й є «squash».',
+    ],
+  },
+  24501: { // Motion Design → кінетична типографіка
+    title: 'Кінетична типографіка',
+    goal: 'Анімуй текстовий напис у часі — щонайменше 2 ключові кадри з різною позицією чи масштабом.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [{ id: 'g1', text: 'Текст анімовано щонайменше 2 ключами', validator: 'hasKeyframes', params: { min: 1, minPerObject: 2 }, weight: 1 }],
+    hints: [
+      'Додай текстовий обʼєкт інструментом T.',
+      'На 0с постав його за межею композиції чи малим, постав ключ.',
+      'На кінці — у фінальній позиції звичайного розміру, постав другий ключ.',
+    ],
+  },
+  24401: { // Motion Design → мікровзаємодії
+    title: 'Мікровзаємодія кнопки',
+    goal: 'Анімуй перехід між двома станами кнопки — щонайменше 2 ключові кадри.',
+    estimateMin: 8, xp: 30, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [{ id: 'g1', text: 'Обʼєкт анімовано щонайменше 2 ключами', validator: 'hasKeyframes', params: { min: 1, minPerObject: 2 }, weight: 1 }],
+    hints: [
+      'Додай прямокутник — кнопку.',
+      'На 0с — звичайний стан, постав ключ.',
+      'На 0.3с зміни колір чи масштаб (стан «натиснуто»), постав другий ключ.',
+    ],
+  },
+  31301: { // Advertising Design → візуальна ієрархія
+    title: 'Візуальна ієрархія в рекламі',
+    goal: 'Побудуй композицію щонайменше з 3 обʼєктів різного розміру — великий заголовок, менший підзаголовок, кнопка.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 3 обʼєкти', validator: 'countObjects', params: { min: 3 }, weight: 1 }],
+    hints: [
+      'Додай великий текстовий заголовок.',
+      'Додай менший текст-підзаголовок нижче.',
+      'Додай кнопку — найменший, але найяскравіший елемент.',
+    ],
+  },
+  31601: { // Advertising Design → формати соцмереж
+    title: 'Анімований елемент для стрічки',
+    goal: 'Додай щонайменше 2 обʼєкти, один з яких анімований — типовий підхід для Reels/Stories.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 2 обʼєкти', validator: 'countObjects', params: { min: 2 }, weight: 1 },
+      { id: 'g2', text: 'Є анімований обʼєкт', validator: 'hasKeyframes', params: { min: 1, minPerObject: 2 }, weight: 1 },
+    ],
+    hints: [
+      'Додай текст і фігуру.',
+      'Анімуй один з них (напр. фігуру) — ключ на 0с і ключ наприкінці з іншою позицією.',
+      'Вертикальні формати (Stories/Reels) особливо виграють від руху вгорі чи внизу кадру.',
+    ],
+  },
+  32001: { // Advertising Design → впізнаваність бренду
+    title: 'Бренд-палітра без логотипу',
+    goal: 'Побудуй композицію, що використовує не більше 3 кольорів — послідовна палітра впізнається навіть без лого.',
+    estimateMin: 10, xp: 30, maxAttempts: 5,
+    startProject: motionStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 2 обʼєкти', validator: 'countObjects', params: { min: 2 }, weight: 1 },
+      { id: 'g2', text: 'Не більше 3 кольорів', validator: 'colorsMax', params: { max: 3 }, weight: 1 },
+    ],
+    hints: [
+      'Додай кілька фігур і текст.',
+      'Використовуй ОДНІ й ТІ САМІ 2-3 кольори для всіх елементів.',
+      'Послідовність кольору — один зі способів впізнаваності бренду без логотипу на кожному кадрі.',
     ],
   },
 }
