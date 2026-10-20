@@ -7,6 +7,7 @@ import { createEmptyMotionProject } from './motionProject.js'
 import { createEmptyUxProject } from './uxProject.js'
 import { createEmptyGameArtProject, GAME_ART_SUBCAT_SECTION } from './gameArtProject.js'
 import { createEmptyLogoProject, LOGO_SUBCAT_SECTION } from './logoProject.js'
+import { createEmptyGraphicProject, GRAPHIC_SUBCAT_SECTION } from './graphicProject.js'
 import { createEmptyAdProject, AD_SUBCAT_SECTION } from './adProject.js'
 import { createEmptyThreeDProject, THREED_SUBCAT_SECTION } from './threeDProject.js'
 import Quiz from './Quiz.jsx'
@@ -66,7 +67,7 @@ const UX_SUBCAT_STAGE = {
 export default function Module() {
   const { id } = useParams()
   const module = getModule(id)
-  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject, logoProjects, saveLogoProject, adProjects, saveAdProject, threeDProjects, saveThreeDProject } = useProgress()
+  const { completed, toggleModule, quizPassed, passQuiz, addPortfolioItem, motionProjects, saveMotionProject, uxProjects, saveUxProject, gameArtProjects, saveGameArtProject, logoProjects, saveLogoProject, adProjects, saveAdProject, threeDProjects, saveThreeDProject, graphicProjects, saveGraphicProject } = useProgress()
   const navigate = useNavigate()
   const [sketchOpen, setSketchOpen] = useState(false)
   const [presentationOpen, setPresentationOpen] = useState(false)
@@ -99,6 +100,12 @@ export default function Module() {
   // побудованих у 3D Lab, матеріали, вимоги, рев'ю, версії) замість
   // загального ескізу.
   const usesThreeDStudio = module.level === '3d-design'
+  // Graphic Design відкриває справжню Graphic Design Studio (вже наявний
+  // растрово-векторний редактор + палітра з WCAG-контрастом + перевірка
+  // форматів) замість загального ескізу. Branding свідомо лишається на
+  // модальному GraphicDesignStudio — окремий практичний інструмент для
+  // логотипу всередині свого напряму, не спільний проєкт.
+  const usesGraphicStudio = module.level === 'graphic-design'
   const subcategory = getSubcategory(module.subcategory)
   const lessonsInSubcat = MODULES.filter((m) => m.subcategory === module.subcategory)
   const idx = lessonsInSubcat.findIndex((m) => m.id === module.id)
@@ -321,10 +328,22 @@ export default function Module() {
               >
                 🧊 Відкрити «3D Design Studio»
               </button>
+            ) : usesGraphicStudio ? (
+              <button
+                className="complete-btn"
+                onClick={() => {
+                  const section = GRAPHIC_SUBCAT_SECTION[module.subcategory] || 'builder'
+                  const existing = graphicProjects[0]
+                  const id = existing ? existing.id : saveGraphicProject(createEmptyGraphicProject('Новий графічний проєкт'))
+                  navigate(`/graphic-design-studio/${id}`, { state: { section, subcategory: module.subcategory } })
+                }}
+              >
+                🖼️ Відкрити «Graphic Design Studio»
+              </button>
             ) : (
               <button className="complete-btn" onClick={() => setSketchOpen(true)}>
                 {module.level === 'game-design' ? '🖊 Відкрити «Game Design Studio»'
-                  : module.level === 'graphic-design' || module.level === 'branding' ? '🖊 Відкрити «Graphic Design Studio»'
+                  : module.level === 'branding' ? '🖊 Відкрити «Graphic Design Studio»'
                   : '🖊 Створити ескіз у застосунку'}
               </button>
             )}
@@ -353,7 +372,7 @@ export default function Module() {
             <GameDesignStudio module={module} onClose={() => setSketchOpen(false)} />
           )}
 
-          {sketchOpen && (module.level === 'graphic-design' || module.level === 'branding') && (
+          {sketchOpen && module.level === 'branding' && (
             <GraphicDesignStudio module={module} onClose={() => setSketchOpen(false)} />
           )}
 

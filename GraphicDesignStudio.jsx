@@ -352,7 +352,7 @@ function rotateObj(o, worldP) {
   return { ...o, rotation: Math.round(deg) }
 }
 
-function buildSvgString(objects, W, H, bg) {
+export function buildSvgString(objects, W, H, bg) {
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   let body = `<rect x="0" y="0" width="${W}" height="${H}" fill="${bg}"/>`
   objects.forEach((o) => {
@@ -660,28 +660,37 @@ function LayersPanel({ objects, selectedId, onSelect, onToggleVisible, onToggleL
   )
 }
 
-export default function GraphicDesignStudio({ module, onClose }) {
+// `project` (optional) pins this editor to one specific, already-existing
+// shared project (Graphic Design Studio's "Конструктор" tab passes its
+// one direction-wide project here) instead of the default standalone
+// behaviour (Branding Studio's embedded logo tool, and the legacy
+// per-lesson modal): when provided, state loads from it on mount, saves
+// always write back to its exact id via onSaved, and the in-editor
+// project switcher (New/recent projects) is hidden, since project
+// identity is then owned by the parent page's :projectId route, not by
+// this editor.
+export default function GraphicDesignStudio({ module, onClose, project, onSaved }) {
   const { addPortfolioItem, graphicProjects, saveGraphicProject } = useProgress()
   const toastApi = useLabToast()
   const canvasRef = useRef(null)
   const imageCache = useRef(new Map())
   const dragRef = useRef(null)
 
-  const initialObjects = useRef([]).current
+  const initialObjects = useRef(project?.objects || []).current
   const objHistory = useLabHistory(initialObjects)
   const objects = objHistory.value
   const [liveObj, setLiveObj] = useState(null)
 
-  const [canvasSize, setCanvasSize] = useState({ w: 1080, h: 1080 })
-  const [bg, setBg] = useState('#FFFFFF')
+  const [canvasSize, setCanvasSize] = useState({ w: project?.canvasW || 1080, h: project?.canvasH || 1080 })
+  const [bg, setBg] = useState(project?.bg || '#FFFFFF')
   const [showGrid, setShowGrid] = useState(false)
   const [gridColumns, setGridColumns] = useState(8)
   const [zoom, setZoom] = useState(1)
   const [tool, setTool] = useState('select')
   const [rightTab, setRightTab] = useState('design')
   const [selectedId, setSelectedId] = useState(null)
-  const [projectId, setProjectId] = useState(null)
-  const [projectTitle, setProjectTitle] = useState(module?.title ? `${module.title} — проєкт` : 'Новий проєкт')
+  const [projectId, setProjectId] = useState(project?.id || null)
+  const [projectTitle, setProjectTitle] = useState(project?.title || (module?.title ? `${module.title} — проєкт` : 'Новий проєкт'))
   const [checked, setChecked] = useState({})
 
   const selected = objects.find((o) => o.id === selectedId) || null
@@ -873,9 +882,15 @@ export default function GraphicDesignStudio({ module, onClose }) {
   }
 
   function handleSaveProject() {
-    const id = saveGraphicProject({ id: projectId, title: projectTitle, lessonId: module?.id, canvasW: canvasSize.w, canvasH: canvasSize.h, bg, objects })
+    // Pinned to a shared project (Graphic Design Studio's own route): keep
+    // every field that lives outside this editor (palette/requirements/
+    // review/versions) intact — saveGraphicProject replaces the record
+    // wholesale by id, it doesn't merge partial patches itself.
+    const base = project ? { ...project } : { lessonId: module?.id }
+    const id = saveGraphicProject({ ...base, id: projectId, title: projectTitle, canvasW: canvasSize.w, canvasH: canvasSize.h, bg, objects })
     setProjectId(id)
     toastApi.show('✓ Проєкт збережено')
+    onSaved?.(id)
   }
 
   function openProject(p) {
@@ -952,11 +967,11 @@ export default function GraphicDesignStudio({ module, onClose }) {
         <input className="cl-text-input" style={{ flex: 1, minWidth: 160 }} value={projectTitle} onChange={(e) => setProjectTitle(e.target.value)} placeholder="Назва проєкту" />
         <button className="harmony-btn" disabled={!objHistory.canUndo} onClick={objHistory.undo}>↶ Undo</button>
         <button className="harmony-btn" disabled={!objHistory.canRedo} onClick={objHistory.redo}>↷ Redo</button>
-        <button className="harmony-btn" onClick={newProject}>📄 Новий</button>
+        {!project && <button className="harmony-btn" onClick={newProject}>📄 Новий</button>}
         <button className="harmony-btn" onClick={handleSaveProject}>💾 Зберегти проєкт</button>
       </div>
 
-      {graphicProjects.length > 0 && (
+      {!project && graphicProjects.length > 0 && (
         <div className="gfx-projects-row">
           <span className="gds-level-toolbar-label">Мої проєкти:</span>
           {graphicProjects.slice(0, 8).map((p) => (
@@ -1024,7 +1039,7 @@ export default function GraphicDesignStudio({ module, onClose }) {
       </div>
 
       <div className="sketchpad-actions">
-        <button className="cl-mini-btn" onClick={onClose}>Закрити</button>
+        {!project && <button className="cl-mini-btn" onClick={onClose}>Закрити</button>}
         <button className="harmony-btn" onClick={() => exportAs('png')}>⬇ PNG</button>
         <button className="harmony-btn" onClick={() => exportAs('jpg')}>⬇ JPG</button>
         <button className="harmony-btn" onClick={() => exportAs('svg')}>⬇ SVG</button>

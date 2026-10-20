@@ -11,6 +11,7 @@ import MotionStudio from './MotionStudio.jsx'
 import UXStudio from './UXStudio.jsx'
 import GameArtStudio from './GameArtStudio.jsx'
 import LogoDesignStudio from './LogoDesignStudio.jsx'
+import GraphicStudio from './GraphicStudio.jsx'
 import AdvertisingDesignStudio from './AdvertisingDesignStudio.jsx'
 import ThreeDDesignStudio from './ThreeDDesignStudio.jsx'
 import ThreeDAnimEditor from './ThreeDAnimEditor.jsx'
@@ -76,6 +77,7 @@ export default function App() {
           <Route path="/ux-studio/:projectId" element={<RequireAuth><UXStudio /></RequireAuth>} />
           <Route path="/game-art-studio/:projectId" element={<RequireAuth><GameArtStudio /></RequireAuth>} />
           <Route path="/logo-design-studio/:projectId" element={<RequireAuth><LogoDesignStudio /></RequireAuth>} />
+          <Route path="/graphic-design-studio/:projectId" element={<RequireAuth><GraphicStudio /></RequireAuth>} />
           <Route path="/advertising-design-studio/:projectId" element={<RequireAuth><AdvertisingDesignStudio /></RequireAuth>} />
           <Route path="/3d-design-studio/:projectId" element={<RequireAuth><ThreeDDesignStudio /></RequireAuth>} />
           <Route path="/3d-design-studio/:projectId/editor" element={<RequireAuth><ThreeDAnimEditor /></RequireAuth>} />
