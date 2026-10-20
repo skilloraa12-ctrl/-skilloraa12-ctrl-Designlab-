@@ -1846,7 +1846,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .practice-body {
   flex: 1; min-height: 0; display: grid;
   grid-template-columns: 48px 1fr 280px;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: minmax(0, 1fr) minmax(140px, 1fr) auto;
   background: var(--bg);
 }
 .practice-toolbar {
@@ -1867,7 +1867,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .vector-studio-svg { background: #fff; box-shadow: var(--shadow-md); max-width: 100%; max-height: 100%; }
 .vs-guide { stroke: #F59E0B; stroke-opacity: .25; stroke-width: 1; stroke-dasharray: 4 4; pointer-events: none; }
 
-.practice-properties { grid-column: 3; grid-row: 1; padding: 12px; overflow-y: auto; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+.practice-properties { grid-column: 3; grid-row: 1; min-height: 0; padding: 12px; overflow-y: auto; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
 .practice-task-panel { grid-column: 3; grid-row: 2; min-height: 0; overflow-y: auto; border-left: 1px solid var(--line); background: var(--surface); }
 .practice-task-toggle { width: 100%; text-align: left; border: none; background: var(--surface-2); color: var(--ink); padding: 8px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .practice-task-body { padding: 10px 12px; }

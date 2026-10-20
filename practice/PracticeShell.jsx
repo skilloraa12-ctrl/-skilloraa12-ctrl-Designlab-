@@ -80,6 +80,20 @@ export default function PracticeShell({ module, task, practiceProject, onPatch, 
     setSaveState('saved')
   }
 
+  // Кнопка показує «Ctrl+Enter» — без цього слухача це був напис без дії.
+  const handleCheckRef = useRef(handleCheck)
+  useEffect(() => { handleCheckRef.current = handleCheck })
+  useEffect(() => {
+    function onKeyDown(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault()
+        handleCheckRef.current()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   function useHint() {
     const next = Math.min(3, hintLevel + 1)
     setHintLevel(next)
