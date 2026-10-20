@@ -15,6 +15,7 @@ const EMPTY_STATE = {
   savedColors: [],
   savedGradients: [],
   graphicProjects: [],
+  practiceProjects: [],
   brandProjects: [],
   motionProjects: [],
   uxProjects: [],
@@ -160,6 +161,30 @@ export function ProgressProvider({ children }) {
 
   const removeGraphicProject = useCallback((id) => {
     setState((prev) => ({ ...prev, graphicProjects: prev.graphicProjects.filter((p) => p.id !== id) }))
+  }, [])
+
+  // Практика (вкладка «Практика», ТЗ практичних редакторів) — той самий
+  // принцип злиття за полями, що й у Logo/Motion/UX/... Studio: onPatch
+  // передає лише змінені поля, savePracticeProject домерджує їх до
+  // наявного запису за id.
+  const savePracticeProject = useCallback((project) => {
+    const id = project.id || crypto.randomUUID()
+    setState((prev) => {
+      const exists = prev.practiceProjects.find((p) => p.id === id)
+      const now = new Date().toISOString()
+      const record = { ...exists, ...project, id, createdAt: exists?.createdAt || now, updatedAt: now }
+      return {
+        ...prev,
+        practiceProjects: exists
+          ? prev.practiceProjects.map((p) => (p.id === id ? record : p))
+          : [record, ...prev.practiceProjects],
+      }
+    })
+    return id
+  }, [])
+
+  const removePracticeProject = useCallback((id) => {
+    setState((prev) => ({ ...prev, practiceProjects: prev.practiceProjects.filter((p) => p.id !== id) }))
   }, [])
 
   // Єдина модель брендингового проєкту (Branding Studio) — усі інструменти
@@ -419,7 +444,12 @@ export function ProgressProvider({ children }) {
   const completedCount = completedIds.length
   const total = MODULES.length
   const quizPassedCount = Object.values(state.quizPassed).filter(Boolean).length
-  const xp = completedCount * 100 + quizPassedCount * 20
+  // earnedXp на practiceProject проставляється лише в момент проходження
+  // (ТЗ FR-TASK-003) — повторне проходження того самого завдання не додає
+  // XP ще раз, бо earnedXp на записі просто перезаписується тим самим чи
+  // новим значенням, а не підсумовується по спробах.
+  const practiceXp = state.practiceProjects.reduce((s, p) => s + (p.earnedXp || 0), 0)
+  const xp = completedCount * 100 + quizPassedCount * 20 + practiceXp
   const level = Math.floor(xp / 500) + 1
 
   const levelDone = useMemo(() => {
@@ -460,6 +490,7 @@ export function ProgressProvider({ children }) {
     savedColors: state.savedColors, saveColor, removeColor,
     savedGradients: state.savedGradients, saveGradient, removeGradient,
     graphicProjects: state.graphicProjects, saveGraphicProject, removeGraphicProject,
+    practiceProjects: state.practiceProjects, savePracticeProject, removePracticeProject,
     brandProjects: state.brandProjects, saveBrandProject, removeBrandProject, duplicateBrandProject,
     motionProjects: state.motionProjects, saveMotionProject, removeMotionProject, duplicateMotionProject,
     uxProjects: state.uxProjects, saveUxProject, removeUxProject, duplicateUxProject,

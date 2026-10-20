@@ -1817,3 +1817,93 @@ button.tool-badge--action:hover { border-color: var(--green); }
 @media (max-width: 860px) {
   .logo-canvas-wrap, .logo-layers-wrap, .logo-props-wrap { flex: 1 1 100%; }
 }
+
+/* ============================================================
+   Практика — спільний каркас (ТЗ практичних редакторів, зони 1-7)
+   ============================================================ */
+.practice-shell { display: flex; flex-direction: column; height: calc(100vh - 28px); color: var(--ink); }
+.practice-topbar {
+  height: 40px; flex: none; display: flex; align-items: center; gap: 8px;
+  padding: 0 10px; border-bottom: 1px solid var(--line); background: var(--surface);
+}
+.practice-logo { font-weight: 700; font-size: 13px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.practice-crumbs { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.practice-crumbs a { color: var(--muted); }
+.practice-crumb-current { color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+.practice-spacer { flex: 1; }
+.practice-version-wrap { position: relative; }
+.practice-version-menu {
+  position: absolute; top: 100%; right: 0; margin-top: 4px; z-index: 20;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md); display: flex; flex-direction: column; min-width: 200px; padding: 4px;
+}
+.practice-version-item { text-align: left; border: none; background: transparent; padding: 7px 9px; border-radius: var(--radius-sm); font-size: 12.5px; color: var(--ink); cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
+.practice-version-item:hover { background: var(--surface-2); }
+.practice-version-item.active { background: var(--accent); color: var(--accent-ink); }
+.practice-version-item.locked { opacity: .5; cursor: not-allowed; }
+.practice-lock { font-size: 10.5px; }
+
+.practice-body {
+  flex: 1; min-height: 0; display: grid;
+  grid-template-columns: 48px 1fr 280px;
+  grid-template-rows: auto 1fr auto;
+  background: var(--bg);
+}
+.practice-toolbar {
+  grid-column: 1; grid-row: 1 / span 2; flex: none;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px;
+  border-right: 1px solid var(--line); background: var(--surface);
+}
+.practice-tool-btn {
+  width: 32px; height: 32px; border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: var(--ink); cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.practice-tool-btn:hover { background: var(--surface-2); }
+.practice-tool-btn.active { background: var(--accent); color: var(--accent-ink); }
+.practice-tool-sep { width: 28px; height: 1px; background: var(--line); margin: 4px 0; }
+.practice-canvas { grid-column: 2; grid-row: 1 / span 2; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: auto; padding: 16px; }
+.practice-coming-soon { grid-column: 1 / 4; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 32px; }
+.vector-studio-svg { background: #fff; box-shadow: var(--shadow-md); max-width: 100%; max-height: 100%; }
+.vs-guide { stroke: #F59E0B; stroke-opacity: .25; stroke-width: 1; stroke-dasharray: 4 4; pointer-events: none; }
+
+.practice-properties { grid-column: 3; grid-row: 1; padding: 12px; overflow-y: auto; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+.practice-task-panel { grid-column: 3; grid-row: 2; min-height: 0; overflow-y: auto; border-left: 1px solid var(--line); background: var(--surface); }
+.practice-task-toggle { width: 100%; text-align: left; border: none; background: var(--surface-2); color: var(--ink); padding: 8px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.practice-task-body { padding: 10px 12px; }
+.practice-task-title { font-weight: 700; font-size: 14px; margin: 0 0 4px; }
+.practice-progress-bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 6px 0 2px; }
+.practice-progress-fill { height: 100%; background: var(--accent); transition: width .2s; }
+.practice-checklist { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; }
+.practice-checklist li { color: var(--muted); }
+.practice-checklist li.ok { color: var(--green, #2FA36B); }
+.practice-checklist li.fail { color: var(--coral, #E0523E); }
+.practice-check-icon { display: inline-block; width: 14px; }
+.practice-check-reason { color: var(--muted); }
+.practice-hints { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.practice-passed { color: var(--green, #2FA36B); font-weight: 600; margin-top: 8px; }
+
+.practice-bottom { grid-column: 1 / 4; grid-row: 3; height: 160px; flex: none; display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--surface); }
+.practice-bottom-tabs { display: flex; gap: 2px; padding: 6px 8px 0; flex: none; }
+.practice-bottom-tabs button { border: none; background: transparent; color: var(--muted); font-size: 12px; padding: 6px 10px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; cursor: pointer; }
+.practice-bottom-tabs button.active { background: var(--bg); color: var(--ink); font-weight: 600; }
+.practice-layers, .practice-palette { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.practice-swatch-wrap { display: inline-flex; align-items: center; gap: 2px; margin-right: 4px; }
+.practice-swatch { width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--line); display: inline-block; }
+
+.practice-statusbar {
+  height: 24px; flex: none; display: flex; align-items: center; gap: 16px;
+  padding: 0 12px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface);
+}
+
+@media (max-width: 1023px) {
+  .practice-body { grid-template-columns: 44px 1fr 240px; }
+}
+@media (max-width: 767px) {
+  .practice-shell { height: auto; }
+  .practice-body, .practice-bottom { display: none; }
+  .practice-shell::after {
+    content: "Для практики відкрийте урок на комп’ютері або планшеті.";
+    display: block; padding: 32px 20px; text-align: center; color: var(--muted);
+  }
+}

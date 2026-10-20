@@ -347,6 +347,9 @@ export default function Module() {
                   : '🖊 Створити ескіз у застосунку'}
               </button>
             )}
+            <Link to={`/practice/${module.id}`} className="complete-btn" style={{ display: 'inline-block', textDecoration: 'none' }}>
+              🧪 Практика
+            </Link>
             <button className="mentor-cta" onClick={() => setMentorOpen(true)}>
               <span className="mentor-cta-icon">💬<span className="dot" /></span>
               <span>

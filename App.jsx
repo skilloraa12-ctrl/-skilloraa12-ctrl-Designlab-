@@ -16,6 +16,7 @@ import AdvertisingDesignStudio from './AdvertisingDesignStudio.jsx'
 import ThreeDDesignStudio from './ThreeDDesignStudio.jsx'
 import ThreeDAnimEditor from './ThreeDAnimEditor.jsx'
 import Module from './Module.jsx'
+import PracticePage from './PracticePage.jsx'
 import ProgressPage from './Progress.jsx'
 import Glossary from './Glossary.jsx'
 import Achievements from './Achievements.jsx'
@@ -59,7 +60,7 @@ import CheatsheetsPage from './CheatsheetsPage.jsx'
 export default function App() {
   const location = useLocation()
   const isWideLab = location.pathname.startsWith('/labs/ui-preview') || location.pathname.startsWith('/labs/game')
-  const isFullBleed = /^\/3d-design-studio\/[^/]+\/editor/.test(location.pathname)
+  const isFullBleed = /^\/3d-design-studio\/[^/]+\/editor/.test(location.pathname) || /^\/practice\/[^/]+/.test(location.pathname)
   return (
     <div className="app">
       <NavBar />
@@ -82,6 +83,7 @@ export default function App() {
           <Route path="/3d-design-studio/:projectId" element={<RequireAuth><ThreeDDesignStudio /></RequireAuth>} />
           <Route path="/3d-design-studio/:projectId/editor" element={<RequireAuth><ThreeDAnimEditor /></RequireAuth>} />
           <Route path="/module/:id" element={<RequireAuth><Module /></RequireAuth>} />
+          <Route path="/practice/:id" element={<RequireAuth><PracticePage /></RequireAuth>} />
           <Route path="/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
           <Route path="/glossary" element={<Glossary />} />
           <Route path="/dictionary" element={<DictionaryHome />} />
