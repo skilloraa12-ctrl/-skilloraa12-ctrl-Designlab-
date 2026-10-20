@@ -10,6 +10,7 @@
 // ще не збудовані цього заходу (чесно позначено в UI як "скоро").
 
 import { contrastRatio as wcagContrastRatio } from '../colorMath.js'
+import { LIGHT_TYPES as LIGHT_TYPES_3D } from '../threeDProject.js'
 
 function ok(message) { return { ok: true, message } }
 function fail(message) { return { ok: false, message } }
@@ -204,12 +205,146 @@ export function minTapTarget(project, { px = 44 } = {}) {
     : fail(`${small.length} елемент(ів) менші за ${px}×${px}px — замалі для пальця.`)
 }
 
+// ---------- Game Systems Board (ТЗ 7.E) ----------
+// nodes/connections — та сама форма {id, type}/{from, to}, що й у
+// hasConnection/noDeadEnds вище, тож Game Board свідомо називає своє
+// поле "connections" (не "links"), щоб ці два загальні валідатори
+// працювали без дублювання логіки.
+
+export function nodeCount(project, { min = 1 } = {}) {
+  const n = (project.nodes || []).length
+  return n >= min ? ok(`Вузлів: ${n}.`) : fail(`Потрібно щонайменше ${min} вузол(ів), зараз ${n}.`)
+}
+
+export function loopClosed(project) {
+  const nodes = project.nodes || []
+  const conns = project.connections || []
+  const adj = {}
+  conns.forEach((c) => { (adj[c.from] = adj[c.from] || []).push(c.to) })
+  function hasCycleFrom(start) {
+    const visited = new Set()
+    const stack = [start]
+    while (stack.length) {
+      const cur = stack.pop()
+      for (const next of adj[cur] || []) {
+        if (next === start) return true
+        if (!visited.has(next)) { visited.add(next); stack.push(next) }
+      }
+    }
+    return false
+  }
+  const closed = nodes.some((n) => hasCycleFrom(n.id))
+  return closed ? ok('Петля замкнена — є цикл у звʼязках.') : fail('Немає жодного циклу: простеж, щоб стрілки врешті поверталися до початкового вузла.')
+}
+
+export function resourceSourceAndSink(project) {
+  const conns = project.connections || []
+  const resources = (project.nodes || []).filter((n) => n.type === 'resource')
+  const ok1 = resources.find((r) => conns.some((c) => c.to === r.id) && conns.some((c) => c.from === r.id))
+  return ok1
+    ? ok(`Ресурс «${ok1.label}» має і джерело, і витрату.`)
+    : fail('Жоден ресурс не має одночасно вхідного (джерело) і вихідного (витрата) звʼязку.')
+}
+
+// Міні-формули без eval (FR-GEN-008): лише "=prev+N" (лінійний ріст) і
+// "=prev*N" (експоненціальний) — явно звужено з повного SUM/AVG/MIN/MAX/
+// IF ТЗ заради безпеки без власного парсера виразів.
+export function resolveTableColumn(rows, colIndex) {
+  const values = []
+  for (let i = 0; i < rows.length; i++) {
+    const raw = String(rows[i][colIndex] ?? '').trim()
+    let v
+    if (raw.startsWith('=')) {
+      const prev = values[i - 1]
+      const addMatch = raw.match(/^=prev\s*\+\s*(-?\d+(\.\d+)?)$/)
+      const mulMatch = raw.match(/^=prev\s*\*\s*(-?\d+(\.\d+)?)$/)
+      if (prev !== undefined && addMatch) v = prev + Number(addMatch[1])
+      else if (prev !== undefined && mulMatch) v = prev * Number(mulMatch[1])
+      else v = NaN
+    } else {
+      v = Number(raw)
+    }
+    values.push(v)
+  }
+  return values
+}
+
+export function formulaValid(project, { column = 1 } = {}) {
+  const rows = project.table?.rows || []
+  if (rows.length === 0) return fail('Таблиця порожня.')
+  const hasFormula = rows.some((r) => String(r[column] ?? '').trim().startsWith('='))
+  if (!hasFormula) return fail('Жодна комірка не використовує формулу (=prev+N чи =prev*N).')
+  const values = resolveTableColumn(rows, column)
+  const broken = values.some((v) => Number.isNaN(v))
+  return broken ? fail('Формула не обчислюється — перевір синтаксис =prev+N чи =prev*N.') : ok('Формули обчислюються коректно.')
+}
+
+export function monotonicIncreasing(project, { column = 1 } = {}) {
+  const rows = project.table?.rows || []
+  const values = resolveTableColumn(rows, column)
+  if (values.length < 2) return fail('Потрібно щонайменше 2 рядки для перевірки зростання.')
+  const ok1 = values.every((v, i) => i === 0 || v > values[i - 1])
+  return ok1 ? ok('Значення зростають із кожним рядком.') : fail('Значення не зростають монотонно — перевір таблицю.')
+}
+
+export function tableColumnsPresent(project, { min = 2 } = {}) {
+  const n = (project.table?.columns || []).length
+  return n >= min ? ok(`Колонок: ${n}.`) : fail(`Потрібно щонайменше ${min} колонки, зараз ${n}.`)
+}
+
+// ---------- 3D Studio (ТЗ 7.A) ----------
+// project.objects тут — та сама форма makeAnimObject() з threeDProject.js
+// (position/rotation/scale/material/light), пряма сумісна з
+// labs/threeAnimScene.js's syncStructure() — редактор не вигадує нову
+// модель, а повторно використовує вже наявну для ThreeDAnimEditor.jsx.
+
+// Грубі орієнтовні лічильники трикутників для кожного примітива
+// (сегменти з GEOMETRY_BUILDERS у threeAnimScene.js) — достатньо чесно
+// для бюджету полігонів у практичному завданні, не точний рушійний
+// підрахунок.
+const POLY_ESTIMATES = {
+  box: 12, sphere: 960, cone: 62, cylinder: 128, torus: 1536, plane: 2,
+  capsule: 544, tetrahedron: 4, octahedron: 8, icosahedron: 20, dodecahedron: 36, torusKnot: 2400,
+}
+
+export function polyBudget(project, { max }) {
+  const total = (project.objects || []).filter((o) => !LIGHT_TYPES_3D.includes(o.type)).reduce((s, o) => s + (POLY_ESTIMATES[o.type] || 0), 0)
+  return total <= max ? ok(`Приблизно ${total} трикутників (ліміт ${max}).`) : fail(`Приблизно ${total} трикутників — перевищує ліміт ${max}.`)
+}
+
+export function lightCount(project, { min = 1, type } = {}) {
+  const n = (project.objects || []).filter((o) => LIGHT_TYPES_3D.includes(o.type) && (!type || o.type === type)).length
+  return n >= min ? ok(`Джерел світла: ${n}.`) : fail(`Потрібно щонайменше ${min} джерел(о) світла, зараз ${n}.`)
+}
+
+export function materialAssigned(project, { min = 1 } = {}) {
+  const n = (project.objects || []).filter((o) => o.material?.touched).length
+  return n >= min
+    ? ok(`Матеріалів свідомо налаштовано: ${n}.`)
+    : fail(`Зміни колір/параметри матеріалу щонайменше у ${min} обʼєкт(ах) — зараз це зроблено лише в ${n}.`)
+}
+
+export function materialColorsMax(project, { max }) {
+  const colors = new Set((project.objects || []).filter((o) => o.material).map((o) => o.material.color))
+  return colors.size <= max
+    ? ok(`Кольорів матеріалів: ${colors.size} (ліміт ${max}).`)
+    : fail(`Забагато кольорів матеріалів: ${colors.size}, ліміт ${max}.`)
+}
+
+export function cameraFraming(project) {
+  return project.cameraView && project.cameraView !== 'iso'
+    ? ok(`Ракурс камери обрано свідомо (${project.cameraView}).`)
+    : fail('Обери ракурс камери в панелі властивостей — за замовчуванням кадр ще не продуманий.')
+}
+
 export const VALIDATORS = {
   hasObject, countObjects, propertyInRange, propertyEquals, exportFormatIs, durationUnder,
   hasConnection, noDeadEnds,
   shapeCount, colorUsed, colorsMax, contrastRatio: contrastRatioCheck, alignedToGuide,
   textHasFont, fontsUsed, pathNodesMax, minSizeLegible, paletteSize, hasVariants, exportSvgValid,
   screenCount, hasLink, allScreensReachable, componentUsed, stateDefined, minTapTarget,
+  nodeCount, loopClosed, resourceSourceAndSink, formulaValid, monotonicIncreasing, tableColumnsPresent,
+  polyBudget, lightCount, materialAssigned, materialColorsMax, cameraFraming,
 }
 
 // goals: [{ id, text, validator, params, weight }]

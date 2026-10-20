@@ -2,15 +2,16 @@
 // дані в коді (та сама логіка, що й уроки в modules.js: контент тут не з
 // CMS/БД, а з коду репозиторію).
 //
-// Чесна межа цього заходу: Vector Studio (Graphic/Logo/Branding) — єдиний
-// повністю збудований редактор, тож лише для нього є вручну підібрані
-// завдання за шаблонами з ТЗ розділу 8 (по 2 на напрям, прив'язані до
-// реальних уроків modules.js). Для решти уроків цих трьох напрямів
-// getPracticeTask() повертає ЗАГАЛЬНУ вправу на розділ (чесно позначену
-// як загальну, не підігнану під конкретний урок) — це дає практику
-// одразу по всій програмі, а не лише в 6 уроках. Для 3D Design/Game Art/
-// UX/UI/Web/App/Motion/Advertising/Game Design завдань ще немає — у них
-// немає редактора (practiceProject.js: editorReady=false).
+// Чесна межа цього заходу: для кожного вже збудованого редактора (Vector/
+// Flow & Layout/Game Systems Board/3D Studio — 10 із 12 напрямів) є кілька
+// вручну підібраних завдань за шаблонами з ТЗ розділу 8, прив'язаних до
+// реальних уроків modules.js. Для решти уроків цих напрямів getPracticeTask()
+// повертає ЗАГАЛЬНУ вправу на розділ (чесно позначену як загальну, не
+// підігнану під конкретний урок) — це дає практику одразу по всій програмі,
+// а не лише в кількох уроках. Motion Design/Advertising Design (Motion
+// Studio) залишаються без редактора цього заходу — повертається null,
+// PracticePage.jsx показує чесну заглушку (practiceProject.js:
+// editorReady=false).
 
 export const COURSE_PALETTE = ['#F59E0B', '#0B0B0C', '#FFFFFF', '#2E6DFF', '#FF5A1F', '#10B981']
 
@@ -244,6 +245,175 @@ function genericFlowTask(module) {
 
 const FLOW_LEVEL_PROFILE = { 'ux-design': 'ux', 'ui-design': 'ui', 'web-design': 'web', 'app-design': 'app' }
 
+function gameBoardStart() {
+  return { nodes: [], connections: [], table: { columns: ['Рівень', 'XP потрібно'], rows: [] } }
+}
+
+const GAME_BOARD_HAND_TASKS = {
+  15301: { // Game Design → «Core Gameplay Loop»
+    title: 'Основна петля',
+    goal: 'Побудуй просту ігрову петлю щонайменше з 4 вузлів, яка замикається сама на себе (гравець повертається до початку).',
+    estimateMin: 15, xp: 45, maxAttempts: 5,
+    startProject: gameBoardStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 4 вузли', validator: 'nodeCount', params: { min: 4 }, weight: 1 },
+      { id: 'g2', text: 'Петля замкнена (є цикл)', validator: 'loopClosed', params: {}, weight: 2 },
+    ],
+    hints: [
+      'Додай 4 вузли: напр. «Дослідити», «Зібрати ресурс», «Покращити», «Спробувати знову».',
+      'Інструментом «Звʼязок» зʼєднай їх по черзі стрілками: 1→2→3→4.',
+      'Останній крок поверни стрілкою назад до першого вузла — це і замикає петлю.',
+    ],
+  },
+  16101: { // Game Design → «Валюти»
+    title: 'Джерело й витрата ресурсу',
+    goal: 'Додай вузол-ресурс (напр. «Золото») із вузлом-джерелом, що його поповнює, і вузлом-дією, що його витрачає.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: gameBoardStart(),
+    goals: [
+      { id: 'g1', text: 'Є вузол-ресурс із джерелом і витратою', validator: 'resourceSourceAndSink', params: {}, weight: 1 },
+    ],
+    hints: [
+      'Додай вузол типу «Ресурс» — напр. «Золото».',
+      'Додай вузол типу «Дія» (напр. «Перемога в бою») і звʼяжи його СТРІЛКОЮ ДО ресурсу — це джерело.',
+      'Додай ще один вузол «Дія» (напр. «Купівля») і звʼяжи ресурс стрілкою ДО нього — це витрата.',
+    ],
+  },
+  15601: { // Game Design → «Symmetry vs Asymmetry» (використано для таблиці балансу)
+    title: 'Таблиця прогресії рівнів',
+    goal: 'Заповни таблицю балансу: 5 рядків із рівнями й XP, що зростає за формулою (без ручного введення кожного числа).',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: gameBoardStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 5 рядків', validator: 'tableColumnsPresent', params: { min: 2 }, weight: 1 },
+      { id: 'g2', text: 'Є робоча формула (=prev+N чи =prev*N)', validator: 'formulaValid', params: { column: 1 }, weight: 1 },
+      { id: 'g3', text: 'Значення зростають монотонно', validator: 'monotonicIncreasing', params: { column: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Перейди на вкладку «Баланс» унизу, додай кнопкою «+ Рядок» 5 рядків.',
+      'У перший рядок другої колонки впиши число, напр. 100.',
+      'У кожен наступний рядок впиши формулу =prev+50 (лінійний ріст) чи =prev*1.3 (експоненціальний).',
+    ],
+  },
+}
+
+function threeDStart() {
+  return { objects: [], cameraView: 'iso', exportedFormats: [] }
+}
+
+const THREED_HAND_TASKS = {
+  33101: { // 3D Design → «Базові примітиви»
+    title: 'Стіл із трьома предметами',
+    goal: 'Додай щонайменше 4 обʼєкти на сцену (напр. стіл + 3 предмети на ньому).',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: threeDStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 4 обʼєкти', validator: 'countObjects', params: { min: 4 }, weight: 1 }],
+    hints: [
+      'Додай куб як «стіл» — збільш його масштаб по X/Z, зменш по Y.',
+      'Додай ще 3 примітиви різних типів зверху столу.',
+      'Позиціонуй по Y так, щоб предмети стояли НА столі, а не всередині нього.',
+    ],
+  },
+  33501: { // 3D Design → матеріали
+    title: 'Матеріали скло, метал, гума',
+    goal: 'Налаштуй матеріал щонайменше трьох обʼєктів — колір, metalness, roughness.',
+    estimateMin: 12, xp: 40, maxAttempts: 5,
+    startProject: threeDStart(),
+    goals: [{ id: 'g1', text: 'Матеріал свідомо налаштовано у 3 обʼєктах', validator: 'materialAssigned', params: { min: 3 }, weight: 1 }],
+    hints: [
+      'Додай 3 примітиви.',
+      'Для «металу» постав високий metalness, низький roughness.',
+      'Для «гуми» постав низький metalness, високий roughness. Для «скла» — низький metalness і низький roughness.',
+    ],
+  },
+  33701: { // 3D Design → освітлення
+    title: 'Трипунктне освітлення',
+    goal: 'Додай щонайменше 3 джерела світла на сцену.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: threeDStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 3 джерела світла', validator: 'lightCount', params: { min: 3 }, weight: 1 }],
+    hints: [
+      'Додай точкове світло кнопкою зліва — це буде «key light».',
+      'Додай ще одне точкове світло слабшої інтенсивності — «fill light».',
+      'Додай прожектор ззаду обʼєкта — «rim light», щоб підсвітити контур.',
+    ],
+  },
+  33801: { // 3D Design → камера й композиція
+    title: 'Кадр і рендер',
+    goal: 'Обери продуманий ракурс камери (не типовий) і зроби PNG-рендер сцени.',
+    estimateMin: 8, xp: 30, maxAttempts: 5,
+    startProject: threeDStart(),
+    goals: [
+      { id: 'g1', text: 'Обрано ракурс камери', validator: 'cameraFraming', params: {}, weight: 1 },
+      { id: 'g2', text: 'Зроблено PNG-рендер', validator: 'exportFormatIs', params: { format: 'png' }, weight: 1 },
+    ],
+    hints: [
+      'Додай хоча б один обʼєкт на сцену.',
+      'У панелі властивостей обери ракурс «Спереду», «Збоку» чи «Зверху».',
+      'Перейди на вкладку «Експорт» унизу й натисни «Рендер PNG».',
+    ],
+  },
+  27601: { // Game Art → 3D-моделювання
+    title: 'Low-poly предмет',
+    goal: 'Побудуй обʼєкт із простих форм, що разом не перевищують 500 трикутників.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: threeDStart(),
+    goals: [{ id: 'g1', text: 'До 500 трикутників', validator: 'polyBudget', params: { max: 500 }, weight: 1 }],
+    hints: [
+      'Куб — лише 12 трикутників, це найдешевший примітив.',
+      'Складні форми (сфера, тор, вузол тора) коштують сотні й тисячі трикутників — уникай їх у low-poly.',
+      'Збирай форму з кількох кубів/циліндрів замість однієї складної фігури.',
+    ],
+  },
+  27701: { // Game Art → UV і текстурування
+    title: 'Стилізовані матеріали',
+    goal: 'Побудуй сцену, що використовує не більше 4 різних кольорів матеріалів — стилізована палітра, як у грі.',
+    estimateMin: 10, xp: 35, maxAttempts: 5,
+    startProject: threeDStart(),
+    goals: [{ id: 'g1', text: 'Не більше 4 кольорів матеріалів', validator: 'materialColorsMax', params: { max: 4 }, weight: 1 }],
+    hints: [
+      'Додай кілька обʼєктів.',
+      'Повторно використовуй ОДНІ й ТІ САМІ кольори для різних обʼєктів замість кожного разу нового.',
+      'Стилізована гра зазвичай тримається на невеликій, продуманій палітрі.',
+    ],
+  },
+}
+
+function genericThreeDTask(module) {
+  return {
+    title: `Практика: ${module.title}`,
+    goal: 'Додай щонайменше 2 обʼєкти на сцену.',
+    estimateMin: 10, xp: 25, maxAttempts: 5,
+    startProject: threeDStart(),
+    goals: [{ id: 'g1', text: 'Щонайменше 2 обʼєкти', validator: 'countObjects', params: { min: 2 }, weight: 1 }],
+    hints: [
+      'Обери примітив чи світло в панелі інструментів зліва й клікни кнопку — він зʼявиться в центрі сцени.',
+      'Перетягуй значення X/Y/Z у панелі властивостей, щоб розташувати обʼєкти.',
+      'Перевір результат кнопкою «Перевірити».',
+    ],
+  }
+}
+
+const THREED_LEVEL_PROFILE = { '3d-design': '3d-design', 'game-art': 'game-art' }
+
+function genericGameBoardTask(module) {
+  return {
+    title: `Практика: ${module.title}`,
+    goal: 'Додай щонайменше 3 вузли й звʼяжи їх хоча б одним звʼязком.',
+    estimateMin: 10, xp: 25, maxAttempts: 5,
+    startProject: gameBoardStart(),
+    goals: [
+      { id: 'g1', text: 'Щонайменше 3 вузли', validator: 'nodeCount', params: { min: 3 }, weight: 1 },
+      { id: 'g2', text: 'Є хоча б один звʼязок', validator: 'hasConnection', params: { min: 1 }, weight: 1 },
+    ],
+    hints: [
+      'Обери тип вузла в панелі властивостей, потім клікни на полотні.',
+      'Інструментом «Звʼязок» зʼєднай два вузли.',
+      'Перевір результат кнопкою «Перевірити».',
+    ],
+  }
+}
+
 // Загальна (не підігнана під урок) вправа — доступна в будь-якому уроці
 // Graphic/Logo/Branding без власноруч підібраного завдання, щоб «Практика»
 // працювала по всій програмі курсу, а не лише в кількох уроках.
@@ -290,6 +460,30 @@ export function getPracticeTask(module) {
       lessonId: module.id,
       editor: 'flow',
       profile: FLOW_LEVEL_PROFILE[module.level],
+      isHandAuthored: !!info,
+    }
+  }
+  if (THREED_LEVEL_PROFILE[module.level]) {
+    const info = THREED_HAND_TASKS[module.id]
+    const base = info || genericThreeDTask(module)
+    return {
+      ...base,
+      taskId: `task-${module.id}`,
+      lessonId: module.id,
+      editor: 'threeD',
+      profile: THREED_LEVEL_PROFILE[module.level],
+      isHandAuthored: !!info,
+    }
+  }
+  if (module.level === 'game-design') {
+    const info = GAME_BOARD_HAND_TASKS[module.id]
+    const base = info || genericGameBoardTask(module)
+    return {
+      ...base,
+      taskId: `task-${module.id}`,
+      lessonId: module.id,
+      editor: 'gameBoard',
+      profile: 'game-design',
       isHandAuthored: !!info,
     }
   }

@@ -9,13 +9,15 @@ import { loadPracticeProject, savePracticeProjectRemote } from './practice/pract
 import PracticeShell from './practice/PracticeShell.jsx'
 import VectorStudio from './practice/editors/VectorStudio.jsx'
 import FlowStudio from './practice/editors/FlowStudio.jsx'
+import GameBoardStudio from './practice/editors/GameBoardStudio.jsx'
+import ThreeDStudio from './practice/editors/ThreeDStudio.jsx'
 
 const EDITORS = {
   vector: { Component: VectorStudio, label: 'Vector Studio' },
-  threeD: { Component: null, label: '3D Studio' },
+  threeD: { Component: ThreeDStudio, label: '3D Studio' },
   flow: { Component: FlowStudio, label: 'Flow & Layout Studio' },
   motion: { Component: null, label: 'Motion Studio' },
-  gameBoard: { Component: null, label: 'Game Systems Board' },
+  gameBoard: { Component: GameBoardStudio, label: 'Game Systems Board' },
 }
 
 export default function PracticePage() {

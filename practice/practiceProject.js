@@ -34,8 +34,8 @@ export function versionRank(v) {
 // ще не збудований цього заходу — показуємо чесну заглушку «скоро», а не
 // фейковий інструмент.
 export const DIRECTION_EDITOR = {
-  '3d-design': { editor: 'threeD', profile: '3d-design', editorReady: false },
-  'game-art': { editor: 'threeD', profile: 'game-art', editorReady: false },
+  '3d-design': { editor: 'threeD', profile: '3d-design', editorReady: true },
+  'game-art': { editor: 'threeD', profile: 'game-art', editorReady: true },
   'graphic-design': { editor: 'vector', profile: 'graphic', editorReady: true },
   'logo-design': { editor: 'vector', profile: 'logo', editorReady: true },
   'branding': { editor: 'vector', profile: 'branding', editorReady: true },
@@ -45,7 +45,7 @@ export const DIRECTION_EDITOR = {
   'app-design': { editor: 'flow', profile: 'app', editorReady: true },
   'motion-design': { editor: 'motion', profile: 'motion', editorReady: false },
   'advertising-design': { editor: 'motion', profile: 'advertising', editorReady: false },
-  'game-design': { editor: 'gameBoard', profile: 'game-design', editorReady: false },
+  'game-design': { editor: 'gameBoard', profile: 'game-design', editorReady: true },
 }
 
 export function createEmptyPracticeProject(task) {
