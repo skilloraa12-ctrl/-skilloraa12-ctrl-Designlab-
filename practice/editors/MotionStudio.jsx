@@ -253,7 +253,7 @@ export default function MotionStudio({ project, onChange }) {
         )}
         {bottomTab === 'export' && (
           <div className="practice-layers">
-            <p className="cl-tab-desc">Рендер поточного кадру в PNG (повноцінний відео-експорт — за межами цього заходу).</p>
+            <p className="cl-tab-desc">Рендер поточного кадру в SVG (повноцінний відео-експорт — за межами цього заходу).</p>
             <button className="harmony-btn" onClick={() => {
               const svgEl = svgRef.current
               const str = new XMLSerializer().serializeToString(svgEl)
