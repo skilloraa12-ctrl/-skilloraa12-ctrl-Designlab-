@@ -27,6 +27,12 @@ const GEOMETRY_BUILDERS = {
   cylinder: () => new THREE.CylinderGeometry(0.6, 0.6, 1.2, 32),
   torus: () => new THREE.TorusGeometry(0.55, 0.22, 20, 48),
   plane: () => new THREE.PlaneGeometry(1.3, 1.3),
+  capsule: () => new THREE.CapsuleGeometry(0.42, 0.75, 4, 16),
+  tetrahedron: () => new THREE.TetrahedronGeometry(0.8),
+  octahedron: () => new THREE.OctahedronGeometry(0.75),
+  icosahedron: () => new THREE.IcosahedronGeometry(0.75),
+  dodecahedron: () => new THREE.DodecahedronGeometry(0.68),
+  torusKnot: () => new THREE.TorusKnotGeometry(0.42, 0.15, 100, 16),
 }
 
 const LIGHT_TYPES = new Set(['pointLight', 'spotLight'])
@@ -38,6 +44,12 @@ export const PRIMITIVES = [
   { type: 'cylinder', label: 'Циліндр', icon: '🛢️' },
   { type: 'torus', label: 'Тор', icon: '🍩' },
   { type: 'plane', label: 'Площина', icon: '▭' },
+  { type: 'capsule', label: 'Капсула', icon: '💊' },
+  { type: 'tetrahedron', label: 'Тетраедр', icon: '🔻' },
+  { type: 'octahedron', label: 'Октаедр', icon: '🔷' },
+  { type: 'icosahedron', label: 'Ікосаедр', icon: '💎' },
+  { type: 'dodecahedron', label: 'Додекаедр', icon: '⬡' },
+  { type: 'torusKnot', label: 'Вузол тора', icon: '🌀' },
 ]
 
 export const LIGHT_KINDS = [
@@ -315,6 +327,13 @@ export function createAnimScene(container) {
     camera.updateProjectionMatrix()
   }
 
+  // Lets the editor temporarily hand off the drag gesture from
+  // "orbit the camera" to "rotate the selected object" (dragging directly
+  // on it) without the two fighting over the same pointer events.
+  function setControlsEnabled(enabled) {
+    controls.enabled = enabled
+  }
+
   function dispose() {
     cancelAnimationFrame(raf)
     ro.disconnect()
@@ -333,6 +352,7 @@ export function createAnimScene(container) {
     setLighting,
     setCameraView,
     setFov,
+    setControlsEnabled,
     getScene: () => scene,
     getCamera: () => camera,
     getRenderer: () => renderer,

@@ -786,22 +786,27 @@ button.tool-badge--action:hover { border-color: var(--green); }
 
 /* ---------- 3D Design: Anim Editor layout (objects/add left, viewport
    + timeline center, properties right — full-bleed page, see
-   .main--full-bleed above) ---------- */
-.tl-editor-page { display: flex; flex-direction: column; min-height: calc(100vh - 32px); }
-.tl-editor-shell { display: flex; gap: 14px; flex: 1; min-height: 0; margin-top: 10px; }
+   .main--full-bleed above). Chrome above the shell (breadcrumb/topbar) is
+   tightened here so the viewport gets as much of the screen as possible. */
+.tl-editor-page { display: flex; flex-direction: column; min-height: calc(100vh - 28px); }
+.tl-editor-page .dict-breadcrumb { margin-bottom: 6px; }
+.tl-editor-page .gfx-topbar { margin-bottom: 6px; }
+.tl-editor-page .motion-autosave-note { flex-basis: auto; }
+.tl-editor-shell { display: flex; gap: 14px; flex: 1; min-height: 0; margin-top: 6px; }
 .tl-editor-left, .tl-editor-right {
   flex: none; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius);
-  background: var(--surface); padding: 12px; max-height: calc(100vh - 140px);
+  background: var(--surface); padding: 12px; max-height: calc(100vh - 110px);
 }
-.tl-editor-left { width: 270px; }
-.tl-editor-right { width: 330px; }
+.tl-editor-left { width: 260px; }
+.tl-editor-right { width: 320px; }
 .tl-editor-center { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .tl-editor-viewport {
-  flex: 1; min-height: 360px; border-radius: var(--radius); border: 1px solid var(--line);
-  overflow: hidden; background: #16161d; cursor: grab; margin-bottom: 10px;
+  flex: 1; min-height: 560px; border-radius: var(--radius); border: 1px solid var(--line);
+  overflow: hidden; background: #16161d; cursor: grab; margin-bottom: 4px;
 }
 .tl-editor-viewport:active { cursor: grabbing; }
 .tl-editor-viewport canvas { display: block; }
+.tl-rotate-hint { font-size: 11.5px; color: var(--muted); margin: 0 0 8px; }
 @media (max-width: 980px) {
   .tl-editor-shell { flex-direction: column; }
   .tl-editor-left, .tl-editor-right { width: 100%; max-height: 340px; }

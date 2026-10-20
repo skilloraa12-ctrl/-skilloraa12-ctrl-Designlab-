@@ -6,6 +6,7 @@ import { useProgress } from './ProgressContext.jsx'
 import { useLabToast } from './labs/useLabToast.js'
 import { useLabHistory } from './labs/useLabHistory.js'
 import LabToast from './labs/LabToast.jsx'
+import LabInfoTip from './labs/LabInfoTip.jsx'
 import NotFound from './NotFound.jsx'
 import { createAnimScene, PRIMITIVES, LIGHT_KINDS, LIGHT_PRESETS, CAMERA_VIEWS } from './labs/threeAnimScene.js'
 import { createEmptyAnimScene, makeAnimObject, makeKeyframeFromObject, LIGHT_TYPES } from './threeDProject.js'
@@ -534,19 +535,60 @@ export default function ThreeDAnimEditor() {
     scheduleSave(undefined, undefined, next)
   }
 
-  // Mount the Three.js scene once; dispose on unmount.
+  // Mount the Three.js scene once; dispose on unmount. Also wires up
+  // direct-manipulation rotation: dragging starting ON the already-selected
+  // object spins it (via applyRotationDeltaRef, see above) instead of
+  // orbiting the camera — the orbit controls are briefly disabled for the
+  // duration of that one drag so the two gestures don't fight each other.
   useEffect(() => {
     if (!containerRef.current) return
-    const api = createAnimScene(containerRef.current)
+    const el = containerRef.current
+    const api = createAnimScene(el)
     sceneApiRef.current = api
     api.syncStructure(objectsRef.current, selectedIdRef.current)
+
+    let rotating = false
+    let lastX = 0
+    let lastY = 0
+
     function handleClick(e) {
       const id = api.pickAt(e.clientX, e.clientY)
       if (id) applySelected(id)
     }
-    containerRef.current.addEventListener('click', handleClick)
+    function handlePointerDown(e) {
+      const id = api.pickAt(e.clientX, e.clientY)
+      if (id && id === selectedIdRef.current) {
+        rotating = true
+        lastX = e.clientX
+        lastY = e.clientY
+        api.setControlsEnabled(false)
+        el.style.cursor = 'grabbing'
+      }
+    }
+    function handlePointerMove(e) {
+      if (!rotating) return
+      const dx = e.clientX - lastX
+      const dy = e.clientY - lastY
+      lastX = e.clientX
+      lastY = e.clientY
+      applyRotationDeltaRef.current(dx, dy, e.shiftKey)
+    }
+    function handlePointerUp() {
+      if (!rotating) return
+      rotating = false
+      api.setControlsEnabled(true)
+      el.style.cursor = 'grab'
+    }
+
+    el.addEventListener('click', handleClick)
+    el.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
     return () => {
-      containerRef.current?.removeEventListener('click', handleClick)
+      el.removeEventListener('click', handleClick)
+      el.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
       api.dispose()
       sceneApiRef.current = null
     }
@@ -679,6 +721,35 @@ export default function ThreeDAnimEditor() {
     })
     applyObjects(next)
   }
+
+  // Direct-manipulation rotation: dragging the selected object in the
+  // viewport spins it (horizontal → Y, vertical → X; hold Shift to roll Z
+  // instead) — the discoverable alternative to typing degrees in the
+  // sliders. Wired up from the pointer handlers below via a ref so the
+  // once-registered scene-mount effect always calls the current version.
+  function applyRotationDelta(dx, dy, roll) {
+    const id = selectedIdRef.current
+    if (!id) return
+    const t = currentTimeRef.current
+    const wrap = (v) => ((v % 360) + 360) % 360
+    const next = objectsRef.current.map((o) => {
+      if (o.id !== id) return o
+      const idx = o.keyframes.findIndex((k) => Math.abs(k.time - t) < 0.01)
+      const source = idx >= 0 ? o.keyframes[idx].rotation : o.rotation
+      const nextRot = roll
+        ? { x: source.x, y: source.y, z: wrap(source.z + dx * 0.6) }
+        : { x: wrap(source.x + dy * 0.6), y: wrap(source.y + dx * 0.6), z: source.z }
+      if (idx >= 0) {
+        const kfs = [...o.keyframes]
+        kfs[idx] = { ...kfs[idx], rotation: nextRot }
+        return { ...o, keyframes: kfs }
+      }
+      return { ...o, rotation: nextRot }
+    })
+    applyObjects(next)
+  }
+  const applyRotationDeltaRef = useRef(applyRotationDelta)
+  applyRotationDeltaRef.current = applyRotationDelta
 
   function addKeyframeHere() {
     if (!selectedIdRef.current) return
@@ -890,7 +961,12 @@ export default function ThreeDAnimEditor() {
         <span className="gfx-status-pill">{objects.length} обʼєктів · {animatedCount} анімовано</span>
         <button className="cl-mini-btn" onClick={handleUndo} disabled={!hist.canUndo} title="Ctrl+Z">↺ Undo</button>
         <button className="cl-mini-btn" onClick={handleRedo} disabled={!hist.canRedo} title="Ctrl+Shift+Z">↻ Redo</button>
-        <span className="motion-autosave-note">Зберігається автоматично. Space — грати, Del — видалити, Ctrl+D — дублювати, ←/→ — кадр, Ctrl+C/V — кадр.</span>
+        <span className="motion-autosave-note">Зберігається автоматично.</span>
+        <LabInfoTip title="Клавіші та керування">
+          Space — грати/пауза, Del — видалити, Ctrl+D — дублювати, ←/→ — крок кадру, Ctrl+C/V — копіювати/вставити кадр.
+          <br /><br />
+          🔄 Перетягни обраний об'єкт прямо у вʼюпорті, щоб обертати його (горизонтально — вісь Y, вертикально — вісь X, Shift — нахил по Z). Перетягування будь-де інде обертає камеру.
+        </LabInfoTip>
       </div>
 
       <div className="tl-editor-shell">
@@ -900,6 +976,7 @@ export default function ThreeDAnimEditor() {
 
         <div className="tl-editor-center">
           <div ref={containerRef} className="tl-editor-viewport" />
+          {selected && <p className="tl-rotate-hint">🔄 Перетягни «{selected.name || 'обраний об\'єкт'}» прямо тут, щоб обертати (Shift — нахил по Z)</p>}
 
           <div className="tl-controls">
             <button className="cl-mini-btn" onClick={() => stepFrame(-1)} title="←">⏮</button>
