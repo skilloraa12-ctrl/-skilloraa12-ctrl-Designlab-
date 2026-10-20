@@ -60,6 +60,11 @@ export default function GameBoardStudio({ project, onChange }) {
   }
 
   function onNodeDown(e, id) {
+    // Клік інструментом «Вузол» по вже існуючому вузлу не повинен просто
+    // вибирати його — пропускаємо подію далі до canvasClick, щоб новий
+    // вузол дійсно зʼявився там, де клікнули (той самий клас бага, що й
+    // у VectorStudio/FlowStudio onShapeDown/onNodeDown).
+    if (tool === 'node') return
     e.stopPropagation()
     if (tool === 'link') {
       if (!linkFrom) { setLinkFrom(id); return }

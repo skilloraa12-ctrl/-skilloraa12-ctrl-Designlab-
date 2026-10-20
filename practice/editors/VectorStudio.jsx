@@ -103,6 +103,12 @@ export default function VectorStudio({ project, onChange }) {
   }
 
   function onShapeDown(e, id) {
+    // Коли активний інструмент малювання (rect/ellipse/star/line/text) і
+    // клік стався на вже існуючій фігурі — НЕ перехоплюємо подію як "обрати
+    // цю фігуру": пропускаємо її далі до canvasClick, щоб нова фігура
+    // справді зʼявилась там, де клікнули (напр. фігури внакладку для
+    // прийому негативного простору), а не ігнорувалась мовчки.
+    if (['rect', 'ellipse', 'star', 'line', 'text'].includes(tool)) return
     e.stopPropagation()
     if (tool === 'eyedropper') {
       const src = project.objects.find((o) => o.id === id)

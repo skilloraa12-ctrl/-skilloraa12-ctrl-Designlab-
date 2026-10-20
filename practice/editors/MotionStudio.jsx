@@ -101,6 +101,11 @@ export default function MotionStudio({ project, onChange }) {
   }
 
   function onShapeDown(e, id) {
+    // Клік інструментом малювання (rect/ellipse/text) по вже існуючій
+    // фігурі не повинен просто вибирати її — пропускаємо подію далі до
+    // canvasClick, щоб нова фігура дійсно зʼявилась там, де клікнули
+    // (той самий клас бага, що й у VectorStudio/FlowStudio).
+    if (['rect', 'ellipse', 'text'].includes(tool)) return
     e.stopPropagation()
     setSelectedId(id)
     if (tool !== 'select') return

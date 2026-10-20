@@ -197,7 +197,7 @@ export function stateDefined(project, { type, count = 1 } = {}) {
 }
 
 export function minTapTarget(project, { px = 44 } = {}) {
-  const interactive = (project.objects || []).filter((o) => o.type === 'component' && ['button', 'checkbox', 'switch', 'tab'].includes(o.componentType))
+  const interactive = (project.objects || []).filter((o) => o.type === 'component' && ['button', 'checkbox', 'switch', 'tab', 'input'].includes(o.componentType))
   if (interactive.length === 0) return fail('Немає інтерактивних компонентів для перевірки.')
   const small = interactive.filter((o) => o.w < px || o.h < px)
   return small.length === 0
