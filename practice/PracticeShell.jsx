@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { useLabHistory } from '../labs/useLabHistory.js'
-import { VERSIONS, versionForLevel, versionRank, pushSnapshot } from './practiceProject.js'
+import { VERSIONS, versionForLevel, versionRank } from './practiceProject.js'
 import { runValidation } from './practiceValidators.js'
 
 // Спільний каркас вкладки «Практика» — ТЗ розділ 3 (зони 1-7).
@@ -19,6 +19,17 @@ import { runValidation } from './practiceValidators.js'
 // стану), спільні для всіх редакторів. getProject()/validate() не потрібні
 // окремо: стан проєкту й так завжди в practiceProject.project, а
 // validate() — це runValidation(project, task.goals) із practiceValidators.js.
+//
+// Чесна межа версій (v1/v2/v3): перемикач нижче й versionForLevel()
+// реально розблоковують вищі версії за рівнем студента (XP), і обраний
+// `version` зберігається в practiceProject та передається в кожен
+// редактор як проп. Але жоден із 5 редакторів цього заходу ще не ЧИТАЄ
+// `version`/`allowedTools`, щоб справді змінити набір інструментів,
+// складність чи стартовий проєкт — v2/v3 розблоковуються, та поки що
+// дають той самий досвід, що й v1. «Версії та розблокування» з ТЗ
+// розділу 4 реалізовані лише як стан розблокування, не як різний
+// контент. pushSnapshot() у practiceProject.js — так само: функція
+// знімків готова, але жоден редактор ще не викликає її кнопкою в UI.
 
 export default function PracticeShell({ module, task, practiceProject, onPatch, xp, level, EditorComponent, editorLabel }) {
   const history = useLabHistory(practiceProject.project, 100)
