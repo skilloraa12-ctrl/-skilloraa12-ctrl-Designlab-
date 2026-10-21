@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { useLabHistory } from '../labs/useLabHistory.js'
 import { VERSIONS, versionForLevel, versionRank, pushSnapshot } from './practiceProject.js'
@@ -161,12 +161,14 @@ export default function PracticeShell({ module, task, practiceProject, onPatch, 
 
       <div className="practice-body">
         {EditorComponent ? (
-          <EditorComponent
-            project={project}
-            version={version}
-            allowedTools={task.allowedTools}
-            onChange={(next) => history.set(next)}
-          />
+          <Suspense fallback={<div className="practice-coming-soon"><p className="cl-tab-desc">Завантаження редактора…</p></div>}>
+            <EditorComponent
+              project={project}
+              version={version}
+              allowedTools={task.allowedTools}
+              onChange={(next) => history.set(next)}
+            />
+          </Suspense>
         ) : (
           <div className="practice-coming-soon">
             <p className="cl-section-title">{editorLabel} — редактор у розробці</p>

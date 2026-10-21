@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, lazy } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
 import { getModule } from './modules.js'
 import { useAuth } from './AuthContext.jsx'
@@ -7,11 +7,16 @@ import { getPracticeTask } from './practice/practiceTasks.js'
 import { createEmptyPracticeProject } from './practice/practiceProject.js'
 import { loadPracticeProject, savePracticeProjectRemote } from './practice/practiceSupabase.js'
 import PracticeShell from './practice/PracticeShell.jsx'
-import VectorStudio from './practice/editors/VectorStudio.jsx'
-import FlowStudio from './practice/editors/FlowStudio.jsx'
-import GameBoardStudio from './practice/editors/GameBoardStudio.jsx'
-import ThreeDStudio from './practice/editors/ThreeDStudio.jsx'
-import MotionStudio from './practice/editors/MotionStudio.jsx'
+
+// Ліниве завантаження — кожна практична сторінка використовує лише ОДИН
+// редактор, тож немає сенсу вантажити всі 5 (разом із three.js для 3D
+// Studio) у кожен перший візит на сайт. PracticeShell.jsx обгортає
+// EditorComponent у <Suspense>.
+const VectorStudio = lazy(() => import('./practice/editors/VectorStudio.jsx'))
+const FlowStudio = lazy(() => import('./practice/editors/FlowStudio.jsx'))
+const GameBoardStudio = lazy(() => import('./practice/editors/GameBoardStudio.jsx'))
+const ThreeDStudio = lazy(() => import('./practice/editors/ThreeDStudio.jsx'))
+const MotionStudio = lazy(() => import('./practice/editors/MotionStudio.jsx'))
 
 const EDITORS = {
   vector: { Component: VectorStudio, label: 'Vector Studio' },
