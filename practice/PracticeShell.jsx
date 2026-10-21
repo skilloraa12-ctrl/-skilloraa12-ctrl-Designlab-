@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { useLabHistory } from '../labs/useLabHistory.js'
-import { VERSIONS, versionForLevel, versionRank } from './practiceProject.js'
+import { VERSIONS, versionForLevel, versionRank, pushSnapshot } from './practiceProject.js'
 import { runValidation } from './practiceValidators.js'
 
 // Спільний каркас вкладки «Практика» — ТЗ розділ 3 (зони 1-7).
@@ -42,8 +42,11 @@ import { runValidation } from './practiceValidators.js'
 //   прискорення (Лінійна/Ease In/Ease Out/Ease In-Out) для кожного
 //   ключового кадру, v3 — додатково Bounce; саме ці криві ТЗ прямо
 //   називав нереалізованими в v1 (practice/editors/MotionStudio.jsx).
-// pushSnapshot() у practiceProject.js лишається осторонь: функція
-// знімків готова, але жоден редактор ще не викликає її кнопкою в UI.
+// Контрольні точки: pushSnapshot() тепер викликається кнопкою «🕐 Точки»
+// в зоні 1 нижче — на відміну від undo/redo (useLabHistory, в памʼяті,
+// губиться після перезавантаження сторінки), знімки зберігаються в
+// practiceProject.snapshots (до 10 останніх) і переживають вихід з
+// практики та повернення пізніше.
 
 export default function PracticeShell({ module, task, practiceProject, onPatch, xp, level, EditorComponent, editorLabel }) {
   const history = useLabHistory(practiceProject.project, 100)
@@ -54,6 +57,7 @@ export default function PracticeShell({ module, task, practiceProject, onPatch, 
   const [hintLevel, setHintLevel] = useState(practiceProject.hintsUsed || 0)
   const [checkResult, setCheckResult] = useState(practiceProject.lastResults?.length ? { results: practiceProject.lastResults, pct: practiceProject.score / 100 } : null)
   const [versionMenuOpen, setVersionMenuOpen] = useState(false)
+  const [snapshotMenuOpen, setSnapshotMenuOpen] = useState(false)
 
   const maxVersion = versionForLevel(level)
   const version = practiceProject.version && versionRank(practiceProject.version) <= versionRank(maxVersion) ? practiceProject.version : maxVersion
@@ -138,6 +142,21 @@ export default function PracticeShell({ module, task, practiceProject, onPatch, 
     setVersionMenuOpen(false)
   }
 
+  // Знімок фіксує саме поточний стан редактора (project, локальна
+  // useLabHistory-копія), а не practiceProject.project — той іще не
+  // оновлений до найближчого автозбереження.
+  function saveSnapshot() {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    const { snapshots } = pushSnapshot({ ...practiceProject, project })
+    onPatch({ project, snapshots })
+    setSaveState('saved')
+    setSnapshotMenuOpen(false)
+  }
+  function restoreSnapshot(snap) {
+    history.set(snap.project)
+    setSnapshotMenuOpen(false)
+  }
+
   const exhausted = (practiceProject.attempts || 0) >= task.maxAttempts
   const checklistDone = checkResult ? checkResult.results.filter((r) => r.ok).length : 0
   const checklistTotal = task.goals.length
@@ -179,6 +198,24 @@ export default function PracticeShell({ module, task, practiceProject, onPatch, 
                     </button>
                   )
                 })}
+              </div>
+            )}
+          </div>
+          <div className="practice-version-wrap">
+            <button className="cl-mini-btn" onClick={() => setSnapshotMenuOpen((v) => !v)} title="Контрольні точки — збережені знімки проєкту, доступні й після повернення до завдання">
+              🕐 Точки ({(practiceProject.snapshots || []).length})
+            </button>
+            {snapshotMenuOpen && (
+              <div className="practice-version-menu practice-snapshot-menu">
+                <button className="practice-version-item" onClick={saveSnapshot}>📌 Зберегти поточний стан</button>
+                {(practiceProject.snapshots || []).length === 0 && (
+                  <p className="cl-tab-desc" style={{ padding: '6px 9px' }}>Немає збережених точок.</p>
+                )}
+                {(practiceProject.snapshots || []).map((s) => (
+                  <button key={s.id} className="practice-version-item" onClick={() => restoreSnapshot(s)}>
+                    ↺ {new Date(s.createdAt).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  </button>
+                ))}
               </div>
             )}
           </div>

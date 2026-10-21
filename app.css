@@ -1843,6 +1843,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .practice-version-item.active { background: var(--accent); color: var(--accent-ink); }
 .practice-version-item.locked { opacity: .5; cursor: not-allowed; }
 .practice-lock { font-size: 10.5px; }
+.practice-snapshot-menu { min-width: 230px; max-height: 280px; overflow-y: auto; }
 
 .practice-body {
   flex: 1; min-height: 0; display: grid;
