@@ -23,17 +23,20 @@ import { runValidation } from './practiceValidators.js'
 // Чесна межа версій (v1/v2/v3): перемикач нижче й versionForLevel()
 // реально розблоковують вищі версії за рівнем студента (XP), і обраний
 // `version` зберігається в practiceProject та передається в кожен
-// редактор як проп. Два редактори вже реально читають `version`:
+// редактор як проп. Три редактори вже реально читають `version`:
 // - Vector Studio (Graphic/Logo/Branding): v2 — градієнтна заливка,
 //   v3 — інструмент «Перо» (practice/editors/VectorStudio.jsx).
 // - Flow & Layout Studio (UX/UI/Web/App): v2 — вирівнювання-прилипання
 //   обʼєктів до центру/країв екрана, v3 — «▶ Переглянути прототип»
 //   (practice/editors/FlowStudio.jsx).
-// Решта 3 редакторів (Game Board/3D/Motion) поки що ІГНОРУЮТЬ
-// `version`/`allowedTools` — v2/v3 там розблоковуються, та досі дають
-// той самий досвід, що й v1. pushSnapshot() у practiceProject.js —
-// так само: функція знімків готова, але жоден редактор ще не викликає
-// її кнопкою в UI.
+// - Game Systems Board (Game Design): v2 — «🔀 Авторозташувати» вузли
+//   графа по колу, v3 — «⬇ Експорт CSV» таблиці балансу
+//   (practice/editors/GameBoardStudio.jsx).
+// Решта 2 редакторів (3D/Motion) поки що ІГНОРУЮТЬ `version`/
+// `allowedTools` — v2/v3 там розблоковуються, та досі дають той самий
+// досвід, що й v1. pushSnapshot() у practiceProject.js — так само:
+// функція знімків готова, але жоден редактор ще не викликає її
+// кнопкою в UI.
 
 export default function PracticeShell({ module, task, practiceProject, onPatch, xp, level, EditorComponent, editorLabel }) {
   const history = useLabHistory(practiceProject.project, 100)

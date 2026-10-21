@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { versionRank } from '../practiceProject.js'
 
 // Game Systems Board (ТЗ 7.E) — v1: граф вузлів (Дія/Умова/Ресурс/Подія)
 // зі звʼязками-стрілками (та сама форма {from,to}, що й noDeadEnds/
@@ -6,10 +7,20 @@ import { useRef, useState } from 'react'
 // працюють тут без дублювання) і таблиця балансу з мінімальними
 // формулами без eval (=prev+N, =prev*N — FR-GEN-008 забороняє eval).
 //
+// Реальна різниця версій (ТЗ розділ 4): v2 (рівень 4+) відкриває
+// «🔀 Авторозташувати» — розкладає всі вузли графа по колу, щоб не
+// розставляти вручну, коли вузлів стає багато (капстоун-завдання вже
+// вимагають 5+). v3 (рівень 8+) відкриває «⬇ Експорт CSV» для
+// таблиці балансу — реальне, клієнтське формування CSV-файлу, без
+// бекенду. Обидві фічі суто на боці редактора (не чіпають
+// practiceValidators.js), тож працюють однаково для будь-якого
+// завдання без змін у practiceTasks.js.
+//
 // Свідомо НЕ реалізовано цього заходу: повний SUM/AVG/MIN/MAX/IF (це
 // вимагає власного безпечного парсера виразів — за межами цього
-// заходу), симуляція циклу ×100/×1000, вкладка ГДД з експортом
-// Markdown/PDF.
+// заходу), симуляція циклу ×100/×1000, повноцінна вкладка ГДД з
+// експортом Markdown/PDF (є лише CSV таблиці балансу, не весь
+// документ).
 
 const NODE_TYPES = [
   { id: 'action', label: 'Дія', color: '#2E6DFF' },
@@ -20,7 +31,8 @@ const NODE_TYPES = [
 
 function uid() { return crypto.randomUUID().slice(0, 8) }
 
-export default function GameBoardStudio({ project, onChange }) {
+export default function GameBoardStudio({ project, version, onChange }) {
+  const vRank = versionRank(version || 'v1')
   const [tool, setTool] = useState('select')
   const [nodeTypePick, setNodeTypePick] = useState('action')
   const [selectedId, setSelectedId] = useState(null)
@@ -104,6 +116,30 @@ export default function GameBoardStudio({ project, onChange }) {
 
   function nodeById(id) { return nodes.find((n) => n.id === id) }
 
+  // v2: авторозташування — розкладає всі вузли по колу навколо центру
+  // їхнього поточного bounding box, щоб не тягати кожен вручну.
+  function autoArrange() {
+    if (nodes.length === 0) return
+    const cx = (bounds.minX + bounds.maxX) / 2, cy = (bounds.minY + bounds.maxY) / 2
+    const radius = Math.max(140, nodes.length * 28)
+    patchNodes(nodes.map((n, i) => {
+      const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2
+      return { ...n, x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) }
+    }))
+  }
+
+  // v3: реальний клієнтський CSV-експорт таблиці балансу (без бекенду,
+  // без повноцінного ГДД-документа — чесно звужено, див. коментар угорі).
+  function exportCsv() {
+    const lines = [table.columns, ...table.rows].map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'balance.csv'; a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 2000)
+    onChange({ ...project, exportedFormats: [...new Set([...(project.exportedFormats || []), 'csv'])] })
+  }
+
   function updateCell(r, c, value) {
     const rows = table.rows.map((row, ri) => (ri === r ? row.map((cell, ci) => (ci === c ? value : cell)) : row))
     onChange({ ...project, table: { ...table, rows } })
@@ -127,6 +163,12 @@ export default function GameBoardStudio({ project, onChange }) {
         <button className={'practice-tool-btn' + (tool === 'link' ? ' active' : '')} title="Звʼязок (C)" onClick={() => { setTool('link'); setLinkFrom(null) }} aria-label="Звʼязок">↗</button>
         <div className="practice-tool-sep" />
         <button className="practice-tool-btn" title="Видалити" onClick={deleteSelected} aria-label="Видалити">🗑</button>
+        {vRank >= 1 && (
+          <>
+            <div className="practice-tool-sep" />
+            <button className="practice-tool-btn" title="Авторозташувати вузли по колу (v2)" onClick={autoArrange} aria-label="Авторозташувати">🔀</button>
+          </>
+        )}
       </div>
 
       <div className="practice-canvas">
@@ -205,7 +247,10 @@ export default function GameBoardStudio({ project, onChange }) {
                 ))}
               </tbody>
             </table>
-            <button className="harmony-btn" style={{ marginTop: 8 }} onClick={addRow}>+ Рядок</button>
+            <div className="cl-btn-row" style={{ marginTop: 8 }}>
+              <button className="harmony-btn" onClick={addRow}>+ Рядок</button>
+              {vRank >= 2 && <button className="harmony-btn" onClick={exportCsv}>⬇ Експорт CSV (v3)</button>}
+            </div>
             <p className="cl-tab-desc" style={{ marginTop: 6 }}>Формули без обчислення в коді (без eval, FR-GEN-008): у комірці другої колонки напиши <code>=prev+10</code> (лінійний ріст) чи <code>=prev*1.5</code> (експоненціальний) — «prev» це значення в тому ж стовпці на рядок вище.</p>
           </div>
         )}
