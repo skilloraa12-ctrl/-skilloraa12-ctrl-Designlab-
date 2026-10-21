@@ -23,7 +23,7 @@ import { runValidation } from './practiceValidators.js'
 // Чесна межа версій (v1/v2/v3): перемикач нижче й versionForLevel()
 // реально розблоковують вищі версії за рівнем студента (XP), і обраний
 // `version` зберігається в practiceProject та передається в кожен
-// редактор як проп. Три редактори вже реально читають `version`:
+// редактор як проп. Чотири редактори вже реально читають `version`:
 // - Vector Studio (Graphic/Logo/Branding): v2 — градієнтна заливка,
 //   v3 — інструмент «Перо» (practice/editors/VectorStudio.jsx).
 // - Flow & Layout Studio (UX/UI/Web/App): v2 — вирівнювання-прилипання
@@ -32,7 +32,13 @@ import { runValidation } from './practiceValidators.js'
 // - Game Systems Board (Game Design): v2 — «🔀 Авторозташувати» вузли
 //   графа по колу, v3 — «⬇ Експорт CSV» таблиці балансу
 //   (practice/editors/GameBoardStudio.jsx).
-// Решта 2 редакторів (3D/Motion) поки що ІГНОРУЮТЬ `version`/
+// - 3D Studio (3D Design/Game Art): v2 — 6 додаткових примітивів, що
+//   вже й так підтримував рушій threeAnimScene.js (капсула/тетраедр/
+//   октаедр/ікосаедр/додекаедр/вузол тора), просто тулбар показував
+//   лише перші 6; v3 — світлові пресети (Студія/День/Захід/Ніч), що й
+//   так існували як api.setLighting() без жодної кнопки в UI
+//   (practice/editors/ThreeDStudio.jsx).
+// Лишився 1 редактор (Motion), що поки що ІГНОРУЄ `version`/
 // `allowedTools` — v2/v3 там розблоковуються, та досі дають той самий
 // досвід, що й v1. pushSnapshot() у practiceProject.js — так само:
 // функція знімків готова, але жоден редактор ще не викликає її

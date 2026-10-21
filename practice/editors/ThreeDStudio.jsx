@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { createAnimScene, PRIMITIVES, LIGHT_KINDS, CAMERA_VIEWS } from '../../labs/threeAnimScene.js'
+import { createAnimScene, PRIMITIVES, LIGHT_KINDS, LIGHT_PRESETS, CAMERA_VIEWS } from '../../labs/threeAnimScene.js'
 import { makeAnimObject, LIGHT_TYPES } from '../../threeDProject.js'
+import { versionRank } from '../practiceProject.js'
 
 // 3D Studio (ТЗ 7.A) — v1: Вибір/Додати примітив/Додати світло/Камера,
 // властивості позиції-повороту-масштабу-матеріалу, аутлайнер сцени,
@@ -8,20 +9,32 @@ import { makeAnimObject, LIGHT_TYPES } from '../../threeDProject.js'
 // syncStructure) і threeDProject.js (makeAnimObject) — той самий рушій,
 // що й ThreeDAnimEditor.jsx, а не новий three.js-код з нуля.
 //
+// Реальна різниця версій (ТЗ розділ 4): рушій threeAnimScene.js уже
+// давно вміє більше, ніж v1-тулбар показував — тут лише відкриваємо це
+// версіями, без жодного нового three.js-коду. v2 (рівень 4+) відкриває
+// решту 6 «складних» примітивів (PRIMITIVES мав 12 записів, v1 показує
+// лише перші 6 через .slice(0,6)): капсула/тетраедр/октаедр/ікосаедр/
+// додекаедр/вузол тора. v3 (рівень 8+) відкриває світлові пресети
+// (LIGHT_PRESETS — Студія/День/Захід/Ніч), що й так вже існували в
+// createAnimScene() як api.setLighting(), просто не мали кнопок у
+// ThreeDStudio.jsx.
+//
 // Свідомо НЕ реалізовано цього заходу: ключові кадри/анімація (не
-// потрібні для статичних v1-завдань практики), екструзія/фаска/UV (v2),
-// малювання текстури/скульптинг (v3), GLB/OBJ-експорт (лишився лише
+// потрібні для статичних v1-завдань практики), екструзія/фаска/UV,
+// малювання текстури/скульптинг, GLB/OBJ-експорт (лишився лише
 // PNG — найпростіший чесний формат для перевірки в завданні).
 
 function uid() { return crypto.randomUUID() }
 
-export default function ThreeDStudio({ project, onChange }) {
+export default function ThreeDStudio({ project, version, onChange }) {
+  const vRank = versionRank(version || 'v1')
   const mountRef = useRef(null)
   const apiRef = useRef(null)
   const [selectedId, setSelectedId] = useState(null)
   const [bottomTab, setBottomTab] = useState('outliner')
   const objects = project.objects || []
   const selected = objects.find((o) => o.id === selectedId) || null
+  const visiblePrimitives = vRank >= 1 ? PRIMITIVES : PRIMITIVES.slice(0, 6)
 
   useEffect(() => {
     const api = createAnimScene(mountRef.current)
@@ -44,6 +57,7 @@ export default function ThreeDStudio({ project, onChange }) {
 
   useEffect(() => {
     if (project.cameraView) apiRef.current?.setCameraView(project.cameraView)
+    if (project.lightPreset) apiRef.current?.setLighting(project.lightPreset)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -78,6 +92,10 @@ export default function ThreeDStudio({ project, onChange }) {
     onChange({ ...project, cameraView: key })
     apiRef.current?.setCameraView(key)
   }
+  function setLightPreset(key) {
+    onChange({ ...project, lightPreset: key })
+    apiRef.current?.setLighting(key)
+  }
   function exportPng() {
     const dataUrl = apiRef.current?.screenshot()
     if (!dataUrl) return
@@ -93,7 +111,7 @@ export default function ThreeDStudio({ project, onChange }) {
   return (
     <>
       <div className="practice-toolbar">
-        {PRIMITIVES.slice(0, 6).map((p) => (
+        {visiblePrimitives.map((p) => (
           <button key={p.type} className="practice-tool-btn" title={`Додати ${p.label}`} onClick={() => addPrimitive(p.type)} aria-label={p.label}>{p.icon}</button>
         ))}
         <div className="practice-tool-sep" />
@@ -154,6 +172,16 @@ export default function ThreeDStudio({ project, onChange }) {
             <button key={v.key} className={'cl-mini-btn' + (project.cameraView === v.key ? ' active' : '')} onClick={() => setCameraView(v.key)}>{v.icon} {v.label}</button>
           ))}
         </div>
+        {vRank >= 2 && (
+          <>
+            <p className="cl-section-title" style={{ marginTop: 14 }}>Світло сцени (v3)</p>
+            <div className="cl-btn-row">
+              {LIGHT_PRESETS.map((p) => (
+                <button key={p.key} className={'cl-mini-btn' + ((project.lightPreset || 'studio') === p.key ? ' active' : '')} onClick={() => setLightPreset(p.key)}>{p.icon} {p.label}</button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="practice-bottom">
