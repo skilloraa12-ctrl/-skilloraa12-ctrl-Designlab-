@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { versionRank } from '../practiceProject.js'
 
 // Motion Studio (ТЗ 7.D) — v1: фігури/текст на композиції 500×500,
 // кожна властивість (X/Y/масштаб/поворот/прозорість) анімується через
@@ -6,15 +7,39 @@ import { useEffect, useRef, useState } from 'react'
 // поточний момент часу, програвання лінійно інтерполює між сусідніми
 // ключами.
 //
+// Реальна різниця версій (ТЗ розділ 4): ТЗ прямо називав «Ease In/
+// Out/Bounce» нереалізованими в v1 — тепер вони реально рахуються в
+// poseAt(), не просто додані в список підтримуваних назв. v2 (рівень
+// 4+) відкриває вибір кривої прискорення (easing) для кожного
+// ключового кадру: Лінійна/Ease In/Ease Out/Ease In-Out. v3 (рівень
+// 8+) додатково відкриває Bounce (пружний відскок наприкінці руху).
+//
 // Свідомо спрощено: ОДИН ключовий кадр знімає ВСІ властивості разом
 // (ТЗ хоче окремий тумблер ◔ на кожну властивість окремо — повний
-// per-property keying додає суттєву складність стану заради v1-рівня
-// завдань, де цього не вимагається). Лише лінійна інтерполяція — Ease
-// In/Out/Bounce/крива Безьє з ТЗ не реалізовані. Експорт — лише PNG
-// поточного кадру (не WebM/GIF): повноцінний запис відео в браузері
-// виходить за межі цього заходу.
+// per-property keying додає суттєву складність стану заради рівня
+// завдань, де цього не вимагається). Крива Безьє (довільна, не з
+// фіксованого набору) з ТЗ так само не реалізована. Експорт — лише
+// SVG поточного кадру (не WebM/GIF): повноцінний запис відео в
+// браузері виходить за межі цього заходу.
 
 const COMP = { w: 500, h: 500 }
+
+// easing(f) приймає прогрес 0..1 і повертає скоригований прогрес —
+// застосовується ДО лінійної інтерполяції значень, а не замість неї.
+const EASINGS = {
+  linear: (f) => f,
+  easeIn: (f) => f * f,
+  easeOut: (f) => 1 - (1 - f) * (1 - f),
+  easeInOut: (f) => (f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2),
+  bounce: (f) => {
+    const n1 = 7.5625, d1 = 2.75
+    if (f < 1 / d1) return n1 * f * f
+    if (f < 2 / d1) return n1 * (f -= 1.5 / d1) * f + 0.75
+    if (f < 2.5 / d1) return n1 * (f -= 2.25 / d1) * f + 0.9375
+    return n1 * (f -= 2.625 / d1) * f + 0.984375
+  },
+}
+const EASING_LABELS = { linear: 'Лінійна', easeIn: 'Ease In', easeOut: 'Ease Out', easeInOut: 'Ease In-Out', bounce: 'Bounce' }
 
 function uid() { return crypto.randomUUID() }
 
@@ -26,6 +51,10 @@ function makeObject(type, x, y) {
 }
 
 function poseAt(obj, t) {
+  // Активна чернетка (щойно відредагована позиція/властивість у момент,
+  // де немає точного ключа) переважає над будь-якою інтерполяцією —
+  // доки студент її не захопить «Додати ключ» чи не змінить час.
+  if (obj.draftPose) return { x: obj.draftPose.x, y: obj.draftPose.y, opacity: obj.draftPose.opacity, scale: obj.draftPose.scale, rotation: obj.draftPose.rotation }
   const kfs = obj.keyframes || []
   const base = { x: obj.x, y: obj.y, opacity: obj.opacity, scale: obj.scale, rotation: obj.rotation }
   if (kfs.length === 0) return base
@@ -43,7 +72,11 @@ function poseAt(obj, t) {
     const a = sorted[i], b = sorted[i + 1]
     if (t >= a.time && t <= b.time) {
       const span = b.time - a.time || 1
-      const f = (t - a.time) / span
+      const linearF = (t - a.time) / span
+      // Крива прискорення сегмента визначається СТАРТОВИМ ключем (a) —
+      // типова конвенція таймлайнів анімації.
+      const ease = EASINGS[a.easing] || EASINGS.linear
+      const f = ease(linearF)
       const lerp = (k) => a[k] + (b[k] - a[k]) * f
       return { x: lerp('x'), y: lerp('y'), opacity: lerp('opacity'), scale: lerp('scale'), rotation: lerp('rotation') }
     }
@@ -51,7 +84,8 @@ function poseAt(obj, t) {
   return sorted[sorted.length - 1]
 }
 
-export default function MotionStudio({ project, onChange }) {
+export default function MotionStudio({ project, version, onChange }) {
+  const vRank = versionRank(version || 'v1')
   const [tool, setTool] = useState('select')
   const [selectedId, setSelectedId] = useState(null)
   const [time, setTime] = useState(0)
@@ -131,8 +165,17 @@ export default function MotionStudio({ project, onChange }) {
   }
 
   // Редагування властивості: якщо на поточному часі вже є ключ — оновлює
-  // ЙОГО; інакше змінює базову (до-ключову) позу обʼєкта. Явний ключ
-  // зʼявляється лише кнопкою «Додати ключ».
+  // ЙОГО напряму. Інакше — зберігає чернетку (draftPose), яку poseAt()
+  // показує НА МІСЦІ звичайної інтерпольованої/крайової пози, доки її не
+  // захопить кнопка «Додати ключ» або не скине зміна часу. Раніше тут
+  // писалось просто в o.x/o.y/... («базову» позу) — але щойно в обʼєкта
+  // зʼявлявся хоча б ОДИН ключ, poseAt() більше ніколи не читав ці поля
+  // (лише keyframes), тож така правка ставала візуально невидимою:
+  // перетягнути чи ввести нову позицію для другого кадру в будь-який
+  // момент, що не збігається день-у-день з часом наявного ключа, не мало
+  // жодного ефекту на екрані, і «Додати ключ» захоплював стару
+  // (незмінену) позу — другий кадр з іншою позою неможливо було
+  // створити звичайним шляхом через UI.
   function setLivePose(id, patch) {
     patchObjects(objects.map((o) => {
       if (o.id !== id) return o
@@ -140,10 +183,19 @@ export default function MotionStudio({ project, onChange }) {
       const idx = kfs.findIndex((k) => Math.abs(k.time - time) < 0.01)
       if (idx >= 0) {
         const nextKfs = kfs.map((k, i) => (i === idx ? { ...k, ...patch } : k))
-        return { ...o, keyframes: nextKfs }
+        return { ...o, keyframes: nextKfs, draftPose: undefined }
       }
-      return { ...o, ...patch }
+      return { ...o, draftPose: { ...poseAt(o, time), ...patch } }
     }))
+  }
+  // Скидає чернетки поз усіх обʼєктів — викликається щоразу, як студент
+  // перемикає час (повзунком таймлайна), бо чернетка стосується лише
+  // того моменту, де її редагували, і втрачає сенс деінде.
+  function setTimeAndClearDrafts(t) {
+    setTime(t)
+    if (objects.some((o) => o.draftPose)) {
+      patchObjects(objects.map((o) => (o.draftPose ? { ...o, draftPose: undefined } : o)))
+    }
   }
 
   function addKeyframe() {
@@ -151,9 +203,15 @@ export default function MotionStudio({ project, onChange }) {
     const pose = poseAt(selected, time)
     const kfs = [...(selected.keyframes || [])]
     const idx = kfs.findIndex((k) => Math.abs(k.time - time) < 0.01)
-    const entry = { id: uid(), time: Math.round(time * 100) / 100, ...pose }
+    const prevEasing = idx >= 0 ? kfs[idx].easing : 'linear'
+    const entry = { id: uid(), time: Math.round(time * 100) / 100, ...pose, easing: prevEasing }
     if (idx >= 0) kfs[idx] = entry
     else kfs.push(entry)
+    patchObjects(objects.map((o) => (o.id === selectedId ? { ...o, keyframes: kfs, draftPose: undefined } : o)))
+  }
+  function setKeyframeEasing(easing) {
+    if (!selected) return
+    const kfs = (selected.keyframes || []).map((k) => (Math.abs(k.time - time) < 0.01 ? { ...k, easing } : k))
     patchObjects(objects.map((o) => (o.id === selectedId ? { ...o, keyframes: kfs } : o)))
   }
   function removeKeyframe(objId, kfTime) {
@@ -203,6 +261,8 @@ export default function MotionStudio({ project, onChange }) {
         {!selected && <p className="cl-tab-desc">Обери обʼєкт на полотні.</p>}
         {selected && (() => {
           const pose = poseAt(selected, time)
+          const kfAtTime = (selected.keyframes || []).find((k) => Math.abs(k.time - time) < 0.01)
+          const easingOptions = vRank >= 2 ? Object.keys(EASINGS) : ['linear', 'easeIn', 'easeOut', 'easeInOut']
           return (
             <>
               {selected.type === 'text' && (
@@ -227,6 +287,13 @@ export default function MotionStudio({ project, onChange }) {
                 <input type="color" value={selected.fill} onChange={(e) => patchObjects(objects.map((o) => (o.id === selectedId ? { ...o, fill: e.target.value } : o)))} />
               </label>
               <button className="harmony-btn" style={{ marginTop: 6 }} onClick={addKeyframe}>◔ Додати ключ на {time.toFixed(2)}с</button>
+              {vRank >= 1 && kfAtTime && (
+                <label className="gfx-field" style={{ marginTop: 6 }}>Крива прискорення (з цього ключа)
+                  <select className="cl-text-input" value={kfAtTime.easing || 'linear'} onChange={(e) => setKeyframeEasing(e.target.value)}>
+                    {easingOptions.map((k) => <option key={k} value={k}>{EASING_LABELS[k]}</option>)}
+                  </select>
+                </label>
+              )}
             </>
           )
         })()}
@@ -241,7 +308,7 @@ export default function MotionStudio({ project, onChange }) {
           <div className="practice-layers">
             <div className="cl-btn-row" style={{ alignItems: 'center' }}>
               <button className="cl-mini-btn" onClick={() => setPlaying((p) => !p)}>{playing ? '⏸' : '▶'}</button>
-              <input type="range" min="0" max={duration} step="0.01" value={time} onChange={(e) => { setPlaying(false); setTime(Number(e.target.value)) }} style={{ flex: 1 }} />
+              <input type="range" min="0" max={duration} step="0.01" value={time} onChange={(e) => { setPlaying(false); setTimeAndClearDrafts(Number(e.target.value)) }} style={{ flex: 1 }} />
               <span className="cl-tab-desc">{time.toFixed(2)}с / {duration}с</span>
             </div>
             {objects.map((o) => (

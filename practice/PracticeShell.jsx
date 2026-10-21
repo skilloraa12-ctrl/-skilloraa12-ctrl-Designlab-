@@ -23,7 +23,7 @@ import { runValidation } from './practiceValidators.js'
 // Чесна межа версій (v1/v2/v3): перемикач нижче й versionForLevel()
 // реально розблоковують вищі версії за рівнем студента (XP), і обраний
 // `version` зберігається в practiceProject та передається в кожен
-// редактор як проп. Чотири редактори вже реально читають `version`:
+// редактор як проп. Усі пʼять редакторів тепер реально читають `version`:
 // - Vector Studio (Graphic/Logo/Branding): v2 — градієнтна заливка,
 //   v3 — інструмент «Перо» (practice/editors/VectorStudio.jsx).
 // - Flow & Layout Studio (UX/UI/Web/App): v2 — вирівнювання-прилипання
@@ -38,11 +38,12 @@ import { runValidation } from './practiceValidators.js'
 //   лише перші 6; v3 — світлові пресети (Студія/День/Захід/Ніч), що й
 //   так існували як api.setLighting() без жодної кнопки в UI
 //   (practice/editors/ThreeDStudio.jsx).
-// Лишився 1 редактор (Motion), що поки що ІГНОРУЄ `version`/
-// `allowedTools` — v2/v3 там розблоковуються, та досі дають той самий
-// досвід, що й v1. pushSnapshot() у practiceProject.js — так само:
-// функція знімків готова, але жоден редактор ще не викликає її
-// кнопкою в UI.
+// - Motion Studio (Motion Design/Advertising Design): v2 — вибір кривої
+//   прискорення (Лінійна/Ease In/Ease Out/Ease In-Out) для кожного
+//   ключового кадру, v3 — додатково Bounce; саме ці криві ТЗ прямо
+//   називав нереалізованими в v1 (practice/editors/MotionStudio.jsx).
+// pushSnapshot() у practiceProject.js лишається осторонь: функція
+// знімків готова, але жоден редактор ще не викликає її кнопкою в UI.
 
 export default function PracticeShell({ module, task, practiceProject, onPatch, xp, level, EditorComponent, editorLabel }) {
   const history = useLabHistory(practiceProject.project, 100)
