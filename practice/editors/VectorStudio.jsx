@@ -1,26 +1,46 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { versionRank } from '../practiceProject.js'
 
 // Vector Studio (ТЗ 7.B) — v1-набір: Вибір/Прямокутник/Еліпс/Зірка/Лінія/
 // Текст/Піпетка, властивості заливки-контуру-позиції-тексту, шари,
 // палітра, один артборд. Контракт редактора: project/version/allowedTools/
 // onChange(nextProject) — див. коментар у PracticeShell.jsx.
 //
-// Свідомо НЕ реалізовано цього заходу (чесно, не приховано): редагування
-// вузлів (A), перо для довільних контурів (P), булеві операції/градієнт/
-// маска (v2), текст по контуру/символи (v3), декілька артбордів одночасно.
-// Властивості розміру редагуються числовими полями, а не ручками
-// resize-рамки — звужує функціонал, але лишається чесним v1-інструментом
-// без половинчастої, ненадійної реалізації перетягування за кут.
+// Реальна різниця версій (не лише розблокування за рівнем — ТЗ розділ 4):
+// v2 (рівень 4+) відкриває градієнтну заливку (2 кольори, лінійний
+// перехід) для прямокутника/еліпса/зірки. v3 (рівень 8+) додатково
+// відкриває інструмент «Перо» — довільний контур із прямих сегментів
+// (клік додає точку, Enter замикає фігуру, Esc скасовує), що вперше
+// реально задіює валідатор pathNodesMax із practiceValidators.js (він
+// був визначений раніше, але жоден інструмент досі не створював
+// обʼєктів type:'path').
+//
+// Свідомо НЕ реалізовано цього заходу (чесно, не приховано): криві
+// Безьє/ручки дотичних у пера (лише прямі сегменти), редагування вузлів
+// існуючого контуру (A), булеві операції, маски, текст по контуру/
+// символи, декілька артбордів одночасно. Властивості розміру
+// редагуються числовими полями, а не ручками resize-рамки — звужує
+// функціонал, але лишається чесним інструментом без половинчастої,
+// ненадійної реалізації перетягування за кут.
 
-const TOOLS = [
+const BASE_TOOLS = [
   { id: 'select', icon: '↖', label: 'Вибір', key: 'V' },
   { id: 'rect', icon: '▭', label: 'Прямокутник', key: 'R' },
   { id: 'ellipse', icon: '◯', label: 'Еліпс', key: 'E' },
   { id: 'star', icon: '★', label: 'Зірка', key: 'Shift+P' },
   { id: 'line', icon: '╱', label: 'Лінія', key: 'L' },
   { id: 'text', icon: 'T', label: 'Текст', key: 'T' },
-  { id: 'eyedropper', icon: '💧', label: 'Піпетка', key: 'I' },
 ]
+const PATH_TOOL = { id: 'path', icon: '✎', label: 'Перо', key: 'P' }
+const EYEDROPPER_TOOL = { id: 'eyedropper', icon: '💧', label: 'Піпетка', key: 'I' }
+
+function toolsForVersion(vRank) {
+  return vRank >= 2 ? [...BASE_TOOLS, PATH_TOOL, EYEDROPPER_TOOL] : [...BASE_TOOLS, EYEDROPPER_TOOL]
+}
+// Для пошуку іконки в шарах — незалежно від версії, щоб обʼєкт типу
+// 'path', створений на v3, не лишився без іконки, якщо студент пізніше
+// перемкнув версію назад на v1/v2.
+const ALL_TOOLS = [...BASE_TOOLS, PATH_TOOL, EYEDROPPER_TOOL]
 
 export const FONTS = [
   'Arial', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana', 'Tahoma',
@@ -55,30 +75,88 @@ function starPoints(cx, cy, w, h) {
   return pts.join(' ')
 }
 
+function fillOf(o) {
+  return o.fill2 ? `url(#grad-${o.id})` : o.fill
+}
+
+function pathBBox(o) {
+  const xs = (o.points || []).map((p) => p.x), ys = (o.points || []).map((p) => p.y)
+  const minX = Math.min(...xs, 0), maxX = Math.max(...xs, 0)
+  const minY = Math.min(...ys, 0), maxY = Math.max(...ys, 0)
+  return { x: o.x + minX, y: o.y + minY, w: maxX - minX, h: maxY - minY }
+}
+
 function ShapeEl({ o, selected, onDown }) {
   const common = { opacity: o.opacity, onPointerDown: (e) => onDown(e, o.id), style: { cursor: 'move' } }
   let node = null
-  if (o.type === 'rect') node = <rect x={o.x} y={o.y} width={o.w} height={o.h} fill={o.fill} stroke={o.stroke} strokeWidth={o.strokeWidth} {...common} />
-  else if (o.type === 'ellipse') node = <ellipse cx={o.x + o.w / 2} cy={o.y + o.h / 2} rx={o.w / 2} ry={o.h / 2} fill={o.fill} stroke={o.stroke} strokeWidth={o.strokeWidth} {...common} />
-  else if (o.type === 'star') node = <polygon points={starPoints(o.x + o.w / 2, o.y + o.h / 2, o.w, o.h)} fill={o.fill} {...common} />
+  if (o.type === 'rect') node = (
+    <>
+      {o.fill2 && <defs><linearGradient id={`grad-${o.id}`} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={o.fill} /><stop offset="100%" stopColor={o.fill2} /></linearGradient></defs>}
+      <rect x={o.x} y={o.y} width={o.w} height={o.h} fill={fillOf(o)} stroke={o.stroke} strokeWidth={o.strokeWidth} {...common} />
+    </>
+  )
+  else if (o.type === 'ellipse') node = (
+    <>
+      {o.fill2 && <defs><linearGradient id={`grad-${o.id}`} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={o.fill} /><stop offset="100%" stopColor={o.fill2} /></linearGradient></defs>}
+      <ellipse cx={o.x + o.w / 2} cy={o.y + o.h / 2} rx={o.w / 2} ry={o.h / 2} fill={fillOf(o)} stroke={o.stroke} strokeWidth={o.strokeWidth} {...common} />
+    </>
+  )
+  else if (o.type === 'star') node = (
+    <>
+      {o.fill2 && <defs><linearGradient id={`grad-${o.id}`} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={o.fill} /><stop offset="100%" stopColor={o.fill2} /></linearGradient></defs>}
+      <polygon points={starPoints(o.x + o.w / 2, o.y + o.h / 2, o.w, o.h)} fill={fillOf(o)} {...common} />
+    </>
+  )
   else if (o.type === 'line') node = <line x1={o.x} y1={o.y} x2={o.x + o.w} y2={o.y + o.h} stroke={o.stroke} strokeWidth={o.strokeWidth} strokeLinecap="round" {...common} />
   else if (o.type === 'text') node = <text x={o.x} y={o.y + o.fontSize} fontFamily={o.fontFamily} fontSize={o.fontSize} fill={o.fill} {...common}>{o.text}</text>
+  else if (o.type === 'path') node = <polygon points={(o.points || []).map((p) => `${o.x + p.x},${o.y + p.y}`).join(' ')} fill={o.fill} stroke={o.stroke} strokeWidth={o.strokeWidth} {...common} />
   if (!selected) return node
-  const b = { x: o.x - 4, y: o.y - 4, w: (o.w || 0) + 8, h: (o.type === 'line' ? Math.abs(o.h) : o.h || 0) + 8 }
+  const b = o.type === 'path'
+    ? (() => { const bb = pathBBox(o); return { x: bb.x - 4, y: bb.y - 4, w: bb.w + 8, h: bb.h + 8 } })()
+    : { x: o.x - 4, y: o.y - 4, w: (o.w || 0) + 8, h: (o.type === 'line' ? Math.abs(o.h) : o.h || 0) + 8 }
   return <g>{node}<rect x={b.x} y={o.type === 'line' ? Math.min(o.y, o.y + o.h) - 4 : b.y} width={b.w} height={b.h} fill="none" stroke="#F59E0B" strokeDasharray="4 3" pointerEvents="none" /></g>
 }
 
-export default function VectorStudio({ project, onChange }) {
+export default function VectorStudio({ project, version, onChange }) {
   const ab = project.artboards[0]
+  const vRank = versionRank(version || 'v1')
+  const TOOLS = toolsForVersion(vRank)
   const [tool, setTool] = useState('select')
   const [selectedId, setSelectedId] = useState(null)
   const [bottomTab, setBottomTab] = useState('layers')
   const svgRef = useRef(null)
   const dragRef = useRef(null)
   const [guideHint, setGuideHint] = useState(null)
+  const [drawingPoints, setDrawingPoints] = useState([])
 
   const selected = project.objects.find((o) => o.id === selectedId) || null
   const centerX = ab.w / 2, centerY = ab.h / 2
+
+  function finishPath() {
+    if (drawingPoints.length < 3) { setDrawingPoints([]); return }
+    const xs = drawingPoints.map((p) => p.x), ys = drawingPoints.map((p) => p.y)
+    const minX = Math.min(...xs), minY = Math.min(...ys)
+    const obj = {
+      id: uid(), type: 'path', x: minX, y: minY, rotation: 0, opacity: 1, guideAligned: false,
+      points: drawingPoints.map((p) => ({ x: p.x - minX, y: p.y - minY })),
+      fill: '#2E6DFF', stroke: 'none', strokeWidth: 0,
+    }
+    patchObjects([...project.objects, obj])
+    setSelectedId(obj.id)
+    setDrawingPoints([])
+    setTool('select')
+  }
+
+  useEffect(() => {
+    if (tool !== 'path') return
+    function onKeyDown(e) {
+      if (e.key === 'Enter') { e.preventDefault(); finishPath() }
+      else if (e.key === 'Escape') { setDrawingPoints([]) }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tool, drawingPoints])
 
   function patchObjects(next) { onChange({ ...project, objects: next }) }
   function updateSelected(patch) { patchObjects(project.objects.map((o) => (o.id === selectedId ? { ...o, ...patch } : o))) }
@@ -96,6 +174,10 @@ export default function VectorStudio({ project, onChange }) {
       if (selected) return
       return
     }
+    if (tool === 'path') {
+      setDrawingPoints((pts) => [...pts, { x: Math.round(p.x), y: Math.round(p.y) }])
+      return
+    }
     const obj = makeObject(tool, p.x - 45, p.y - 35)
     patchObjects([...project.objects, obj])
     setSelectedId(obj.id)
@@ -108,7 +190,7 @@ export default function VectorStudio({ project, onChange }) {
     // цю фігуру": пропускаємо її далі до canvasClick, щоб нова фігура
     // справді зʼявилась там, де клікнули (напр. фігури внакладку для
     // прийому негативного простору), а не ігнорувалась мовчки.
-    if (['rect', 'ellipse', 'star', 'line', 'text'].includes(tool)) return
+    if (['rect', 'ellipse', 'star', 'line', 'text', 'path'].includes(tool)) return
     e.stopPropagation()
     if (tool === 'eyedropper') {
       const src = project.objects.find((o) => o.id === id)
@@ -217,7 +299,12 @@ export default function VectorStudio({ project, onChange }) {
         <button className="practice-tool-btn" title="Видалити (Del)" onClick={deleteSelected} aria-label="Видалити">🗑</button>
       </div>
 
-      <div className="practice-canvas">
+      <div className="practice-canvas" style={{ position: 'relative' }}>
+        {tool === 'path' && (
+          <p className="cl-tab-desc" style={{ position: 'absolute', top: 8, left: 8, zIndex: 5, background: 'var(--surface)', padding: '4px 8px', borderRadius: 6, margin: 0 }}>
+            Клікай, щоб додати точки контуру ({drawingPoints.length}). Enter — замкнути (мін. 3 точки), Esc — скасувати.
+          </p>
+        )}
         <svg
           ref={svgRef}
           viewBox={`0 0 ${ab.w} ${ab.h}`}
@@ -229,6 +316,12 @@ export default function VectorStudio({ project, onChange }) {
           <line x1={0} y1={centerY} x2={ab.w} y2={centerY} className="vs-guide" />
           {project.objects.map((o) => <ShapeEl key={o.id} o={o} selected={o.id === selectedId} onDown={onShapeDown} />)}
           {guideHint && <circle cx={guideHint.x} cy={guideHint.y} r={3} fill="#F59E0B" />}
+          {drawingPoints.length > 0 && (
+            <g pointerEvents="none">
+              <polyline points={drawingPoints.map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#F59E0B" strokeWidth={2} strokeDasharray="4 3" />
+              {drawingPoints.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={4} fill="#F59E0B" />)}
+            </g>
+          )}
         </svg>
       </div>
 
@@ -256,16 +349,30 @@ export default function VectorStudio({ project, onChange }) {
               <label className="gfx-num">X<input type="number" value={Math.round(selected.x)} onChange={(e) => updateSelected({ x: Number(e.target.value) })} /></label>
               <label className="gfx-num">Y<input type="number" value={Math.round(selected.y)} onChange={(e) => updateSelected({ y: Number(e.target.value) })} /></label>
             </div>
-            {selected.type !== 'line' && (
+            {selected.type !== 'line' && selected.type !== 'path' && (
               <div className="gfx-row">
                 <label className="gfx-num">W<input type="number" value={Math.round(selected.w)} onChange={(e) => updateSelected({ w: Math.max(4, Number(e.target.value)) })} /></label>
                 <label className="gfx-num">H<input type="number" value={Math.round(selected.h)} onChange={(e) => updateSelected({ h: Math.max(4, Number(e.target.value)) })} /></label>
               </div>
             )}
+            {selected.type === 'path' && <p className="cl-tab-desc">Контур із {selected.points.length} точок — розмір задають самі точки.</p>}
             {selected.type !== 'line' && selected.type !== 'text' && (
               <label className="gfx-field">Заливка
                 <input type="color" value={selected.fill} onChange={(e) => updateSelected({ fill: e.target.value })} />
               </label>
+            )}
+            {vRank >= 1 && ['rect', 'ellipse', 'star'].includes(selected.type) && (
+              <>
+                <label className="gfx-field" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <input type="checkbox" checked={!!selected.fill2} onChange={(e) => updateSelected({ fill2: e.target.checked ? '#FFFFFF' : null })} />
+                  Градієнт (v2)
+                </label>
+                {selected.fill2 && (
+                  <label className="gfx-field">Другий колір градієнта
+                    <input type="color" value={selected.fill2} onChange={(e) => updateSelected({ fill2: e.target.value })} />
+                  </label>
+                )}
+              </>
             )}
             {selected.type === 'text' && (
               <label className="gfx-field">Колір тексту
@@ -296,7 +403,7 @@ export default function VectorStudio({ project, onChange }) {
             {project.objects.map((o) => (
               <div key={o.id} className={'ux-list-row' + (o.id === selectedId ? ' active' : '')}>
                 <button className="cl-mini-btn" style={{ flex: 1, textAlign: 'left' }} onClick={() => setSelectedId(o.id)}>
-                  {TOOLS.find((t) => t.id === o.type)?.icon} {o.type === 'text' ? o.text : o.type}
+                  {ALL_TOOLS.find((t) => t.id === o.type)?.icon} {o.type === 'text' ? o.text : o.type}
                 </button>
                 <button className="cl-mini-btn" onClick={() => reorder(o.id, 1)}>↑</button>
                 <button className="cl-mini-btn" onClick={() => reorder(o.id, -1)}>↓</button>
