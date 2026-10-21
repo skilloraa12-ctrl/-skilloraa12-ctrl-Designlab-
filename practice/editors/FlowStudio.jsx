@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { versionRank } from '../practiceProject.js'
 
 // Flow & Layout Studio (ТЗ 7.C) — v1-набір для UX/UI/Web/App: екрани
 // (Frame) на спільному нескінченному полотні, прямокутники/текст/
@@ -6,12 +7,24 @@ import { useRef, useState } from 'react'
 // Б», що й перевіряється валідаторами screenCount/hasLink/
 // allScreensReachable (реальна перевірка досяжності графом, не фейкова).
 //
+// Реальна різниця версій (ТЗ розділ 4): v2 (рівень 4+) відкриває
+// вирівнювання-прилипання (snap) до центру й країв екрана під час
+// перетягування обʼєктів — досі перетягування не мало жодного
+// снепінгу. v3 (рівень 8+) відкриває «▶ Переглянути прототип» —
+// режим прогляду, що виконує обіцянку з попереднього дисклеймера
+// («режим прототипу з клікабельним переглядом»): показує екрани по
+// одному на весь канвас, клік будь-де на екрані переходить до
+// першого звʼязку з нього (links — усе ще рівня «екран → екран», не
+// прив'язані до конкретного обʼєкта/кнопки, тож це огляд структури
+// переходів, а не повноцінна інтерактивна симуляція кліків по
+// кнопках — чесно позначено як спрощення).
+//
 // Свідомо НЕ реалізовано цього заходу: Auto layout, сітки колонок 4/8/
-// 12, constraints (прив'язка до країв), режим прототипу з клікабельним
-// переглядом усередині полотна, перемикач адаптиву Mobile/Tablet/
-// Desktop для ОДНОГО екрана (тут кожен розмір — окремий Frame, що теж
-// чесно покриває "кілька екранів різних пристроїв", просто без
-// автоматичної синхронізації вмісту між ними).
+// 12, constraints (прив'язка до країв), посилання на конкретний
+// обʼєкт як тригер переходу (лише рівень екрана), перемикач адаптиву
+// Mobile/Tablet/Desktop для ОДНОГО екрана (тут кожен розмір — окремий
+// Frame, що теж чесно покриває "кілька екранів різних пристроїв",
+// просто без автоматичної синхронізації вмісту між ними).
 
 const FRAME_PRESETS = [
   { id: 'mobile', label: 'Mobile 375×812', w: 375, h: 812 },
@@ -67,12 +80,17 @@ function ComponentNode({ o, selected, onDown }) {
   )
 }
 
-export default function FlowStudio({ project, onChange }) {
+const SNAP = 8
+
+export default function FlowStudio({ project, version, onChange }) {
+  const vRank = versionRank(version || 'v1')
   const [tool, setTool] = useState('select')
   const [selectedId, setSelectedId] = useState(null)
   const [bottomTab, setBottomTab] = useState('screens')
   const [compPick, setCompPick] = useState('button')
   const [linkFrom, setLinkFrom] = useState(null)
+  const [guideHint, setGuideHint] = useState(null)
+  const [previewFrameId, setPreviewFrameId] = useState(null)
   const svgRef = useRef(null)
   const dragRef = useRef(null)
 
@@ -88,6 +106,11 @@ export default function FlowStudio({ project, onChange }) {
 
   const selectedObj = objects.find((o) => o.id === selectedId) || null
   const selectedFrame = frames.find((f) => f.id === selectedId) || null
+
+  useEffect(() => {
+    if (previewFrameId && !frames.some((f) => f.id === previewFrameId)) setPreviewFrameId(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frames, previewFrameId])
 
   function patch(nextObjects, nextFrames) {
     onChange({ ...project, objects: nextObjects ?? objects, frames: nextFrames ?? frames })
@@ -171,12 +194,35 @@ export default function FlowStudio({ project, onChange }) {
     if (!d) return
     const dx = (e.clientX - d.startX) * d.scale
     const dy = (e.clientY - d.startY) * d.scale
-    const nx = Math.round(d.ox + dx), ny = Math.round(d.oy + dy)
-    if (d.isFrame) patch(undefined, frames.map((f) => (f.id === d.id ? { ...f, x: nx, y: ny } : f)))
-    else patch(objects.map((o) => (o.id === d.id ? { ...o, x: nx, y: ny } : o)))
+    let nx = Math.round(d.ox + dx), ny = Math.round(d.oy + dy)
+    if (d.isFrame) {
+      patch(undefined, frames.map((f) => (f.id === d.id ? { ...f, x: nx, y: ny } : f)))
+      return
+    }
+    // v2: вирівнювання-прилипання до центру й країв рідного екрана —
+    // лише для обʼєктів (не для самих екранів, у яких немає "батька").
+    if (vRank >= 1) {
+      const obj = objects.find((o) => o.id === d.id)
+      const frame = frames.find((f) => f.id === obj?.frameId)
+      if (frame) {
+        const w = obj.w || 0, h = obj.h || 0
+        const objCenterX = nx + w / 2, objCenterY = ny + h / 2
+        const frameCenterX = frame.x + frame.w / 2, frameCenterY = frame.y + frame.h / 2
+        let aligned = false
+        if (Math.abs(objCenterX - frameCenterX) < SNAP) { nx = Math.round(frameCenterX - w / 2); aligned = true }
+        if (Math.abs(objCenterY - frameCenterY) < SNAP) { ny = Math.round(frameCenterY - h / 2); aligned = true }
+        if (Math.abs(nx - frame.x) < SNAP) { nx = frame.x; aligned = true }
+        if (Math.abs(ny - frame.y) < SNAP) { ny = frame.y; aligned = true }
+        if (Math.abs(nx + w - (frame.x + frame.w)) < SNAP) { nx = frame.x + frame.w - w; aligned = true }
+        if (Math.abs(ny + h - (frame.y + frame.h)) < SNAP) { ny = frame.y + frame.h - h; aligned = true }
+        setGuideHint(aligned ? { x: nx + w / 2, y: ny + h / 2 } : null)
+      }
+    }
+    patch(objects.map((o) => (o.id === d.id ? { ...o, x: nx, y: ny } : o)))
   }
   function onUp() {
     dragRef.current = null
+    setGuideHint(null)
     window.removeEventListener('pointermove', onMove)
     window.removeEventListener('pointerup', onUp)
   }
@@ -206,9 +252,44 @@ export default function FlowStudio({ project, onChange }) {
         <button className={'practice-tool-btn' + (tool === 'link' ? ' active' : '')} title="Зв’язок (Shift+L)" onClick={() => { setTool('link'); setLinkFrom(null) }} aria-label="Зв’язок">↗</button>
         <div className="practice-tool-sep" />
         <button className="practice-tool-btn" title="Видалити" onClick={deleteSelected} aria-label="Видалити">🗑</button>
+        {vRank >= 2 && frames.length > 0 && (
+          <>
+            <div className="practice-tool-sep" />
+            <button className="practice-tool-btn" title="Переглянути прототип (v3)" onClick={() => setPreviewFrameId(frames[0].id)} aria-label="Переглянути прототип">▶</button>
+          </>
+        )}
       </div>
 
-      <div className="practice-canvas">
+      <div className="practice-canvas" style={{ position: 'relative' }}>
+        {previewFrameId && (() => {
+          const f = frames.find((x) => x.id === previewFrameId)
+          if (!f) return null
+          const outgoing = links.find((l) => l.from === previewFrameId)
+          return (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: '#17171A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', top: 10, left: 10, right: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="cl-tab-desc" style={{ color: '#F5F4F0' }}>{f.name}{!outgoing && ' · кінцевий екран (переходу немає)'}</span>
+                <button className="cl-mini-btn" onClick={() => setPreviewFrameId(null)}>✕ Закрити перегляд</button>
+              </div>
+              <svg
+                className="flow-preview-svg"
+                viewBox={`${f.x} ${f.y} ${f.w} ${f.h}`}
+                style={{ maxWidth: '90%', maxHeight: '80%', background: '#fff', cursor: outgoing ? 'pointer' : 'default', boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}
+                onClick={() => outgoing && setPreviewFrameId(outgoing.to)}
+              >
+                {objects.filter((o) => o.frameId === previewFrameId).map((o) => {
+                  if (o.type === 'component') return <ComponentNode key={o.id} o={o} selected={false} onDown={() => {}} />
+                  if (o.type === 'rect') return <rect key={o.id} x={o.x} y={o.y} width={o.w} height={o.h} fill={o.fill} />
+                  if (o.type === 'text') return <text key={o.id} x={o.x} y={o.y + o.fontSize} fontFamily={o.fontFamily} fontSize={o.fontSize} fill={o.fill}>{o.text}</text>
+                  return null
+                })}
+              </svg>
+              <p className="cl-tab-desc" style={{ color: '#9b9a9f', marginTop: 8 }}>
+                {outgoing ? 'Клікни будь-де на екрані, щоб перейти далі.' : 'У цього екрана ще немає вихідного зв’язку.'}
+              </p>
+            </div>
+          )
+        })()}
         <svg ref={svgRef} viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} className="vector-studio-svg" style={{ background: '#2a2756' }} onPointerDown={canvasClick}>
           {links.map((l) => {
             const a = frameCenter(l.from), b = frameCenter(l.to)
@@ -229,6 +310,7 @@ export default function FlowStudio({ project, onChange }) {
             if (o.type === 'text') return <text key={o.id} x={o.x} y={o.y + o.fontSize} fontFamily={o.fontFamily} fontSize={o.fontSize} fill={o.fill} onPointerDown={(e) => onNodeDown(e, o.id)} style={{ cursor: 'move' }}>{o.text}</text>
             return null
           })}
+          {guideHint && <circle cx={guideHint.x} cy={guideHint.y} r={3} fill="#F59E0B" />}
         </svg>
       </div>
 

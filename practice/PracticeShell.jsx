@@ -23,10 +23,13 @@ import { runValidation } from './practiceValidators.js'
 // Чесна межа версій (v1/v2/v3): перемикач нижче й versionForLevel()
 // реально розблоковують вищі версії за рівнем студента (XP), і обраний
 // `version` зберігається в practiceProject та передається в кожен
-// редактор як проп. Vector Studio (для Graphic/Logo/Branding) — перший
-// редактор, що реально читає `version`: v2 відкриває градієнтну
-// заливку, v3 — інструмент «Перо» (practice/editors/VectorStudio.jsx).
-// Решта 4 редакторів (Flow/Game Board/3D/Motion) поки що ІГНОРУЮТЬ
+// редактор як проп. Два редактори вже реально читають `version`:
+// - Vector Studio (Graphic/Logo/Branding): v2 — градієнтна заливка,
+//   v3 — інструмент «Перо» (practice/editors/VectorStudio.jsx).
+// - Flow & Layout Studio (UX/UI/Web/App): v2 — вирівнювання-прилипання
+//   обʼєктів до центру/країв екрана, v3 — «▶ Переглянути прототип»
+//   (practice/editors/FlowStudio.jsx).
+// Решта 3 редакторів (Game Board/3D/Motion) поки що ІГНОРУЮТЬ
 // `version`/`allowedTools` — v2/v3 там розблоковуються, та досі дають
 // той самий досвід, що й v1. pushSnapshot() у practiceProject.js —
 // так само: функція знімків готова, але жоден редактор ще не викликає
