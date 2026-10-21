@@ -1831,6 +1831,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .practice-crumbs a { color: var(--muted); }
 .practice-crumb-current { color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
 .practice-spacer { flex: 1; }
+.practice-topbar-controls { display: flex; align-items: center; gap: 8px; }
 .practice-version-wrap { position: relative; }
 .practice-version-menu {
   position: absolute; top: 100%; right: 0; margin-top: 4px; z-index: 20;
@@ -1901,7 +1902,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 }
 @media (max-width: 767px) {
   .practice-shell { height: auto; }
-  .practice-body, .practice-bottom { display: none; }
+  .practice-body, .practice-bottom, .practice-topbar-controls { display: none; }
   .practice-shell::after {
     content: "Для практики відкрийте урок на комп’ютері або планшеті.";
     display: block; padding: 32px 20px; text-align: center; color: var(--muted);

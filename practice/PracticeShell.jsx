@@ -128,35 +128,42 @@ export default function PracticeShell({ module, task, practiceProject, onPatch, 
           <span className="practice-crumb-current">{module.title}</span>
         </div>
         <div className="practice-spacer" />
-        <div className="practice-version-wrap">
-          <button className="cl-mini-btn" onClick={() => setVersionMenuOpen((v) => !v)}>
-            {VERSIONS.find((v) => v.id === version)?.label} ({version}) ▾
+        {/* На мобільних (<768px) .practice-body/.practice-bottom ховаються
+            честоvо заглушкою «відкрийте на більшому екрані» — ці елементи
+            керування редактором (версія/undo/redo/збереження/XP) нічого не
+            редагують без видимого редактора під ними, тож теж ховаємо їх
+            класом .practice-topbar-controls, щоб не показувати нефункціональний UI. */}
+        <div className="practice-topbar-controls">
+          <div className="practice-version-wrap">
+            <button className="cl-mini-btn" onClick={() => setVersionMenuOpen((v) => !v)}>
+              {VERSIONS.find((v) => v.id === version)?.label} ({version}) ▾
+            </button>
+            {versionMenuOpen && (
+              <div className="practice-version-menu">
+                {VERSIONS.map((v) => {
+                  const locked = versionRank(v.id) > versionRank(maxVersion)
+                  return (
+                    <button
+                      key={v.id}
+                      className={'practice-version-item' + (v.id === version ? ' active' : '') + (locked ? ' locked' : '')}
+                      disabled={locked}
+                      onClick={() => changeVersion(v.id)}
+                      title={locked ? `Відкриється на рівні ${v.minLevel}` : ''}
+                    >
+                      {v.label} · {v.id}{locked && <span className="practice-lock">🔒 рівень {v.minLevel}</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+          <button className="cl-mini-btn" disabled={!history.canUndo} onClick={history.undo} title="Ctrl+Z">↶</button>
+          <button className="cl-mini-btn" disabled={!history.canRedo} onClick={history.redo} title="Ctrl+Shift+Z">↷</button>
+          <button className="cl-mini-btn" onClick={saveNow} title="Ctrl+S">
+            {saveState === 'saved' ? '✓ Збережено' : saveState === 'saving' ? '⏳ Збереження…' : '● Є зміни'}
           </button>
-          {versionMenuOpen && (
-            <div className="practice-version-menu">
-              {VERSIONS.map((v) => {
-                const locked = versionRank(v.id) > versionRank(maxVersion)
-                return (
-                  <button
-                    key={v.id}
-                    className={'practice-version-item' + (v.id === version ? ' active' : '') + (locked ? ' locked' : '')}
-                    disabled={locked}
-                    onClick={() => changeVersion(v.id)}
-                    title={locked ? `Відкриється на рівні ${v.minLevel}` : ''}
-                  >
-                    {v.label} · {v.id}{locked && <span className="practice-lock">🔒 рівень {v.minLevel}</span>}
-                  </button>
-                )
-              })}
-            </div>
-          )}
+          <span className="gfx-xp-pill">XP {xp} · Рівень {level}</span>
         </div>
-        <button className="cl-mini-btn" disabled={!history.canUndo} onClick={history.undo} title="Ctrl+Z">↶</button>
-        <button className="cl-mini-btn" disabled={!history.canRedo} onClick={history.redo} title="Ctrl+Shift+Z">↷</button>
-        <button className="cl-mini-btn" onClick={saveNow} title="Ctrl+S">
-          {saveState === 'saved' ? '✓ Збережено' : saveState === 'saving' ? '⏳ Збереження…' : '● Є зміни'}
-        </button>
-        <span className="gfx-xp-pill">XP {xp} · Рівень {level}</span>
       </div>
 
       <div className="practice-body">
