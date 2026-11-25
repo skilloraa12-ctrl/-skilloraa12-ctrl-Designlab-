@@ -8,7 +8,7 @@ import { useLabHistory } from './labs/useLabHistory.js'
 import LabToast from './labs/LabToast.jsx'
 import LabInfoTip from './labs/LabInfoTip.jsx'
 import NotFound from './NotFound.jsx'
-import { createAnimScene, PRIMITIVES, LIGHT_KINDS, LIGHT_PRESETS, CAMERA_VIEWS } from './labs/threeAnimScene.js'
+import { createAnimScene, PRIMITIVES, CUSTOM_SHAPE, DEFAULT_PROFILE, pointKey, LIGHT_KINDS, LIGHT_PRESETS, CAMERA_VIEWS } from './labs/threeAnimScene.js'
 import { createEmptyAnimScene, makeAnimObject, makeKeyframeFromObject, LIGHT_TYPES } from './threeDProject.js'
 
 // Повноцінний 3D-редактор з анімацією для 3D Design Studio — окремий від
@@ -22,6 +22,7 @@ import { createEmptyAnimScene, makeAnimObject, makeKeyframeFromObject, LIGHT_TYP
 
 const TABS = [
   { key: 'transform', icon: '🔄', label: 'Трансформація' },
+  { key: 'shape', icon: '✏️', label: 'Форма' },
   { key: 'material', icon: '🎨', label: 'Матеріал/Світло' },
   { key: 'lighting', icon: '💡', label: 'Освітлення' },
   { key: 'camera', icon: '🎥', label: 'Камера' },
@@ -42,6 +43,8 @@ const EASINGS = {
 }
 
 const SNAP_SIZE = 0.25
+const SHAPES = [...PRIMITIVES, CUSTOM_SHAPE]
+const PROFILE_RANGE = 1.5
 
 let idCounter = 0
 function nextId() {
@@ -150,7 +153,7 @@ function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScru
     <div className="tl-tracks">
       {objects.length === 0 && <p className="cl-tab-desc" style={{ margin: 0 }}>Додай обʼєкт зліва, щоб побачити тут його доріжку.</p>}
       {objects.map((o) => {
-        const meta = PRIMITIVES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
+        const meta = SHAPES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
         return (
           <div key={o.id} className="tl-track-row">
             <button type="button" className={'tl-track-label' + (o.id === selectedId ? ' active' : '')} onClick={() => onSelect(o.id)} title={o.name || o.type}>
@@ -199,7 +202,7 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDelete, onDuplic
 
       <div className="cl-section-title">Додати фігуру</div>
       <div className="cl-btn-row">
-        {PRIMITIVES.map((p) => (
+        {SHAPES.map((p) => (
           <button key={p.type} className="harmony-btn" onClick={() => onAdd(p.type)}>{p.icon} {p.label}</button>
         ))}
       </div>
@@ -216,7 +219,7 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDelete, onDuplic
       ) : (
         <div className="l3d-object-list">
           {objects.map((o, i) => {
-            const meta = PRIMITIVES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
+            const meta = SHAPES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
             return (
               <div key={o.id} className={'l3d-object-row' + (o.id === selectedId ? ' active' : '')}>
                 <button className="l3d-object-select" onClick={() => onSelect(o.id)}>
@@ -289,6 +292,194 @@ function TransformTab({ selected, time, onEdit, onAddKeyframe, onDeleteKeyframe,
       <AxisRow label="Rotation" values={pose.rotation} onChange={(axis, v) => onEdit('rotation', axis, v)} min={0} max={360} step={1} />
       <div className="cl-section-title">Scale</div>
       <AxisRow label="Scale" values={pose.scale} onChange={(axis, v) => onEdit('scale', axis, v)} min={0.1} max={3} step={0.05} />
+    </div>
+  )
+}
+
+function distToSegment(p, a, b) {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const len2 = dx * dx + dy * dy || 1e-9
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2))
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
+}
+
+// 2D-редактор контуру «Своєї форми»: тягни точки, клік по порожньому
+// місцю — нова точка (вставляється в найближчий відрізок), подвійний клік
+// по точці — видалити. Для «обертання» ліва половина — лише дзеркальне
+// превʼю: профіль задається праворуч від осі.
+function ProfileEditor({ mode, points, onChange }) {
+  const svgRef = useRef(null)
+  const dragIdx = useRef(null)
+  const closed = mode === 'extrude'
+  const R = PROFILE_RANGE
+
+  function toLocal(e) {
+    const rect = svgRef.current.getBoundingClientRect()
+    let x = ((e.clientX - rect.left) / rect.width) * 2 * R - R
+    let y = -(((e.clientY - rect.top) / rect.height) * 2 * R - R)
+    const r = (v) => Math.round(Math.max(-R, Math.min(R, v)) * 100) / 100
+    x = r(x)
+    y = r(y)
+    if (mode === 'lathe') x = Math.max(0, x)
+    return { x, y }
+  }
+  function handleMove(e) {
+    if (dragIdx.current === null) return
+    const p = toLocal(e)
+    onChange(points.map((pt, i) => (i === dragIdx.current ? p : pt)))
+  }
+  function handleUp() {
+    dragIdx.current = null
+  }
+  function handleBgClick(e) {
+    if (e.target.dataset.handle) return
+    const p = toLocal(e)
+    const segCount = closed ? points.length : points.length - 1
+    let best = 0
+    let bestD = Infinity
+    for (let i = 0; i < segCount; i++) {
+      const d = distToSegment(p, points[i], points[(i + 1) % points.length])
+      if (d < bestD) { bestD = d; best = i }
+    }
+    const next = [...points]
+    next.splice(best + 1, 0, p)
+    onChange(next)
+  }
+  const toSvg = (pt) => `${pt.x},${-pt.y}`
+  const path = points.map(toSvg).join(' ')
+  const mirror = points.map((pt) => `${-pt.x},${-pt.y}`).join(' ')
+  const grid = []
+  for (let v = -R; v <= R + 1e-6; v += 0.25) {
+    const major = Math.abs(v) < 1e-6
+    grid.push(<line key={'v' + v} x1={v} y1={-R} x2={v} y2={R} stroke={major ? '#6b6b80' : '#2c2c38'} strokeWidth={major ? 0.015 : 0.008} />)
+    grid.push(<line key={'h' + v} x1={-R} y1={v} x2={R} y2={v} stroke={major ? '#6b6b80' : '#2c2c38'} strokeWidth={major ? 0.015 : 0.008} />)
+  }
+  return (
+    <svg
+      ref={svgRef}
+      className="shape-profile-svg"
+      viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`}
+      onPointerMove={handleMove}
+      onPointerUp={handleUp}
+      onPointerLeave={handleUp}
+      onClick={handleBgClick}
+    >
+      <rect x={-R} y={-R} width={2 * R} height={2 * R} fill="#14141b" />
+      {grid}
+      {mode === 'lathe' && <rect x={-R} y={-R} width={R} height={2 * R} fill="rgba(0,0,0,0.35)" />}
+      {mode === 'lathe' && <polyline points={mirror} fill="none" stroke="#7d78ff" strokeWidth={0.02} strokeDasharray="0.06 0.05" opacity={0.6} />}
+      {closed
+        ? <polygon points={path} fill="rgba(125,120,255,0.25)" stroke="#9b97ff" strokeWidth={0.025} />
+        : <polyline points={path} fill="none" stroke="#9b97ff" strokeWidth={0.03} />}
+      {points.map((pt, i) => (
+        <circle
+          key={i}
+          data-handle="1"
+          cx={pt.x}
+          cy={-pt.y}
+          r={0.065}
+          fill={i === 0 ? '#ffd23f' : '#ffffff'}
+          stroke="#3E37E0"
+          strokeWidth={0.02}
+          style={{ cursor: 'grab' }}
+          onPointerDown={(e) => {
+            e.preventDefault()
+            dragIdx.current = i
+            svgRef.current.setPointerCapture?.(e.pointerId)
+          }}
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            if (points.length > 3) onChange(points.filter((_, j) => j !== i))
+          }}
+        >
+          <title>Точка {i + 1}: ({pt.x}; {pt.y}) — подвійний клік видаляє</title>
+        </circle>
+      ))}
+    </svg>
+  )
+}
+
+function ShapeTab({
+  selected, pointsVisible, onTogglePoints, selectedPointKey, pointBase, softRadius, onSoftRadius,
+  symmetry, onToggleSymmetry, onSetPointCoord, onResetShape, onSetProfile,
+}) {
+  if (!selected) return <p className="cl-tab-desc">Вибери фігуру зліва, щоб змінювати її форму.</p>
+  if (LIGHT_TYPES.includes(selected.type)) return <p className="cl-tab-desc">У світла немає форми — вибери фігуру.</p>
+  const edits = selected.vertexEdits || {}
+  const editedCount = Object.keys(edits).length
+  const profile = selected.type === 'custom' ? (selected.profile || DEFAULT_PROFILE) : null
+  const profilePoints = profile ? (profile.points?.[profile.mode] || DEFAULT_PROFILE.points[profile.mode]) : null
+  const d = selectedPointKey ? edits[selectedPointKey] : null
+  const cur = pointBase ? { x: pointBase.x + (d?.x || 0), y: pointBase.y + (d?.y || 0), z: pointBase.z + (d?.z || 0) } : null
+
+  function updateProfile(patch) {
+    const base = profile || DEFAULT_PROFILE
+    onSetProfile({ ...base, ...patch, points: { ...DEFAULT_PROFILE.points, ...base.points, ...(patch.points || {}) } })
+  }
+
+  return (
+    <div>
+      <p className="cl-tab-desc">Змінюй форму будь-якої фігури, перетягуючи її точки (вершини) прямо у вʼюпорті{profile ? ', або намалюй власний контур нижче' : ''}.</p>
+      <HelpBox>
+        <p><b>Точки у вʼюпорті:</b> кожна біла точка — вершина сітки. Затисни точку й тягни — вона рухається паралельно екрану, тож поверни камеру, щоб тягнути в потрібному напрямку (напр. ракурс «Спереду» — рух по X/Y, «Зверху» — по X/Z). Блакитні — вже зсунуті, жовта — обрана.</p>
+        <p><b>М'яке виділення</b> тягне разом із точкою сусідні в заданому радіусі з плавним затуханням — так ліпиться органічна форма замість гострого «шипа».</p>
+        <p><b>Симетрія X</b> дзеркально повторює зсув на протилежному боці фігури.</p>
+        {profile && <p><b>Своя форма:</b> у режимі «Обертання» контур обертається навколо вертикальної осі (ваза, келих, пішак), у режимі «Видавлювання» замкнений контур отримує товщину (зірка, буква, логотип).</p>}
+        <p>Форма не анімується ключовими кадрами — вона однакова на всьому таймлайні.</p>
+      </HelpBox>
+
+      {profile && (
+        <>
+          <div className="cl-section-title">Контур своєї форми</div>
+          <div className="cl-btn-row" style={{ marginBottom: 10 }}>
+            <button className={'cl-mini-btn' + (profile.mode === 'lathe' ? ' active' : '')} onClick={() => updateProfile({ mode: 'lathe' })}>🏺 Обертання</button>
+            <button className={'cl-mini-btn' + (profile.mode === 'extrude' ? ' active' : '')} onClick={() => updateProfile({ mode: 'extrude' })}>⭐ Видавлювання</button>
+          </div>
+          <ProfileEditor
+            mode={profile.mode}
+            points={profilePoints}
+            onChange={(pts) => updateProfile({ points: { [profile.mode]: pts } })}
+          />
+          <p className="cl-tab-desc" style={{ marginTop: 6 }}>Тягни точки · клік по порожньому місцю — додати точку · подвійний клік по точці — видалити ({profilePoints.length} точок).</p>
+          {profile.mode === 'extrude' && (
+            <div className="cl-editrow"><label>Товщина
+              <input type="range" min={0.05} max={2} step={0.05} value={profile.depth || 0.6} onChange={(e) => updateProfile({ depth: parseFloat(e.target.value) })} />
+              <span>{(profile.depth || 0.6).toFixed(2)}</span>
+            </label></div>
+          )}
+          <div className="cl-btn-row" style={{ marginBottom: 6 }}>
+            <button className="cl-mini-btn" onClick={() => updateProfile({ points: { [profile.mode]: DEFAULT_PROFILE.points[profile.mode] } })}>↺ Стандартний контур</button>
+          </div>
+          {editedCount > 0 && <p className="cl-tab-desc">⚠ Зміна контуру скидає ручні зсуви 3D-точок нижче.</p>}
+        </>
+      )}
+
+      <div className="cl-section-title">Точки у вʼюпорті</div>
+      <label className="cl-editrow" style={{ marginBottom: 8 }}>
+        <input type="checkbox" checked={pointsVisible} onChange={onTogglePoints} /> ✏️ Показати й редагувати точки
+      </label>
+      <label className="cl-editrow" style={{ marginBottom: 8 }}>
+        <input type="checkbox" checked={symmetry} onChange={onToggleSymmetry} /> 🪞 Симетрія по X
+      </label>
+      <div className="cl-editrow"><label>М'яке виділення (радіус)
+        <input type="range" min={0} max={1.5} step={0.05} value={softRadius} onChange={(e) => onSoftRadius(parseFloat(e.target.value))} />
+        <span>{softRadius === 0 ? 'вимк.' : softRadius.toFixed(2)}</span>
+      </label></div>
+
+      {cur ? (
+        <>
+          <div className="cl-section-title">Обрана точка</div>
+          <AxisRow label="Точка" values={cur} onChange={onSetPointCoord} min={-2} max={2} step={0.01} />
+        </>
+      ) : (
+        <p className="cl-tab-desc">Клікни точку у вʼюпорті, щоб обрати її та вводити координати точно.</p>
+      )}
+
+      <div className="cl-picker-top" style={{ marginTop: 12 }}>
+        <span className="gfx-status-pill">Змінено точок: {editedCount}</span>
+        <button className="cl-mini-btn" onClick={onResetShape} disabled={editedCount === 0}>↺ Скинути форму</button>
+      </div>
     </div>
   )
 }
@@ -450,6 +641,10 @@ export default function ThreeDAnimEditor() {
   const [recording, setRecording] = useState(false)
   const [snapEnabled, setSnapEnabled] = useState(false)
   const [hasClipboard, setHasClipboard] = useState(false)
+  const [pointsVisible, setPointsVisible] = useState(true)
+  const [selectedPointKey, setSelectedPointKey] = useState(null)
+  const [softRadius, setSoftRadius] = useState(0)
+  const [symmetry, setSymmetry] = useState(false)
 
   const hist = useLabHistory({ objects: anim0.objects, selectedId: anim0.objects[0]?.id ?? null })
   const [objects, setObjectsState] = useState(hist.value.objects)
@@ -470,6 +665,12 @@ export default function ThreeDAnimEditor() {
   const recorderRef = useRef(null)
   const recordingRef = useRef(false)
   const clipboardRef = useRef(null)
+  const editModeRef = useRef(false)
+  const pointDragRef = useRef(null)
+  const softRadiusRef = useRef(softRadius)
+  const symmetryRef = useRef(symmetry)
+  softRadiusRef.current = softRadius
+  symmetryRef.current = symmetry
 
   useEffect(() => { durationRef.current = duration }, [duration])
   useEffect(() => { fpsRef.current = fps }, [fps])
@@ -548,14 +749,29 @@ export default function ThreeDAnimEditor() {
     api.syncStructure(objectsRef.current, selectedIdRef.current)
 
     let rotating = false
+    let pointDragging = false
+    let suppressClick = false
     let lastX = 0
     let lastY = 0
 
     function handleClick(e) {
+      if (suppressClick) { suppressClick = false; return }
+      if (editModeRef.current && api.pickPoint(e.clientX, e.clientY)) return
       const id = api.pickAt(e.clientX, e.clientY)
       if (id) applySelected(id)
     }
     function handlePointerDown(e) {
+      if (editModeRef.current) {
+        // Режим точок: захоплення точки тягне її; обертання обʼєкта
+        // перетягуванням вимкнене, щоб жести не плутались.
+        const key = api.pickPoint(e.clientX, e.clientY)
+        if (key && startPointDragRef.current(key)) {
+          pointDragging = true
+          api.setControlsEnabled(false)
+          el.style.cursor = 'move'
+        }
+        return
+      }
       const id = api.pickAt(e.clientX, e.clientY)
       if (id && id === selectedIdRef.current) {
         rotating = true
@@ -566,6 +782,11 @@ export default function ThreeDAnimEditor() {
       }
     }
     function handlePointerMove(e) {
+      if (pointDragging) {
+        const delta = api.dragPointTo(e.clientX, e.clientY)
+        if (delta) applyPointDragRef.current(delta)
+        return
+      }
       if (!rotating) return
       const dx = e.clientX - lastX
       const dy = e.clientY - lastY
@@ -574,6 +795,16 @@ export default function ThreeDAnimEditor() {
       applyRotationDeltaRef.current(dx, dy, e.shiftKey)
     }
     function handlePointerUp() {
+      if (pointDragging) {
+        pointDragging = false
+        suppressClick = true
+        setTimeout(() => { suppressClick = false }, 0)
+        api.endPointDrag()
+        pointDragRef.current = null
+        api.setControlsEnabled(true)
+        el.style.cursor = 'grab'
+        return
+      }
       if (!rotating) return
       rotating = false
       api.setControlsEnabled(true)
@@ -615,6 +846,19 @@ export default function ThreeDAnimEditor() {
   }, [currentTime, objects])
 
   useEffect(() => { sceneApiRef.current?.setLighting(lighting) }, [lighting])
+
+  // Маркери точок обраної фігури — лише на вкладці «Форма».
+  const selectedForEdit = objects.find((o) => o.id === selectedId) || null
+  const editMode = tab === 'shape' && pointsVisible && !!selectedForEdit && !LIGHT_TYPES.includes(selectedForEdit.type)
+  editModeRef.current = editMode
+  useEffect(() => {
+    const api = sceneApiRef.current
+    if (!api) return
+    if (editMode) api.showPointHandles(selectedId, selectedForEdit?.vertexEdits, selectedPointKey)
+    else api.clearHandles()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editMode, objects, selectedId, selectedPointKey])
+  useEffect(() => { setSelectedPointKey(null) }, [selectedId])
 
   function setCameraView(viewKey) {
     setCameraViewState(viewKey)
@@ -666,6 +910,7 @@ export default function ThreeDAnimEditor() {
     const next = [...objectsRef.current, obj]
     applyObjects(next)
     applySelected(obj.id)
+    if (type === 'custom') setTab('shape')
     toastApi.show('✓ Додано')
   }
   function deleteObject(id) {
@@ -750,6 +995,102 @@ export default function ThreeDAnimEditor() {
   }
   const applyRotationDeltaRef = useRef(applyRotationDelta)
   applyRotationDeltaRef.current = applyRotationDelta
+
+  // ── Редагування форми по точках ──
+  function setVertexEdits(id, edits) {
+    applyObjects(objectsRef.current.map((o) => (o.id === id ? { ...o, vertexEdits: edits } : o)))
+  }
+  function mirrorKeyOf(p) {
+    return pointKey(-p.x, p.y, p.z)
+  }
+  // Додає зсув `delta` до точки `center` (+ сусідів у радіусі м'якого
+  // виділення з плавним затуханням) і, з симетрією, дзеркально по X.
+  function influence(points, out, center, delta) {
+    const r = softRadiusRef.current
+    for (const p of points) {
+      let w = 0
+      if (p.key === center.key) w = 1
+      else if (r > 0) {
+        const dist = Math.hypot(p.x - center.x, p.y - center.y, p.z - center.z)
+        if (dist < r) { const t = 1 - dist / r; w = t * t * (3 - 2 * t) }
+      }
+      if (w === 0) continue
+      const prev = out[p.key] || { x: 0, y: 0, z: 0 }
+      out[p.key] = { x: prev.x + delta.x * w, y: prev.y + delta.y * w, z: prev.z + delta.z * w }
+    }
+  }
+  function computeEdits(points, snapshot, center, delta) {
+    const out = { ...snapshot }
+    const mk = mirrorKeyOf(center)
+    const mirror = symmetryRef.current ? points.find((p) => p.key === mk) : null
+    let d = delta
+    if (mirror && mirror.key === center.key) d = { ...delta, x: 0 } // точка на площині симетрії лишається на ній
+    influence(points, out, center, d)
+    if (mirror && mirror.key !== center.key) influence(points, out, mirror, { x: -d.x, y: d.y, z: d.z })
+    for (const k of Object.keys(out)) {
+      const v = out[k]
+      if (Math.abs(v.x) < 1e-4 && Math.abs(v.y) < 1e-4 && Math.abs(v.z) < 1e-4) delete out[k]
+      else out[k] = { x: Math.round(v.x * 1e4) / 1e4, y: Math.round(v.y * 1e4) / 1e4, z: Math.round(v.z * 1e4) / 1e4 }
+    }
+    return out
+  }
+  function startPointDrag(key) {
+    const api = sceneApiRef.current
+    const id = selectedIdRef.current
+    const obj = objectsRef.current.find((o) => o.id === id)
+    if (!api || !obj) return false
+    const points = api.getPoints(id)
+    const center = points.find((p) => p.key === key)
+    if (!center) return false
+    const snapshot = { ...(obj.vertexEdits || {}) }
+    if (!api.beginPointDrag(id, key, snapshot)) return false
+    pointDragRef.current = { id, points, center, snapshot }
+    setSelectedPointKey(key)
+    return true
+  }
+  function applyPointDrag(delta) {
+    const drag = pointDragRef.current
+    if (!drag) return
+    let d = delta
+    if (snapEnabled) {
+      // Прив'язка: сама точка стає на сітку, а не зсув.
+      const base = drag.center
+      const prev = drag.snapshot[base.key] || { x: 0, y: 0, z: 0 }
+      const snap = (b, p, dv) => Math.round((b + p + dv) / SNAP_SIZE) * SNAP_SIZE - b - p
+      d = { x: snap(base.x, prev.x, delta.x), y: snap(base.y, prev.y, delta.y), z: snap(base.z, prev.z, delta.z) }
+    }
+    setVertexEdits(drag.id, computeEdits(drag.points, drag.snapshot, drag.center, d))
+  }
+  const startPointDragRef = useRef(startPointDrag)
+  startPointDragRef.current = startPointDrag
+  const applyPointDragRef = useRef(applyPointDrag)
+  applyPointDragRef.current = applyPointDrag
+
+  function setPointCoord(axis, value) {
+    const api = sceneApiRef.current
+    const id = selectedIdRef.current
+    const obj = objectsRef.current.find((o) => o.id === id)
+    if (!api || !obj || !selectedPointKey || Number.isNaN(value)) return
+    const points = api.getPoints(id)
+    const center = points.find((p) => p.key === selectedPointKey)
+    if (!center) return
+    const prev = obj.vertexEdits?.[center.key] || { x: 0, y: 0, z: 0 }
+    const delta = { x: 0, y: 0, z: 0 }
+    delta[axis] = value - (center[axis] + prev[axis])
+    setVertexEdits(id, computeEdits(points, { ...(obj.vertexEdits || {}) }, center, delta))
+  }
+  function resetShape() {
+    if (!selectedIdRef.current) return
+    setVertexEdits(selectedIdRef.current, {})
+    setSelectedPointKey(null)
+    toastApi.show('✓ Форму скинуто')
+  }
+  function setProfile(profile) {
+    const id = selectedIdRef.current
+    if (!id) return
+    setSelectedPointKey(null)
+    applyObjects(objectsRef.current.map((o) => (o.id === id ? { ...o, profile, vertexEdits: {} } : o)))
+  }
 
   function addKeyframeHere() {
     if (!selectedIdRef.current) return
@@ -965,6 +1306,8 @@ export default function ThreeDAnimEditor() {
         <LabInfoTip title="Клавіші та керування">
           Space — грати/пауза, Del — видалити, Ctrl+D — дублювати, ←/→ — крок кадру, Ctrl+C/V — копіювати/вставити кадр.
           <br /><br />
+          ✏️ Вкладка «Форма» — тягни точки (вершини) фігури прямо у вʼюпорті, щоб змінити її форму; «Своя форма» — малюєш контур по точках.
+          <br /><br />
           🔄 Перетягни обраний об'єкт прямо у вʼюпорті, щоб обертати його (горизонтально — вісь Y, вертикально — вісь X, Shift — нахил по Z). Перетягування будь-де інде обертає камеру.
         </LabInfoTip>
       </div>
@@ -976,7 +1319,9 @@ export default function ThreeDAnimEditor() {
 
         <div className="tl-editor-center">
           <div ref={containerRef} className="tl-editor-viewport" />
-          {selected && <p className="tl-rotate-hint">🔄 Перетягни «{selected.name || 'обраний об\'єкт'}» прямо тут, щоб обертати (Shift — нахил по Z)</p>}
+          {editMode ? (
+            <p className="tl-rotate-hint">✏️ Режим точок: тягни точку, щоб змінити форму. Тягни поза точками — обертай камеру, щоб рухати точку в іншій площині.</p>
+          ) : selected && <p className="tl-rotate-hint">🔄 Перетягни «{selected.name || 'обраний об\'єкт'}» прямо тут, щоб обертати (Shift — нахил по Z)</p>}
 
           <div className="tl-controls">
             <button className="cl-mini-btn" onClick={() => stepFrame(-1)} title="←">⏮</button>
@@ -1022,6 +1367,22 @@ export default function ThreeDAnimEditor() {
                 canPaste={hasClipboard}
                 snapEnabled={snapEnabled}
                 onToggleSnap={() => setSnapEnabled((v) => !v)}
+              />
+            )}
+            {tab === 'shape' && (
+              <ShapeTab
+                selected={selected}
+                pointsVisible={pointsVisible}
+                onTogglePoints={() => setPointsVisible((v) => !v)}
+                selectedPointKey={selectedPointKey}
+                pointBase={selected && selectedPointKey ? (sceneApiRef.current?.getPoints(selected.id).find((p) => p.key === selectedPointKey) || null) : null}
+                softRadius={softRadius}
+                onSoftRadius={setSoftRadius}
+                symmetry={symmetry}
+                onToggleSymmetry={() => setSymmetry((v) => !v)}
+                onSetPointCoord={setPointCoord}
+                onResetShape={resetShape}
+                onSetProfile={setProfile}
               />
             )}
             {tab === 'material' && <MaterialTab selected={selected} setMaterial={setMaterial} setLightProp={setLightProp} />}

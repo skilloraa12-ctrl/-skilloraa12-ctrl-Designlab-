@@ -37,6 +37,54 @@ const GEOMETRY_BUILDERS = {
 
 const LIGHT_TYPES = new Set(['pointLight', 'spotLight'])
 
+// «Своя форма»: обʼєкт, форму якого задає сам користувач точками контуру
+// (2D-профіль) — або видавлюванням полігона на глибину, або обертанням
+// профілю навколо вертикальної осі (як на гончарному крузі).
+export const CUSTOM_SHAPE = { type: 'custom', label: 'Своя форма', icon: '✏️' }
+
+export const DEFAULT_PROFILE = {
+  mode: 'lathe',
+  depth: 0.6,
+  points: {
+    lathe: [{ x: 0, y: -0.65 }, { x: 0.55, y: -0.65 }, { x: 0.35, y: -0.2 }, { x: 0.6, y: 0.3 }, { x: 0.3, y: 0.65 }, { x: 0, y: 0.65 }],
+    extrude: [{ x: 0, y: 0.7 }, { x: 0.2, y: 0.2 }, { x: 0.7, y: 0.15 }, { x: 0.3, y: -0.15 }, { x: 0.45, y: -0.65 }, { x: 0, y: -0.35 }, { x: -0.45, y: -0.65 }, { x: -0.3, y: -0.15 }, { x: -0.7, y: 0.15 }, { x: -0.2, y: 0.2 }],
+  },
+}
+
+function buildCustomGeometry(profile) {
+  const p = profile || DEFAULT_PROFILE
+  if (p.mode === 'extrude') {
+    const pts = p.points?.extrude || DEFAULT_PROFILE.points.extrude
+    const shape = new THREE.Shape(pts.map((v) => new THREE.Vector2(v.x, v.y)))
+    const depth = p.depth || 0.6
+    const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 })
+    geo.translate(0, 0, -depth / 2)
+    return geo
+  }
+  const pts = p.points?.lathe || DEFAULT_PROFILE.points.lathe
+  return new THREE.LatheGeometry(pts.map((v) => new THREE.Vector2(Math.max(0, v.x), v.y)), 48)
+}
+
+// Ключ точки = її початкова (до редагування) позиція, округлена до 0.001.
+// Усі вершини геометрії з однаковою позицією (шви сфери, ребра куба, де
+// кожна грань має власні вершини) зливаються в одну «точку», тож рух точки
+// ніколи не розриває поверхню. Нормалізує -0 → 0, щоб дзеркальний ключ
+// (симетрія по X) завжди збігався.
+function roundKey(v) {
+  const n = Math.round(v * 1000) / 1000
+  return (n === 0 ? 0 : n).toFixed(3)
+}
+export function pointKey(x, y, z) {
+  return `${roundKey(x)},${roundKey(y)},${roundKey(z)}`
+}
+
+function baseSignature(obj) {
+  return obj.type === 'custom' ? `custom:${JSON.stringify(obj.profile || null)}` : obj.type
+}
+function geometrySignature(obj) {
+  return `${baseSignature(obj)}|${JSON.stringify(obj.vertexEdits || null)}`
+}
+
 export const PRIMITIVES = [
   { type: 'box', label: 'Куб', icon: '🧊' },
   { type: 'sphere', label: 'Сфера', icon: '⚪' },
@@ -107,6 +155,164 @@ export function createAnimScene(container) {
 
   const raycaster = new THREE.Raycaster()
   const pointer = new THREE.Vector2()
+
+  // Незмінена (базова) геометрія кожного типу/профілю + її злиті точки —
+  // кешується, щоб кожен рух точки лише клонував базу й додавав зсуви.
+  const baseCache = new Map() // signature -> { geometry, points: [{ key, x, y, z, indices }] }
+  function getBase(obj) {
+    const sig = baseSignature(obj)
+    let entry = baseCache.get(sig)
+    if (entry) return entry
+    const geometry = obj.type === 'custom' ? buildCustomGeometry(obj.profile) : (GEOMETRY_BUILDERS[obj.type] || GEOMETRY_BUILDERS.box)()
+    const pos = geometry.attributes.position
+    const byKey = new Map()
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i)
+      const key = pointKey(x, y, z)
+      let pt = byKey.get(key)
+      if (!pt) { pt = { key, x, y, z, indices: [] }; byKey.set(key, pt) }
+      pt.indices.push(i)
+    }
+    entry = { geometry, points: [...byKey.values()] }
+    baseCache.set(sig, entry)
+    return entry
+  }
+  function buildGeometry(obj) {
+    const base = getBase(obj)
+    const geo = base.geometry.clone()
+    const edits = obj.vertexEdits
+    if (edits && Object.keys(edits).length > 0) {
+      const pos = geo.attributes.position
+      for (const pt of base.points) {
+        const d = edits[pt.key]
+        if (!d) continue
+        for (const i of pt.indices) pos.setXYZ(i, pt.x + d.x, pt.y + d.y, pt.z + d.z)
+      }
+      pos.needsUpdate = true
+      geo.computeVertexNormals()
+      geo.computeBoundingSphere()
+      geo.computeBoundingBox()
+    }
+    return geo
+  }
+
+  // ── Редагування форми по точках ──────────────────────────────────────
+  // Маркери точок — THREE.Points дочірній до обраного меша (тож вони
+  // слідують за його позицією/обертанням/масштабом і під час анімації).
+  // Вибір точки — у просторі екрана (найближча в радіусі ~14px), що
+  // надійніше за raycast по дрібних точках.
+  let handles = null // { id, points: THREE.Points, keys: [] }
+  let drag = null // { plane, startLocal, node }
+
+  function clearHandles() {
+    if (!handles) return
+    handles.points.parent?.remove(handles.points)
+    handles.points.geometry.dispose()
+    handles.points.material.dispose()
+    handles = null
+  }
+  function showPointHandles(id, edits, selectedKey) {
+    clearHandles()
+    const node = nodeMap.get(id)
+    if (!node || node.isLight || !node.userData.obj) return
+    const base = getBase(node.userData.obj)
+    const n = base.points.length
+    const positions = new Float32Array(n * 3)
+    const colors = new Float32Array(n * 3)
+    const keys = []
+    base.points.forEach((pt, i) => {
+      const d = edits?.[pt.key]
+      positions[i * 3] = pt.x + (d?.x || 0)
+      positions[i * 3 + 1] = pt.y + (d?.y || 0)
+      positions[i * 3 + 2] = pt.z + (d?.z || 0)
+      const c = pt.key === selectedKey ? [1, 0.82, 0.25] : d ? [0.55, 0.95, 1] : [1, 1, 1]
+      colors.set(c, i * 3)
+      keys.push(pt.key)
+    })
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    const mat = new THREE.PointsMaterial({ size: 8, sizeAttenuation: false, vertexColors: true, depthTest: false, transparent: true })
+    const pts = new THREE.Points(geo, mat)
+    pts.renderOrder = 999
+    pts.userData.isHandles = true
+    pts.raycast = () => {} // не заважає вибору обʼєктів кліком
+    node.add(pts)
+    handles = { id, points: pts, keys }
+  }
+
+  function setPointer(clientX, clientY) {
+    const rect = renderer.domElement.getBoundingClientRect()
+    pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1
+    pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1
+    return rect
+  }
+
+  function pickPoint(clientX, clientY) {
+    if (!handles) return null
+    const rect = renderer.domElement.getBoundingClientRect()
+    const pos = handles.points.geometry.attributes.position
+    handles.points.updateMatrixWorld()
+    const v = new THREE.Vector3()
+    let best = null
+    let bestDist = 14
+    let bestDepth = Infinity
+    for (let i = 0; i < pos.count; i++) {
+      v.set(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(handles.points.matrixWorld).project(camera)
+      if (v.z > 1) continue
+      const sx = (v.x + 1) / 2 * rect.width + rect.left
+      const sy = (1 - v.y) / 2 * rect.height + rect.top
+      const dist = Math.hypot(sx - clientX, sy - clientY)
+      if (dist < bestDist - 2 || (dist < bestDist + 2 && v.z < bestDepth)) {
+        best = handles.keys[i]
+        bestDist = Math.min(dist, bestDist)
+        bestDepth = v.z
+      }
+    }
+    return best
+  }
+
+  function currentLocal(node, key, edits) {
+    const pt = getBase(node.userData.obj).points.find((p) => p.key === key)
+    if (!pt) return null
+    const d = edits?.[key]
+    return new THREE.Vector3(pt.x + (d?.x || 0), pt.y + (d?.y || 0), pt.z + (d?.z || 0))
+  }
+
+  // Починає перетягування точки: площина руху проходить через точку й
+  // дивиться на камеру — тож точка рухається «по екрану» з будь-якого
+  // ракурсу. Повертає false, якщо точку не знайдено.
+  function beginPointDrag(id, key, edits) {
+    const node = nodeMap.get(id)
+    if (!node) return false
+    const local = currentLocal(node, key, edits)
+    if (!local) return false
+    node.updateMatrixWorld()
+    const world = node.localToWorld(local.clone())
+    const normal = new THREE.Vector3()
+    camera.getWorldDirection(normal)
+    drag = { node, plane: new THREE.Plane().setFromNormalAndCoplanarPoint(normal, world), startLocal: local }
+    return true
+  }
+  // Зсув точки (у локальних координатах обʼєкта) від початку перетягування.
+  function dragPointTo(clientX, clientY) {
+    if (!drag) return null
+    setPointer(clientX, clientY)
+    raycaster.setFromCamera(pointer, camera)
+    const hit = new THREE.Vector3()
+    if (!raycaster.ray.intersectPlane(drag.plane, hit)) return null
+    drag.node.updateMatrixWorld()
+    const local = drag.node.worldToLocal(hit)
+    return { x: local.x - drag.startLocal.x, y: local.y - drag.startLocal.y, z: local.z - drag.startLocal.z }
+  }
+  function endPointDrag() {
+    drag = null
+  }
+  function getPoints(id) {
+    const node = nodeMap.get(id)
+    if (!node || node.isLight || !node.userData.obj) return []
+    return getBase(node.userData.obj).points.map(({ key, x, y, z }) => ({ key, x, y, z }))
+  }
 
   function resize() {
     const w = container.clientWidth
@@ -197,8 +403,7 @@ export function createAnimScene(container) {
       light.add(buildLightMarker(obj.light.color))
       return light
     }
-    const build = GEOMETRY_BUILDERS[obj.type] || GEOMETRY_BUILDERS.box
-    const geometry = build()
+    const geometry = buildGeometry(obj)
     const material = buildMaterial(obj.material, obj.type)
     return new THREE.Mesh(geometry, material)
   }
@@ -206,6 +411,7 @@ export function createAnimScene(container) {
   function removeNode(id) {
     const node = nodeMap.get(id)
     if (!node) return
+    if (handles?.id === id) clearHandles()
     group.remove(node)
     if (node.target) group.remove(node.target)
     if (node.isLight) {
@@ -251,6 +457,7 @@ export function createAnimScene(container) {
         if (node) removeNode(obj.id)
         node = buildNode(obj)
         node.userData.type = obj.type
+        node.userData.geoSig = geometrySignature(obj)
         node.userData.id = obj.id
         node.name = obj.id
         group.add(node)
@@ -260,7 +467,21 @@ export function createAnimScene(container) {
         patchLight(node, obj.light)
       } else {
         patchMaterial(node, obj.material)
+        const sig = geometrySignature(obj)
+        if (node.userData.geoSig !== sig) {
+          if (handles?.id === obj.id) clearHandles()
+          if (selectionHelper?.parent === node) {
+            node.remove(selectionHelper)
+            selectionHelper.geometry.dispose()
+            selectionHelper.material.dispose()
+            selectionHelper = null
+          }
+          node.geometry.dispose()
+          node.geometry = buildGeometry(obj)
+          node.userData.geoSig = sig
+        }
       }
+      node.userData.obj = obj
       node.position.set(obj.position.x, obj.position.y, obj.position.z)
       node.rotation.set(
         THREE.MathUtils.degToRad(obj.rotation.x),
@@ -339,6 +560,8 @@ export function createAnimScene(container) {
     ro.disconnect()
     controls.dispose()
     for (const id of [...nodeMap.keys()]) removeNode(id)
+    for (const entry of baseCache.values()) entry.geometry.dispose()
+    baseCache.clear()
     renderer.dispose()
     if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement)
   }
@@ -353,6 +576,13 @@ export function createAnimScene(container) {
     setCameraView,
     setFov,
     setControlsEnabled,
+    showPointHandles,
+    clearHandles,
+    pickPoint,
+    beginPointDrag,
+    dragPointTo,
+    endPointDrag,
+    getPoints,
     getScene: () => scene,
     getCamera: () => camera,
     getRenderer: () => renderer,

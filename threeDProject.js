@@ -31,6 +31,17 @@ function makeAsset(kind) {
 
 export const LIGHT_TYPES = ['pointLight', 'spotLight']
 
+// Дубль DEFAULT_PROFILE з labs/threeAnimScene.js — тут без імпорту three,
+// щоб модель проєкту лишалась легкою.
+const CUSTOM_PROFILE_DEFAULT = {
+  mode: 'lathe',
+  depth: 0.6,
+  points: {
+    lathe: [{ x: 0, y: -0.65 }, { x: 0.55, y: -0.65 }, { x: 0.35, y: -0.2 }, { x: 0.6, y: 0.3 }, { x: 0.3, y: 0.65 }, { x: 0, y: 0.65 }],
+    extrude: [{ x: 0, y: 0.7 }, { x: 0.2, y: 0.2 }, { x: 0.7, y: 0.15 }, { x: 0.3, y: -0.15 }, { x: 0.45, y: -0.65 }, { x: 0, y: -0.35 }, { x: -0.45, y: -0.65 }, { x: -0.3, y: -0.15 }, { x: -0.7, y: 0.15 }, { x: -0.2, y: 0.2 }],
+  },
+}
+
 const LIGHT_DEFAULTS = {
   pointLight: { color: '#ffe9b0', intensity: 1.2, distance: 0, decay: 2 },
   spotLight: { color: '#ffe9b0', intensity: 1.5, distance: 0, decay: 2, angle: 35, penumbra: 0.3 },
@@ -54,6 +65,12 @@ export function makeAnimObject(type = 'box', idFn = () => crypto.randomUUID()) {
     scale: { x: 1, y: 1, z: 1 },
     material: isLight ? null : { color: '#3E37E0', metalness: 0.2, roughness: 0.5, wireframe: false, opacity: 1 },
     light: isLight ? { ...LIGHT_DEFAULTS[type] } : null,
+    // Редагування форми по точках: { "x,y,z" (початкова позиція точки) →
+    // зсув {x,y,z} }. Порожньо = незмінена фігура.
+    vertexEdits: {},
+    // Лише для «Своєї форми» (type 'custom'): контур із точок, з якого
+    // будується тіло — обертанням (lathe) або видавлюванням (extrude).
+    profile: type === 'custom' ? JSON.parse(JSON.stringify(CUSTOM_PROFILE_DEFAULT)) : null,
     keyframes: [],
   }
 }
