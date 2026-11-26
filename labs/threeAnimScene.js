@@ -120,7 +120,87 @@ function baseSignature(obj) {
   return obj.type === 'custom' ? `custom:${JSON.stringify(obj.profile || null)}` : obj.type
 }
 function geometrySignature(obj) {
-  return `${baseSignature(obj)}|${JSON.stringify(obj.vertexEdits || null)}`
+  return `${baseSignature(obj)}|${JSON.stringify(obj.vertexEdits || null)}|${obj.paint ? 'paint' : ''}`
+}
+
+// ── Розфарбування моделі (малювання по 3D) ───────────────────────────
+// Текстура-«розгортка» 1536×1024 = 6 квадратних клітинок 512×512, по одній
+// на кожен бік: спереду, справа, ззаду, зліва (верхній ряд), зверху, знизу.
+// Кожен трикутник фігури потрапляє в клітинку за напрямком своєї нормалі
+// й проєктується на неї (як фото фігури з цього боку). Так будь-яка
+// фігура — і стандартна, і «Своя форма», і зі зсунутими точками — отримує
+// унікальні UV без ручної розгортки, а малюнок «спереду» лягає саме на
+// передню частину моделі.
+export const PAINT_W = 1536
+export const PAINT_H = 1024
+const PAINT_MARGIN = 0.03
+export const PAINT_SIDES = [
+  { key: 'front', label: 'Спереду', dir: [0, 0, 1] },
+  { key: 'right', label: 'Справа', dir: [1, 0, 0] },
+  { key: 'back', label: 'Ззаду', dir: [0, 0, -1] },
+  { key: 'left', label: 'Зліва', dir: [-1, 0, 0] },
+  { key: 'top', label: 'Зверху', dir: [0, 1, 0] },
+  { key: 'bottom', label: 'Знизу', dir: [0, -1, 0] },
+]
+// Координати (0..1) точки p на клітинці `cell` — «як видно з цього боку».
+function projectToCell(cell, p, box, S) {
+  const { min, max } = box
+  switch (cell) {
+    case 0: return [(p.x - min.x) / S, (p.y - min.y) / S]
+    case 1: return [(max.z - p.z) / S, (p.y - min.y) / S]
+    case 2: return [(max.x - p.x) / S, (p.y - min.y) / S]
+    case 3: return [(p.z - min.z) / S, (p.y - min.y) / S]
+    case 4: return [(p.x - min.x) / S, (max.z - p.z) / S]
+    default: return [(p.x - min.x) / S, (p.z - min.z) / S]
+  }
+}
+// Клітинка (0..1 у ній) → пікселі текстури.
+function cellToPixel(cell, u, v) {
+  const col = cell % 3
+  const row = Math.floor(cell / 3)
+  const cw = PAINT_W / 3
+  const ch = PAINT_H / 2
+  const k = 1 - 2 * PAINT_MARGIN
+  return [col * cw + (PAINT_MARGIN + u * k) * cw, row * ch + (1 - (PAINT_MARGIN + v * k)) * ch]
+}
+function cellOfNormal(n) {
+  const ax = Math.abs(n.x)
+  const ay = Math.abs(n.y)
+  const az = Math.abs(n.z)
+  if (az >= ax && az >= ay) return n.z >= 0 ? 0 : 2
+  if (ax >= ay) return n.x >= 0 ? 1 : 3
+  return n.y >= 0 ? 4 : 5
+}
+function applyPaintAtlas(geo) {
+  const g = geo.index ? geo.toNonIndexed() : geo
+  if (g !== geo) geo.dispose()
+  g.computeBoundingBox()
+  const box = g.boundingBox
+  const size = box.getSize(new THREE.Vector3())
+  const S = Math.max(size.x, size.y, size.z) || 1
+  const pos = g.attributes.position
+  const uv = new Float32Array(pos.count * 2)
+  const a = new THREE.Vector3()
+  const b = new THREE.Vector3()
+  const c = new THREE.Vector3()
+  const n = new THREE.Vector3()
+  for (let i = 0; i < pos.count; i += 3) {
+    a.fromBufferAttribute(pos, i)
+    b.fromBufferAttribute(pos, i + 1)
+    c.fromBufferAttribute(pos, i + 2)
+    n.subVectors(c, b).cross(new THREE.Vector3().subVectors(a, b)).normalize()
+    const cell = cellOfNormal(n)
+    ;[a, b, c].forEach((p, k) => {
+      const [u, v] = projectToCell(cell, p, box, S)
+      const [px, py] = cellToPixel(cell, u, v)
+      uv[(i + k) * 2] = px / PAINT_W
+      uv[(i + k) * 2 + 1] = 1 - py / PAINT_H
+    })
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
+  g.userData.paintBox = box.clone()
+  g.userData.paintS = S
+  return g
 }
 
 export const PRIMITIVES = [
@@ -231,7 +311,139 @@ export function createAnimScene(container, opts = {}) {
       geo.computeBoundingSphere()
       geo.computeBoundingBox()
     }
-    return geo
+    return obj.paint ? applyPaintAtlas(geo) : geo
+  }
+
+  // Полотно розфарбування живе на меші (userData.paint); obj.paint — PNG
+  // (dataURL) для збереження/undo. version росте з кожним мазком, щоб
+  // запізніле завантаження старого PNG не затерло щойно намальоване.
+  function ensurePaint(node, obj) {
+    const st = node.userData.paint
+    if (!obj.paint) {
+      if (st) {
+        st.texture.dispose()
+        node.material.map = null
+        node.material.color.set(obj.material.color)
+        node.material.needsUpdate = true
+        node.userData.paint = null
+      }
+      return
+    }
+    let p = st
+    if (!p) {
+      const canvas = document.createElement('canvas')
+      canvas.width = PAINT_W
+      canvas.height = PAINT_H
+      const ctx = canvas.getContext('2d')
+      ctx.fillStyle = obj.material.color
+      ctx.fillRect(0, 0, PAINT_W, PAINT_H)
+      const texture = new THREE.CanvasTexture(canvas)
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.anisotropy = 4
+      p = { canvas, ctx, texture, url: null, version: 0, last: null }
+      node.userData.paint = p
+    }
+    if (node.material.map !== p.texture) {
+      node.material.map = p.texture
+      node.material.needsUpdate = true
+    }
+    node.material.color.set('#ffffff')
+    if (p.url !== obj.paint) {
+      p.url = obj.paint
+      const v = p.version
+      const img = new Image()
+      img.onload = () => {
+        if (p.version !== v) return
+        p.ctx.clearRect(0, 0, PAINT_W, PAINT_H)
+        p.ctx.drawImage(img, 0, 0, PAINT_W, PAINT_H)
+        p.texture.needsUpdate = true
+      }
+      img.src = obj.paint
+    }
+  }
+
+  // Мазок пензля по моделі. Точка влучання й нормаль — у локальних
+  // координатах меша; між попередньою й поточною точкою крок інтерполюється
+  // в 3D, і кожна проміжна точка малюється в усі клітинки, «повернуті» до
+  // неї (dot(нормаль, бік) > 0.2) — тому лінія безшовно переходить через
+  // ребра й шви розгортки. Повертає true, якщо пензель влучив у модель.
+  function paintStroke(id, clientX, clientY, brush, isStart) {
+    const node = nodeMap.get(id)
+    const p = node?.userData.paint
+    if (!node || !p) return false
+    setPointer(clientX, clientY)
+    raycaster.setFromCamera(pointer, camera)
+    const hit = raycaster.intersectObject(node, false)[0]
+    if (!hit || !hit.face) { if (!isStart) p.last = null; return false }
+    node.updateMatrixWorld()
+    const local = node.worldToLocal(hit.point.clone())
+    const normal = hit.face.normal.clone()
+    const geo = node.geometry
+    const box = geo.userData.paintBox
+    const S = geo.userData.paintS
+    if (!box) return false
+    const cellPx = PAINT_W / 3
+    const from = !isStart && p.last ? p.last : { pos: local, normal }
+    const distPx = (from.pos.distanceTo(local) / S) * cellPx
+    const steps = Math.max(1, Math.ceil(distPx / Math.max(1, brush.size * 0.35)))
+    const ctx = p.ctx
+    ctx.fillStyle = brush.color
+    ctx.globalAlpha = brush.opacity ?? 1
+    for (let k = 1; k <= steps; k++) {
+      const t = k / steps
+      const pt = from.pos.clone().lerp(local, t)
+      const nn = from.normal.clone().lerp(normal, t).normalize()
+      PAINT_SIDES.forEach((side, cell) => {
+        const w = nn.x * side.dir[0] + nn.y * side.dir[1] + nn.z * side.dir[2]
+        if (w < 0.2) return
+        const [u, v] = projectToCell(cell, pt, box, S)
+        const [x, y] = cellToPixel(cell, u, v)
+        ctx.beginPath()
+        ctx.arc(x, y, brush.size, 0, Math.PI * 2)
+        ctx.fill()
+      })
+    }
+    ctx.globalAlpha = 1
+    p.last = { pos: local, normal }
+    p.version += 1
+    p.texture.needsUpdate = true
+    return true
+  }
+  // Завершення мазка: PNG для збереження (obj.paint), без перезавантаження.
+  function commitPaint(id) {
+    const p = nodeMap.get(id)?.userData.paint
+    if (!p) return null
+    p.last = null
+    p.url = p.canvas.toDataURL('image/jpeg', 0.88) // JPEG: полотно непрозоре, а файл у рази менший за PNG
+    return p.url
+  }
+  // Заливка всієї моделі одним кольором.
+  function fillPaint(id, color) {
+    const p = nodeMap.get(id)?.userData.paint
+    if (!p) return null
+    p.ctx.fillStyle = color
+    p.ctx.fillRect(0, 0, PAINT_W, PAINT_H)
+    p.version += 1
+    p.texture.needsUpdate = true
+    return commitPaint(id)
+  }
+  // Наклеїти картинку (напр. малюнок із Game Art) на один бік моделі —
+  // вписується в клітинку цього боку зі збереженням пропорцій.
+  function stampImage(id, img, sideKey) {
+    const p = nodeMap.get(id)?.userData.paint
+    if (!p) return null
+    const cell = Math.max(0, PAINT_SIDES.findIndex((sd) => sd.key === sideKey))
+    const [x0, y1] = cellToPixel(cell, 0, 0)
+    const [x1, y0] = cellToPixel(cell, 1, 1)
+    const cw = x1 - x0
+    const ch = y1 - y0
+    const k = Math.min(cw / img.width, ch / img.height)
+    const w = img.width * k
+    const h = img.height * k
+    p.ctx.drawImage(img, x0 + (cw - w) / 2, y0 + (ch - h) / 2, w, h)
+    p.version += 1
+    p.texture.needsUpdate = true
+    return commitPaint(id)
   }
 
   // ── Редагування форми по точках ──────────────────────────────────────
@@ -459,6 +671,7 @@ export function createAnimScene(container, opts = {}) {
         marker.material.dispose()
       }
     } else {
+      node.userData.paint?.texture.dispose()
       node.geometry.dispose()
       node.material.dispose()
     }
@@ -494,6 +707,7 @@ export function createAnimScene(container, opts = {}) {
       if (!node || node.userData.type !== obj.type) {
         if (node) removeNode(obj.id)
         node = buildNode(obj)
+        node.userData.obj = obj
         node.userData.type = obj.type
         node.userData.geoSig = geometrySignature(obj)
         node.userData.id = obj.id
@@ -520,6 +734,7 @@ export function createAnimScene(container, opts = {}) {
         }
       }
       node.userData.obj = obj
+      if (!node.isLight) ensurePaint(node, obj)
       node.position.set(obj.position.x, obj.position.y, obj.position.z)
       node.rotation.set(
         THREE.MathUtils.degToRad(obj.rotation.x),
@@ -621,6 +836,10 @@ export function createAnimScene(container, opts = {}) {
     dragPointTo,
     endPointDrag,
     getPoints,
+    paintStroke,
+    commitPaint,
+    fillPaint,
+    stampImage,
     getScene: () => scene,
     getCamera: () => camera,
     getRenderer: () => renderer,

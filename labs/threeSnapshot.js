@@ -123,6 +123,7 @@ export function renderThreeDSnapshot(project, { width = 1100, height = 760, view
       }
       meshes.push(node)
       if (style === 'clay') {
+        node.material.map = null
         node.material.color.set('#f2f0ea')
         node.material.metalness = 0
         node.material.roughness = 0.9

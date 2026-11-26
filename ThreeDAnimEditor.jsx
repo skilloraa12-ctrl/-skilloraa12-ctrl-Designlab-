@@ -8,7 +8,7 @@ import { useLabHistory } from './labs/useLabHistory.js'
 import LabToast from './labs/LabToast.jsx'
 import LabInfoTip from './labs/LabInfoTip.jsx'
 import NotFound from './NotFound.jsx'
-import { createAnimScene, PRIMITIVES, CUSTOM_SHAPE, DEFAULT_PROFILE, PRIMITIVE_PROFILES, pointKey, LIGHT_KINDS, LIGHT_PRESETS, CAMERA_VIEWS } from './labs/threeAnimScene.js'
+import { createAnimScene, PRIMITIVES, CUSTOM_SHAPE, DEFAULT_PROFILE, PRIMITIVE_PROFILES, PAINT_W, PAINT_H, PAINT_SIDES, pointKey, LIGHT_KINDS, LIGHT_PRESETS, CAMERA_VIEWS } from './labs/threeAnimScene.js'
 import { createEmptyAnimScene, makeAnimObject, makeKeyframeFromObject, LIGHT_TYPES } from './threeDProject.js'
 
 // Повноцінний 3D-редактор з анімацією для 3D Design Studio — окремий від
@@ -23,6 +23,7 @@ import { createEmptyAnimScene, makeAnimObject, makeKeyframeFromObject, LIGHT_TYP
 const TABS = [
   { key: 'transform', icon: '🔄', label: 'Трансформація' },
   { key: 'shape', icon: '✏️', label: 'Форма' },
+  { key: 'paint', icon: '🖌', label: 'Малювати' },
   { key: 'material', icon: '🎨', label: 'Матеріал/Світло' },
   { key: 'lighting', icon: '💡', label: 'Освітлення' },
   { key: 'camera', icon: '🎥', label: 'Камера' },
@@ -191,7 +192,7 @@ function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScru
   )
 }
 
-function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onDelete, onDuplicate, onRename, selected }) {
+function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFile, pendingImport, onImportApply, onImportCancel, onDelete, onDuplicate, onRename, selected }) {
   return (
     <div>
       <p className="cl-tab-desc">Кожна фігура чи світло отримує власну доріжку на таймлайні. Обʼєкт без жодного ключового кадру лишається статичним — анімація потрібна лише там, де вона справді щось розповідає.</p>
@@ -201,6 +202,20 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onDelete, 
       </HelpBox>
 
       <button className="harmony-btn draw-shape-btn" onClick={onDraw}>🖌 Намалювати форму → 3D</button>
+      <label className="harmony-btn draw-shape-btn" style={{ cursor: 'pointer' }} title="Файл scene.json, збережений на вкладці «Експорт»">
+        📥 Відкрити 3D-файл (JSON)
+        <input type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files[0]; e.target.value = ''; if (f) onImportFile(f) }} />
+      </label>
+      {pendingImport && (
+        <div className="import-banner">
+          <p className="cl-tab-desc" style={{ margin: '0 0 8px' }}>Файл «{pendingImport.fileName}»: {pendingImport.objects.length} обʼєктів. Що зробити?</p>
+          <div className="cl-btn-row">
+            <button className="cl-mini-btn active" onClick={() => onImportApply('add')}>➕ Додати до сцени</button>
+            <button className="cl-mini-btn" onClick={() => onImportApply('replace')}>♻ Замінити сцену</button>
+            <button className="cl-mini-btn" onClick={onImportCancel}>Скасувати</button>
+          </div>
+        </div>
+      )}
       <div className="cl-section-title">Додати фігуру</div>
       <div className="cl-btn-row">
         {SHAPES.map((p) => (
@@ -955,7 +970,7 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
             <label className="cl-editrow"><input type="checkbox" checked={bevel} onChange={(e) => setBevel(e.target.checked)} /> Округлені краї</label>
           </>
         )}
-        <div className="cl-picker-top" style={{ marginTop: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+        <div className="cl-picker-top draw-modal-footer" style={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           <button className="cl-mini-btn" onClick={undoLast} disabled={nodes.length === 0 && inks.length === 0}>↶ Крок назад</button>
           <button className="cl-mini-btn" onClick={clear} disabled={nodes.length === 0 && inks.length === 0}>🧽 Стерти</button>
           <button className="cl-mini-btn" onClick={onCancel}>Скасувати</button>
@@ -1062,6 +1077,90 @@ function ShapeTab({
         <span className="gfx-status-pill">Змінено точок: {editedCount}</span>
         <button className="cl-mini-btn" onClick={onResetShape} disabled={editedCount === 0}>↺ Скинути форму</button>
       </div>
+    </div>
+  )
+}
+
+const PAINT_SWATCHES = ['#1a1a1a', '#ffffff', '#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#6d4c41', '#f48fb1']
+
+// Вкладка «Малювати»: розфарбування моделі прямо у вʼюпорті (360° —
+// крутиш камеру й малюєш з будь-якого боку) + наклеювання готових
+// малюнків (з Game Art Studio чи файлу) на потрібний бік моделі.
+function PaintTab({ selected, brush, setBrush, onFill, onStamp, onClearPaint, artImages }) {
+  const [side, setSide] = useState('front')
+  if (!selected) return <p className="cl-tab-desc">Вибери фігуру зліва, щоб малювати на ній.</p>
+  if (LIGHT_TYPES.includes(selected.type)) return <p className="cl-tab-desc">На світлі малювати не можна — вибери фігуру.</p>
+  function stampFromUrl(url) {
+    const img = new Image()
+    img.onload = () => onStamp(img, side)
+    img.src = url
+  }
+  return (
+    <div>
+      <p className="cl-tab-desc">Тягни мишкою <b>по моделі</b> — малюєш прямо на ній. Тягни <b>поза моделлю</b> — крутиш камеру, щоб домалювати з іншого боку (усі 360°).</p>
+      <HelpBox>
+        <p>Малюнок зберігається разом із моделлю, потрапляє в glTF-експорт і в «🧊 З 3D» у Game Art Studio. Undo (Ctrl+Z) скасовує мазки.</p>
+        <p><b>Гумка</b> повертає колір основи фігури. <b>Наклеїти малюнок</b> — кладе картинку на обраний бік моделі (як наліпку): так переносиш на 3D те, що намалювала в 2D.</p>
+        <p>Якщо потім змінити форму фігури (точки/контур), малюнок може трохи зсунутися.</p>
+      </HelpBox>
+
+      <div className="cl-btn-row" style={{ marginBottom: 10 }}>
+        <button className={'cl-mini-btn' + (brush.mode === 'brush' ? ' active' : '')} onClick={() => setBrush({ ...brush, mode: 'brush' })}>🖌 Пензель</button>
+        <button className={'cl-mini-btn' + (brush.mode === 'eraser' ? ' active' : '')} onClick={() => setBrush({ ...brush, mode: 'eraser' })}>🧽 Гумка</button>
+      </div>
+      <div className="cl-picker-top">
+        <input type="color" className="cl-swatch-input" value={brush.color} onChange={(e) => setBrush({ ...brush, color: e.target.value, mode: 'brush' })} />
+        <div className="paint-swatches">
+          {PAINT_SWATCHES.map((c) => (
+            <button key={c} type="button" className={'paint-swatch' + (brush.color === c ? ' active' : '')} style={{ background: c }} title={c} onClick={() => setBrush({ ...brush, color: c, mode: 'brush' })} />
+          ))}
+        </div>
+      </div>
+      <div className="cl-editrow"><label>Розмір пензля
+        <input type="range" min={2} max={60} step={1} value={brush.size} onChange={(e) => setBrush({ ...brush, size: parseInt(e.target.value, 10) })} />
+        <span>{brush.size}</span>
+      </label></div>
+      <div className="cl-editrow"><label>Непрозорість
+        <input type="range" min={0.1} max={1} step={0.05} value={brush.opacity} onChange={(e) => setBrush({ ...brush, opacity: parseFloat(e.target.value) })} />
+        <span>{Math.round(brush.opacity * 100)}%</span>
+      </label></div>
+      <div className="cl-btn-row" style={{ margin: '6px 0 4px' }}>
+        <button className="cl-mini-btn" onClick={() => onFill(brush.color)}>🪣 Залити все цим кольором</button>
+        <button className="cl-mini-btn" onClick={onClearPaint} disabled={!selected.paint}>🗑 Прибрати малюнок</button>
+      </div>
+
+      <div className="cl-section-title">Наклеїти малюнок на модель</div>
+      <div className="cl-btn-row" style={{ marginBottom: 8 }}>
+        {PAINT_SIDES.map((sd) => (
+          <button key={sd.key} className={'cl-mini-btn' + (side === sd.key ? ' active' : '')} onClick={() => setSide(sd.key)}>{sd.label}</button>
+        ))}
+      </div>
+      <label className="harmony-btn" style={{ cursor: 'pointer', display: 'inline-block', marginBottom: 8 }}>
+        🖼 З файлу (PNG/JPG)
+        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+          const f = e.target.files[0]
+          e.target.value = ''
+          if (!f) return
+          const r = new FileReader()
+          r.onload = () => stampFromUrl(r.result)
+          r.readAsDataURL(f)
+        }} />
+      </label>
+      {artImages.length > 0 ? (
+        <>
+          <p className="cl-tab-desc" style={{ margin: '4px 0' }}>Твої малюнки з Game Art Studio — клікни, щоб наклеїти:</p>
+          <div className="paint-art-grid">
+            {artImages.map((a) => (
+              <button key={a.id} type="button" className="paint-art-item" onClick={() => stampFromUrl(a.url)} title={`${a.project} — ${a.title}`}>
+                <img src={a.url} alt={a.title} />
+                <span>{a.title}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="cl-tab-desc">Малюнки, збережені в Game Art Studio, теж зʼявляться тут.</p>
+      )}
     </div>
   )
 }
@@ -1206,7 +1305,10 @@ function ExportTab({ objects, duration, getScreenshot, onRecordVideo, recording,
 
 export default function ThreeDAnimEditor() {
   const { projectId } = useParams()
-  const { threeDProjects, saveThreeDProject } = useProgress()
+  const { threeDProjects, saveThreeDProject, gameArtProjects = [] } = useProgress()
+  const artImages = useMemo(() => gameArtProjects.flatMap((p) =>
+    Object.values(p.assets || {}).flat().filter((a) => a && a.imageDataUrl).map((a) => ({ id: a.id, title: a.title || 'Без назви', project: p.name, url: a.imageDataUrl }))
+  ), [gameArtProjects])
   const toastApi = useLabToast()
   const project = threeDProjects.find((p) => p.id === projectId)
   const anim0 = project?.anim || createEmptyAnimScene()
@@ -1230,6 +1332,10 @@ export default function ThreeDAnimEditor() {
   const [softRadius, setSoftRadius] = useState(0)
   const [symmetry, setSymmetry] = useState(false)
   const [drawTarget, setDrawTarget] = useState(null) // null | 'new' | id обʼєкта
+  const [pendingImport, setPendingImport] = useState(null)
+  const [brush, setBrushState] = useState({ mode: 'brush', color: '#e53935', size: 14, opacity: 1 })
+  const brushRef = useRef(brush)
+  function setBrush(b) { brushRef.current = b; setBrushState(b) }
 
   const hist = useLabHistory({ objects: anim0.objects, selectedId: anim0.objects[0]?.id ?? null })
   const [objects, setObjectsState] = useState(hist.value.objects)
@@ -1251,6 +1357,7 @@ export default function ThreeDAnimEditor() {
   const recordingRef = useRef(false)
   const clipboardRef = useRef(null)
   const editModeRef = useRef(false)
+  const paintModeRef = useRef(false)
   const pointDragRef = useRef(null)
   const softRadiusRef = useRef(softRadius)
   const symmetryRef = useRef(symmetry)
@@ -1334,6 +1441,7 @@ export default function ThreeDAnimEditor() {
     api.syncStructure(objectsRef.current, selectedIdRef.current)
 
     let rotating = false
+    let painting = false
     let pointDragging = false
     let suppressClick = false
     let lastX = 0
@@ -1346,6 +1454,14 @@ export default function ThreeDAnimEditor() {
       if (id) applySelected(id)
     }
     function handlePointerDown(e) {
+      if (paintModeRef.current) {
+        // Режим малювання: по моделі — мазок, поза нею — звичайне обертання камери.
+        if (beginPaintRef.current(e.clientX, e.clientY)) {
+          painting = true
+          api.setControlsEnabled(false)
+        }
+        return
+      }
       if (editModeRef.current) {
         // Режим точок: захоплення точки тягне її; обертання обʼєкта
         // перетягуванням вимкнене, щоб жести не плутались.
@@ -1367,6 +1483,10 @@ export default function ThreeDAnimEditor() {
       }
     }
     function handlePointerMove(e) {
+      if (painting) {
+        api.paintStroke(selectedIdRef.current, e.clientX, e.clientY, paintBrushFor(selectedIdRef.current), false)
+        return
+      }
       if (pointDragging) {
         const delta = api.dragPointTo(e.clientX, e.clientY)
         if (delta) applyPointDragRef.current(delta)
@@ -1380,6 +1500,14 @@ export default function ThreeDAnimEditor() {
       applyRotationDeltaRef.current(dx, dy, e.shiftKey)
     }
     function handlePointerUp() {
+      if (painting) {
+        painting = false
+        suppressClick = true
+        setTimeout(() => { suppressClick = false }, 0)
+        api.setControlsEnabled(true)
+        endPaintRef.current()
+        return
+      }
       if (pointDragging) {
         pointDragging = false
         suppressClick = true
@@ -1438,6 +1566,8 @@ export default function ThreeDAnimEditor() {
   const pointsVisible = hasProfileEditor ? pointsPref.profile : pointsPref.other
   const editMode = tab === 'shape' && pointsVisible && !!selectedForEdit && !LIGHT_TYPES.includes(selectedForEdit.type)
   editModeRef.current = editMode
+  const paintMode = tab === 'paint' && !!selectedForEdit && !LIGHT_TYPES.includes(selectedForEdit.type)
+  paintModeRef.current = paintMode
   useEffect(() => {
     const api = sceneApiRef.current
     if (!api) return
@@ -1600,6 +1730,113 @@ export default function ThreeDAnimEditor() {
   }
   const applyRotationDeltaRef = useRef(applyRotationDelta)
   applyRotationDeltaRef.current = applyRotationDelta
+
+  // ── Малювання на моделі ──
+  function paintBrushFor(id) {
+    const b = brushRef.current
+    const obj = objectsRef.current.find((o) => o.id === id)
+    return { size: b.size, opacity: b.mode === 'eraser' ? 1 : b.opacity, color: b.mode === 'eraser' ? (obj?.material?.color || '#ffffff') : b.color }
+  }
+  function setPaint(id, url) {
+    applyObjects(objectsRef.current.map((o) => (o.id === id ? { ...o, paint: url } : o)))
+  }
+  // Перший мазок/наліпка на фігурі без малюнка: створюємо полотно кольору
+  // основи й одразу синхронізуємо сцену, щоб у меша зʼявилась розгортка.
+  function ensurePaintNow(id) {
+    const obj = objectsRef.current.find((o) => o.id === id)
+    if (!obj || obj.paint) return
+    const c = document.createElement('canvas')
+    c.width = PAINT_W
+    c.height = PAINT_H
+    const ctx = c.getContext('2d')
+    ctx.fillStyle = obj.material.color
+    ctx.fillRect(0, 0, PAINT_W, PAINT_H)
+    const next = objectsRef.current.map((o) => (o.id === id ? { ...o, paint: c.toDataURL('image/jpeg', 0.88) } : o))
+    objectsRef.current = next
+    sceneApiRef.current?.syncStructure(next, selectedIdRef.current)
+    applyObjects(next)
+  }
+  function beginPaint(x, y) {
+    const api = sceneApiRef.current
+    const id = selectedIdRef.current
+    if (!api || !id || api.pickAt(x, y) !== id) return false
+    ensurePaintNow(id)
+    return api.paintStroke(id, x, y, paintBrushFor(id), true)
+  }
+  function endPaint() {
+    const id = selectedIdRef.current
+    const url = sceneApiRef.current?.commitPaint(id)
+    if (url) setPaint(id, url)
+  }
+  const beginPaintRef = useRef(beginPaint)
+  beginPaintRef.current = beginPaint
+  const endPaintRef = useRef(endPaint)
+  endPaintRef.current = endPaint
+  function fillModel(color) {
+    const id = selectedIdRef.current
+    if (!id) return
+    ensurePaintNow(id)
+    const url = sceneApiRef.current?.fillPaint(id, color)
+    if (url) { setPaint(id, url); toastApi.show('✓ Модель залито') }
+  }
+  function stampOnModel(img, side) {
+    const id = selectedIdRef.current
+    if (!id) return
+    ensurePaintNow(id)
+    const url = sceneApiRef.current?.stampImage(id, img, side)
+    if (url) { setPaint(id, url); toastApi.show('✓ Малюнок наклеєно — поверни модель, щоб побачити') }
+  }
+  function clearModelPaint() {
+    const id = selectedIdRef.current
+    if (id) setPaint(id, null)
+  }
+
+  // ── Відкрити 3D-файл (JSON з вкладки «Експорт») ──
+  const VALID_TYPES = new Set([...SHAPES.map((x) => x.type), ...LIGHT_TYPES])
+  function importSceneFile(file) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result)
+        const list = Array.isArray(data) ? data : data.objects || data.anim?.objects
+        if (!Array.isArray(list)) throw new Error('no objects')
+        const vec = (v, d) => ({ x: Number(v?.x ?? d.x) || 0, y: Number(v?.y ?? d.y) || 0, z: Number(v?.z ?? d.z) || 0 })
+        const objs = list.filter((o) => o && typeof o === 'object').map((o) => {
+          const type = VALID_TYPES.has(o.type) ? o.type : 'box'
+          const base = makeAnimObject(type, nextId)
+          return {
+            ...base,
+            name: typeof o.name === 'string' ? o.name : null,
+            position: vec(o.position, base.position),
+            rotation: vec(o.rotation, base.rotation),
+            scale: vec(o.scale, base.scale),
+            material: base.material ? { ...base.material, ...(o.material || {}) } : null,
+            light: base.light ? { ...base.light, ...(o.light || {}) } : null,
+            vertexEdits: o.vertexEdits && typeof o.vertexEdits === 'object' ? o.vertexEdits : {},
+            profile: type === 'custom' ? (o.profile || base.profile) : null,
+            paint: typeof o.paint === 'string' && o.paint.startsWith('data:image/') ? o.paint : null,
+            keyframes: Array.isArray(o.keyframes) ? o.keyframes.filter((k) => k && typeof k.time === 'number').map((k) => ({
+              time: k.time, position: vec(k.position, base.position), rotation: vec(k.rotation, base.rotation), scale: vec(k.scale, base.scale), easing: k.easing || 'linear',
+            })) : [],
+          }
+        })
+        if (objs.length === 0) throw new Error('empty')
+        setPendingImport({ fileName: file.name, objects: objs, duration: Number(data.duration) || null })
+      } catch {
+        toastApi.show('✗ Це не схоже на 3D-файл сцени (JSON)')
+      }
+    }
+    reader.readAsText(file)
+  }
+  function applyImport(how) {
+    if (!pendingImport) return
+    const next = how === 'replace' ? pendingImport.objects : [...objectsRef.current, ...pendingImport.objects]
+    applyObjects(next)
+    applySelected(pendingImport.objects[0]?.id ?? null)
+    if (how === 'replace' && pendingImport.duration) applyDuration(Math.max(1, Math.min(60, pendingImport.duration)))
+    toastApi.show(`✓ Завантажено ${pendingImport.objects.length} обʼєктів`)
+    setPendingImport(null)
+  }
 
   // ── Редагування форми по точках ──
   function setVertexEdits(id, edits) {
@@ -1920,12 +2157,14 @@ export default function ThreeDAnimEditor() {
 
       <div className="tl-editor-shell">
         <div className="tl-editor-left">
-          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} />
+          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onImportFile={importSceneFile} pendingImport={pendingImport} onImportApply={applyImport} onImportCancel={() => setPendingImport(null)} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} />
         </div>
 
         <div className="tl-editor-center">
           <div ref={containerRef} className="tl-editor-viewport" />
-          {editMode ? (
+          {paintMode ? (
+            <p className="tl-rotate-hint">🖌 Малюй прямо на «{selected?.name || 'моделі'}». Тягни поза моделлю — крути камеру й малюй з іншого боку.</p>
+          ) : editMode ? (
             <p className="tl-rotate-hint">✏️ Режим точок: тягни точку, щоб змінити форму. Тягни поза точками — обертай камеру, щоб рухати точку в іншій площині.</p>
           ) : selected && <p className="tl-rotate-hint">🔄 Перетягни «{selected.name || 'обраний об\'єкт'}» прямо тут, щоб обертати (Shift — нахил по Z)</p>}
 
@@ -1991,6 +2230,9 @@ export default function ThreeDAnimEditor() {
                 onSetProfile={setProfile}
                 onRedraw={() => setDrawTarget(selectedId)}
               />
+            )}
+            {tab === 'paint' && (
+              <PaintTab selected={selected} brush={brush} setBrush={setBrush} onFill={fillModel} onStamp={stampOnModel} onClearPaint={clearModelPaint} artImages={artImages} />
             )}
             {tab === 'material' && <MaterialTab selected={selected} setMaterial={setMaterial} setLightProp={setLightProp} />}
             {tab === 'lighting' && <LightingTab lighting={lighting} setLighting={setLighting} />}
