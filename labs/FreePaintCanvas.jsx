@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   BRUSH_SIZES, BRUSH_TYPES, BRUSH_VARIANTS, SHAPE_TYPES, DEFAULT_PALETTE, setupCanvas, loadImageToCanvas,
   strokeSegment, strokeCartoonPath, dot, drawShape, drawText, canvasToDataUrl, pointFromEvent,
-  drawColorWheel, pickFromWheel, hsvToHex, floodFill,
+  drawColorWheel, pickFromWheel, hsvToHex, floodFill, constrainShapeEnd,
 } from './freePaintEngine.js'
 import { useProgress } from '../ProgressContext.jsx'
 import { renderThreeDSnapshot, SNAPSHOT_STYLES } from './threeSnapshot.js'
@@ -188,6 +188,10 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
   // Масштаб і зсув перегляду полотна (лише вигляд — сам малюнок 1100×760
   // не змінюється, тому пензлі, undo й збереження працюють як раніше).
   const [view, setView] = useState({ zoom: 1, x: 0, y: 0 })
+  // 📏 Лінійка: поділки по краях полотна + напрямні кожні 100 px.
+  const [showRuler, setShowRuler] = useState(() => { try { return localStorage.getItem('fpc-ruler') === '1' } catch { return false } })
+  const [canvasRect, setCanvasRect] = useState(null)
+  const straightRef = useRef(null) // Shift+пензель: пряма лінія від точки старту
   const [handTool, setHandTool] = useState(false)
   const [spaceDown, setSpaceDown] = useState(false)
   const wrapRef = useRef(null)
@@ -698,6 +702,36 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
     })
   }
   function resetView() { setView({ zoom: 1, x: 0, y: 0 }) }
+  useEffect(() => { try { localStorage.setItem('fpc-ruler', showRuler ? '1' : '0') } catch { /* приватний режим */ } }, [showRuler])
+  useLayoutEffect(() => {
+    if (!showRuler) return
+    const wrap = wrapRef.current, cv = canvasRef.current
+    if (!wrap || !cv) return
+    const measure = () => {
+      const a = wrap.getBoundingClientRect(), b = cv.getBoundingClientRect()
+      setCanvasRect({ left: b.left - a.left, top: b.top - a.top, width: b.width, height: b.height })
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(wrap); ro.observe(cv)
+    window.addEventListener('resize', measure)
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
+  }, [showRuler, view, fullscreen])
+  function downloadPng() {
+    const c = document.createElement('canvas')
+    c.width = CANVAS_W
+    c.height = CANVAS_H
+    c.getContext('2d').drawImage(canvasRef.current, 0, 0, CANVAS_W, CANVAS_H)
+    c.toBlob((blob) => {
+      if (!blob) return
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = 'malyunok.png'
+      document.body.appendChild(a); a.click(); a.remove()
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000)
+      onMessage?.('⬇ Малюнок збережено як PNG (папка «Завантаження»)')
+    }, 'image/png')
+  }
   useEffect(() => {
     const el = wrapRef.current
     if (!el) return
@@ -811,6 +845,7 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
     pushUndo(snap)
     drawingRef.current = true
     lastPointRef.current = p
+    straightRef.current = { snap, p }
     if (brushType === 'hard' && variant === 'cartoon') {
       // Контур малюється одним суцільним шляхом на весь мазок (не по
       // сегментах), щоб петлі й самоперетини не перемальовувались
@@ -861,7 +896,19 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
     if (tool === 'shape') {
       ctx.putImageData(shapeBaseRef.current, 0, 0)
       const start_ = shapeStartRef.current
-      drawShape(ctx, shapeType, start_.x, start_.y, p.x, p.y, { color, opacity, filled: shapeFilled, lineWidth: Math.max(2, size * 0.5) })
+      const q = e.shiftKey ? constrainShapeEnd(shapeType, start_.x, start_.y, p.x, p.y) : p
+      drawShape(ctx, shapeType, start_.x, start_.y, q.x, q.y, { color, opacity, filled: shapeFilled, lineWidth: Math.max(2, size * 0.5) })
+      return
+    }
+    // Shift + пензель/гумка — рівна пряма від точки, де почав (як по лінійці).
+    if (e.shiftKey && straightRef.current && (tool === 'brush' || tool === 'eraser')) {
+      const st = straightRef.current
+      const q = constrainShapeEnd('line', st.p.x, st.p.y, p.x, p.y)
+      ctx.putImageData(st.snap, 0, 0)
+      dot(ctx, st.p.x, st.p.y, { size, color, opacity, brushType, variant, erase: tool === 'eraser' })
+      strokeSegment(ctx, st.p.x, st.p.y, q.x, q.y, { size, color, opacity, brushType, variant, erase: tool === 'eraser' })
+      lastPointRef.current = q
+      if (cartoonPointsRef.current && brushType === 'hard' && variant === 'cartoon') cartoonPointsRef.current = [st.p, q]
       return
     }
     if (brushType === 'hard' && variant === 'cartoon') {
@@ -1187,8 +1234,12 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
         <button type="button" className="cl-mini-btn" onClick={undo} disabled={!canUndo}>↶ Скасувати</button>
         <button type="button" className="cl-mini-btn" onClick={clearCanvas}>🗑 Очистити</button>
         <button type="button" className="cl-mini-btn" onClick={() => setShow3d(true)}>🧊 З 3D</button>
+        <button type="button" className={'cl-mini-btn' + (showRuler ? ' active' : '')} onClick={() => setShowRuler((v) => !v)} title="Поділки по краях і напрямні кожні 100 px. Shift + пензель — рівна лінія">📏 Лінійка</button>
+        <button type="button" className="cl-mini-btn" onClick={downloadPng} title="Зберегти малюнок на компʼютер як картинку PNG">⬇ Зберегти PNG</button>
         <button type="button" className="cl-mini-btn" onClick={() => setFullscreen(!fullscreen)}>{fullscreen ? '✕ Закрити' : '⛶ На весь екран'}</button>
       </div>
+
+      <p className="cl-tab-desc fpc-autosave" style={{ margin: '6px 0 0', fontSize: 11 }}>✓ Малюнок зберігається автоматично після кожної дії. «⬇ Зберегти PNG» — завантажити його собі на компʼютер.</p>
 
       {tool === 'pick' && (
         <div className="fpc-place-panel">
@@ -1279,6 +1330,7 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
             <button key={s.key} type="button" className={'cl-mini-btn' + (shapeType === s.key ? ' active' : '')} onClick={() => setShapeType(s.key)}>{s.label}</button>
           ))}
           <button type="button" className={'cl-mini-btn' + (shapeFilled ? ' active' : '')} onClick={() => setShapeFilled(!shapeFilled)}>Заливка</button>
+          <p className="cl-tab-desc" style={{ margin: '4px 0 0', fontSize: 11, width: '100%' }}>Тягни по полотну, щоб намалювати. <b>Shift</b> — рівний квадрат/коло, лінія й стрілка під кутом 45°.</p>
         </div>
       )}
 
@@ -1376,10 +1428,52 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
           onPointerUp={end}
           onPointerLeave={end}
         />
+        {showRuler && canvasRect && <RulerOverlay rect={canvasRect} />}
       </div>
       {show3d && (
         <ThreeDImportModal projects={threeDProjects} width={CANVAS_W} height={CANVAS_H} onInsert={insertImage} onClose={() => setShow3d(false)} />
       )}
     </div>
+  )
+}
+
+// 📏 Лінійка поверх полотна: поділки згори й зліва (у пікселях малюнка
+// 1100×760) і тонкі напрямні кожні 100 px + центральні лінії. Не заважає
+// малювати (pointer-events: none) і не потрапляє в збережену картинку.
+function RulerOverlay({ rect }) {
+  const T = 22 // товщина лінійки в одиницях полотна
+  const ticks = (len) => Array.from({ length: Math.floor(len / 10) + 1 }, (_, i) => i * 10)
+  return (
+    <svg
+      className="fpc-ruler"
+      style={{ position: 'absolute', left: rect.left, top: rect.top, width: rect.width, height: rect.height, pointerEvents: 'none', overflow: 'visible' }}
+      viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      {ticks(CANVAS_W).filter((x) => x % 100 === 0 && x > 0 && x < CANVAS_W).map((x) => (
+        <line key={'gv' + x} x1={x} y1={0} x2={x} y2={CANVAS_H} stroke="rgba(124,77,255,.28)" strokeWidth={1} strokeDasharray="6 6" />
+      ))}
+      {ticks(CANVAS_H).filter((y) => y % 100 === 0 && y > 0 && y < CANVAS_H).map((y) => (
+        <line key={'gh' + y} x1={0} y1={y} x2={CANVAS_W} y2={y} stroke="rgba(124,77,255,.28)" strokeWidth={1} strokeDasharray="6 6" />
+      ))}
+      <line x1={CANVAS_W / 2} y1={0} x2={CANVAS_W / 2} y2={CANVAS_H} stroke="rgba(255,80,120,.55)" strokeWidth={1.5} />
+      <line x1={0} y1={CANVAS_H / 2} x2={CANVAS_W} y2={CANVAS_H / 2} stroke="rgba(255,80,120,.55)" strokeWidth={1.5} />
+      <rect x={0} y={0} width={CANVAS_W} height={T} fill="rgba(255,255,255,.88)" />
+      <rect x={0} y={0} width={T} height={CANVAS_H} fill="rgba(255,255,255,.88)" />
+      {ticks(CANVAS_W).map((x) => (
+        <line key={'tx' + x} x1={x} y1={T} x2={x} y2={T - (x % 100 === 0 ? T * 0.75 : x % 50 === 0 ? T * 0.5 : T * 0.28)} stroke="#333" strokeWidth={1} />
+      ))}
+      {ticks(CANVAS_H).map((y) => (
+        <line key={'ty' + y} x1={T} y1={y} x2={T - (y % 100 === 0 ? T * 0.75 : y % 50 === 0 ? T * 0.5 : T * 0.28)} y2={y} stroke="#333" strokeWidth={1} />
+      ))}
+      {ticks(CANVAS_W).filter((x) => x % 100 === 0 && x > 0).map((x) => (
+        <text key={'lx' + x} x={x + 3} y={11} fontSize={11} fill="#333" fontFamily="system-ui, sans-serif">{x}</text>
+      ))}
+      {ticks(CANVAS_H).filter((y) => y % 100 === 0 && y > 0).map((y) => (
+        <text key={'ly' + y} x={3} y={y - 3} fontSize={10} fill="#333" fontFamily="system-ui, sans-serif">{y}</text>
+      ))}
+      <rect x={0} y={0} width={T} height={T} fill="#eee" />
+    </svg>
   )
 }

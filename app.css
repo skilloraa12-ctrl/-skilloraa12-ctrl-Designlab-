@@ -2001,3 +2001,13 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .l3d-object-row.active .obj-act, .l3d-object-row.active .obj-lock { display: inline-flex; }
 @media (hover: none) { .l3d-object-row .obj-act, .l3d-object-row .obj-lock { display: inline-flex; } }
 .tl-editor-left { width: 280px; }
+
+/* 🔗 «Прикріпити до…» прямо в рядку списку обʼєктів 3D-редактора */
+.l3d-object-row:has(.attach-picker) { flex-wrap: wrap; }
+.attach-picker {
+  flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin: 2px 0 4px; padding: 8px; border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 10%, transparent); border: 1px dashed var(--accent);
+}
+.attach-picker-title { font-size: 12px; font-weight: 600; color: var(--ink); }
+.attach-picker select { flex: 1; min-width: 120px; }

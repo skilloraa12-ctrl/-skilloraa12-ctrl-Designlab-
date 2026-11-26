@@ -270,8 +270,39 @@ function treeOrder(objects) {
   return out
 }
 
-function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFile, pendingImport, onImportApply, onImportCancel, onDelete, onDuplicate, onRename, onRenameId, onToggleLock, selected }) {
+// «🔗 Прикріпити до…» прямо в списку обʼєктів: можна вибрати будь-який
+// обʼєкт, крім самого себе й тих, що вже прикріплені до нього (інакше коло).
+function AttachPicker({ obj, objects, onPick, onClose }) {
+  const blocked = new Set([obj.id])
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const o of objects) if (o.parentId && blocked.has(o.parentId) && !blocked.has(o.id)) { blocked.add(o.id); grew = true }
+  }
+  const options = objects.map((o, i) => ({ o, i })).filter(({ o }) => !blocked.has(o.id))
+  const label = (o, i) => o.name || `${(SHAPES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type))?.label || o.type} #${i + 1}`
+  return (
+    <div className="attach-picker" onClick={(e) => e.stopPropagation()}>
+      {obj.locked ? (
+        <p className="cl-tab-desc" style={{ margin: 0 }}>🔒 Обʼєкт зафіксовано — спершу натисни 🔒, щоб розблокувати.</p>
+      ) : (
+        <>
+          <span className="attach-picker-title">🔗 Прикріпити до:</span>
+          <select autoFocus value={obj.parentId || ''} onChange={(e) => onPick(e.target.value || null)} className="cl-hex-input" style={{ textTransform: 'none' }}>
+            <option value="">— нічого (окремо) —</option>
+            {options.map(({ o, i }) => <option key={o.id} value={o.id}>{label(o, i)}</option>)}
+          </select>
+          {obj.parentId && <button type="button" className="cl-mini-btn" onClick={() => onPick(null)}>Відʼєднати</button>}
+        </>
+      )}
+      <button type="button" className="cl-mini-btn" onClick={onClose} aria-label="Закрити">✕</button>
+    </div>
+  )
+}
+
+function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFile, pendingImport, onImportApply, onImportCancel, onDelete, onDuplicate, onRename, onRenameId, onToggleLock, onSetParent, selected }) {
   const [editingId, setEditingId] = useState(null)
+  const [attachId, setAttachId] = useState(null) // рядок, для якого відкрито «🔗 Прикріпити до…»
   return (
     <div>
       <p className="cl-tab-desc">Кожна фігура чи світло отримує власну доріжку на таймлайні. Обʼєкт без жодного ключового кадру лишається статичним — анімація потрібна лише там, де вона справді щось розповідає.</p>
@@ -333,9 +364,18 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFi
                 <span className={'obj-actions' + (o.locked ? ' has-lock' : '')}>
                   {editingId !== o.id && <button className="cl-mini-btn obj-act" onClick={() => { onSelect(o.id); setEditingId(o.id) }} title="Перейменувати (або подвійний клік по назві)">✏</button>}
                   <button className={'cl-mini-btn obj-lock' + (o.locked ? ' active' : '')} onClick={() => onToggleLock(o.id)} title={o.locked ? 'Розблокувати' : 'Зафіксувати — не можна випадково зачепити чи зсунути'}>{o.locked ? '🔒' : '🔓'}</button>
+                  <button className={'cl-mini-btn obj-act' + (o.parentId ? ' active' : '')} onClick={() => { onSelect(o.id); setAttachId(attachId === o.id ? null : o.id) }} title={o.parentId ? 'Прикріплено — змінити або відʼєднати' : 'Прикріпити до іншого обʼєкта (рухатиметься разом з ним)'}>🔗</button>
                   <button className="cl-mini-btn obj-act" onClick={() => onDuplicate(o.id)} title="Дублювати (Ctrl+D)">⧉</button>
                   <button className="cl-mini-btn obj-act" onClick={() => onDelete(o.id)} title="Видалити (Del)" disabled={o.locked}>✕</button>
                 </span>
+                {attachId === o.id && (
+                  <AttachPicker
+                    obj={o}
+                    objects={objects}
+                    onPick={(pid) => { onSetParent(o.id, pid); setAttachId(null) }}
+                    onClose={() => setAttachId(null)}
+                  />
+                )}
               </div>
             )
           })}
@@ -1960,7 +2000,7 @@ function ThreeDAnimEditorInner() {
     return objs.map((o) => (o.id !== id ? o : { ...convert(o), parentId: parentId || null, keyframes: o.keyframes.map((k) => convert(k)) }))
   }
   function setParent(id, parentId) {
-    if (isLocked(id)) return
+    if (isLocked(id)) { toastApi.show('🔒 Обʼєкт зафіксовано — спершу розблокуй (🔒 у списку)'); return }
     applyObjects(reparentObjs(objectsRef.current, id, parentId))
     toastApi.show(parentId ? '🔗 Прикріплено' : 'Відʼєднано')
   }
@@ -2603,7 +2643,7 @@ function ThreeDAnimEditorInner() {
 
       <div className="tl-editor-shell">
         <div className="tl-editor-left">
-          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onImportFile={importSceneFile} pendingImport={pendingImport} onImportApply={applyImport} onImportCancel={() => setPendingImport(null)} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} onRenameId={renameObject} onToggleLock={toggleLock} />
+          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onImportFile={importSceneFile} pendingImport={pendingImport} onImportApply={applyImport} onImportCancel={() => setPendingImport(null)} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} onRenameId={renameObject} onToggleLock={toggleLock} onSetParent={setParent} />
         </div>
 
         <div className="tl-editor-center">

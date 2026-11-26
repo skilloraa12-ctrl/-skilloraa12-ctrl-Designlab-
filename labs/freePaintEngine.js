@@ -144,7 +144,23 @@ export const SHAPE_TYPES = [
   { key: 'circle', label: 'Коло' },
   { key: 'triangle', label: 'Трикутник' },
   { key: 'star', label: 'Зірка' },
+  { key: 'arrow', label: 'Стрілка' },
+  { key: 'rhombus', label: 'Ромб' },
+  { key: 'heart', label: 'Серце' },
 ]
+
+// Shift під час малювання форми: рівний квадрат/коло (однакові ширина й
+// висота), а лінія чи стрілка — строго під кутом, кратним 45°.
+export function constrainShapeEnd(type, x0, y0, x1, y1) {
+  const dx = x1 - x0, dy = y1 - y0
+  if (type === 'line' || type === 'arrow') {
+    const len = Math.hypot(dx, dy)
+    const a = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4)
+    return { x: x0 + Math.cos(a) * len, y: y0 + Math.sin(a) * len }
+  }
+  const m = Math.max(Math.abs(dx), Math.abs(dy))
+  return { x: x0 + Math.sign(dx || 1) * m, y: y0 + Math.sign(dy || 1) * m }
+}
 
 export const DEFAULT_PALETTE = [
   '#000000', '#3a3a3a', '#7a7a7a', '#b8b8b8', '#ffffff',
@@ -805,6 +821,39 @@ export function drawShape(ctx, type, x0, y0, x1, y1, { color, opacity, filled, l
       ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR)
     }
     ctx.closePath()
+  } else if (type === 'rhombus') {
+    ctx.moveTo(cx, y0)
+    ctx.lineTo(x1, cy)
+    ctx.lineTo(cx, y1)
+    ctx.lineTo(x0, cy)
+    ctx.closePath()
+  } else if (type === 'heart') {
+    const top = Math.min(y0, y1), bot = Math.max(y0, y1)
+    const left = Math.min(x0, x1), right = Math.max(x0, x1)
+    const hw = (right - left) / 2, hh = bot - top
+    ctx.moveTo(cx, bot)
+    ctx.bezierCurveTo(cx - hw * 0.15, bot - hh * 0.18, left, top + hh * 0.62, left, top + hh * 0.3)
+    ctx.bezierCurveTo(left, top + hh * 0.02, cx - hw * 0.1, top - hh * 0.04, cx, top + hh * 0.24)
+    ctx.bezierCurveTo(cx + hw * 0.1, top - hh * 0.04, right, top + hh * 0.02, right, top + hh * 0.3)
+    ctx.bezierCurveTo(right, top + hh * 0.62, cx + hw * 0.15, bot - hh * 0.18, cx, bot)
+    ctx.closePath()
+  } else if (type === 'arrow') {
+    // Лінія + наконечник; розмір наконечника залежить від товщини лінії й довжини.
+    const ang = Math.atan2(y1 - y0, x1 - x0)
+    const len = Math.hypot(x1 - x0, y1 - y0)
+    const head = Math.min(len * 0.45, Math.max(14, lineWidth * 4))
+    ctx.lineCap = 'round'
+    ctx.moveTo(x0, y0)
+    ctx.lineTo(x1 - Math.cos(ang) * head * 0.6, y1 - Math.sin(ang) * head * 0.6)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(x1 - Math.cos(ang - 0.45) * head, y1 - Math.sin(ang - 0.45) * head)
+    ctx.lineTo(x1 - Math.cos(ang + 0.45) * head, y1 - Math.sin(ang + 0.45) * head)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+    return
   }
   if (type !== 'line') {
     if (filled) ctx.fill()
