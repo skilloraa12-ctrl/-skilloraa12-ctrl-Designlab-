@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext.jsx'
 import { supabase, APP_ID } from './supabaseClient.js'
 
 export default function RequireAuth({ children }) {
-  const { user, loading, profile, profileLoading, logout } = useAuth()
+  const { user, loading, profile, profileLoading, profileError, retryProfile, logout } = useAuth()
   const navigate = useNavigate()
   const [access, setAccess] = useState('checking') // checking | granted | denied
 
@@ -35,13 +35,22 @@ export default function RequireAuth({ children }) {
       navigate('/login')
       return
     }
-    if (!profileLoading && !profile?.full_name) {
+    if (!profileLoading && !profileError && !profile?.full_name) {
       navigate('/welcome')
     }
   }, [loading, user, profileLoading, profile, navigate])
 
   if (loading || profileLoading) {
     return <p style={{ padding: 24, color: 'var(--muted)' }}>Завантаження…</p>
+  }
+  if (profileError) {
+    return (
+      <div style={{ padding: 24, maxWidth: 460 }}>
+        <h1 className="page-title">Сервер не відповідає</h1>
+        <p className="page-sub">Не вдалося завантажити твій профіль за 15 секунд — схоже, база даних зараз перевантажена або недоступна. Твої дані на сервері не змінено.</p>
+        <button className="complete-btn" onClick={retryProfile}>🔄 Спробувати знову</button>
+      </div>
+    )
   }
   if (!user || !profile?.full_name) return null
 

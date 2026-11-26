@@ -1977,3 +1977,4 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .tree-branch { color: var(--muted); margin-right: 4px; }
 .scene-build-box { border: 1px solid var(--line, #2c2c38); border-radius: 10px; padding: 10px; margin-bottom: 12px; }
 .rec-btn.active { background: #e53935 !important; color: #fff !important; border-color: #e53935 !important; }
+.progress-load-error { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 5000; max-width: min(640px, calc(100vw - 32px)); padding: 10px 14px; border-radius: 10px; background: #b3261e; color: #fff; font-size: 13px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; box-shadow: 0 6px 20px rgba(0,0,0,0.35); }

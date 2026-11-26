@@ -35,7 +35,12 @@ export function ProgressProvider({ children }) {
   const { user } = useAuth()
   const [state, setState] = useState(EMPTY_STATE)
   const [ready, setReady] = useState(false)
+  // Помилка/таймаут завантаження: тоді НЕ вмикаємо автозбереження, інакше
+  // порожній стан записався б поверх справжнього прогресу на сервері.
+  const [loadError, setLoadError] = useState(false)
   const saveTimer = useRef(null)
+  const savingRef = useRef(false)
+  const pendingRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -45,16 +50,21 @@ export function ProgressProvider({ children }) {
       return
     }
     setReady(false)
-    supabase
-      .from('progress')
-      .select('data')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
+    setLoadError(false)
+    let timer
+    const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve({ timedOut: true }), 45000) })
+    Promise.race([
+      supabase.from('progress').select('data').eq('user_id', user.id).maybeSingle(),
+      timeout,
+    ])
+      .then((res) => {
+        clearTimeout(timer)
         if (cancelled) return
-        if (error) {
-          console.warn('Не вдалося завантажити прогрес', error)
-          setState(EMPTY_STATE)
+        const { data, error, timedOut } = res
+        if (timedOut || error) {
+          console.warn('Не вдалося завантажити прогрес', error || 'таймаут')
+          setLoadError(true)
+          return // ready лишається false — без автозбереження порожнечі
         } else if (data) {
           setState({ ...EMPTY_STATE, ...data.data })
         } else {
@@ -82,14 +92,28 @@ export function ProgressProvider({ children }) {
   useEffect(() => {
     if (!ready || !user) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
+    // Збереження раз на ~2 с і ніколи не паралельно: великий прогрес
+    // (малюнки, 3D-сцени) не повинен засипати базу запитами.
     saveTimer.current = setTimeout(() => {
-      supabase
-        .from('progress')
-        .upsert({ user_id: user.id, data: state, updated_at: new Date().toISOString() })
-        .then(({ error }) => {
-          if (error) console.warn('Не вдалося зберегти прогрес', error)
-        })
-    }, 600)
+      pendingRef.current = state
+      const flush = () => {
+        if (savingRef.current || !pendingRef.current) return
+        const data = pendingRef.current
+        pendingRef.current = null
+        savingRef.current = true
+        supabase
+          .from('progress')
+          .upsert({ user_id: user.id, data, updated_at: new Date().toISOString() })
+          .then(({ error }) => {
+            if (error) console.warn('Не вдалося зберегти прогрес', error)
+          })
+          .finally(() => {
+            savingRef.current = false
+            flush()
+          })
+      }
+      flush()
+    }, 2000)
     return () => clearTimeout(saveTimer.current)
   }, [state, ready, user])
 
@@ -471,6 +495,7 @@ export function ProgressProvider({ children }) {
 
   const value = {
     ready,
+    loadError,
     completed: state.completed, toggleModule, completedIds, completedCount, total, xp, level, levelDone,
     quizPassed: state.quizPassed, passQuiz, quizPassedCount,
     portfolio: state.portfolio, addPortfolioItem, removePortfolioItem,
@@ -491,7 +516,17 @@ export function ProgressProvider({ children }) {
     resetProgress,
   }
 
-  return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>
+  return (
+    <ProgressContext.Provider value={value}>
+      {loadError && (
+        <div className="progress-load-error">
+          ⚠ Не вдалося завантажити твій прогрес із сервера (він перевантажений або недоступний). Щоб нічого не затерти, збереження вимкнено.
+          <button type="button" className="cl-mini-btn" onClick={() => window.location.reload()}>🔄 Оновити сторінку</button>
+        </div>
+      )}
+      {children}
+    </ProgressContext.Provider>
+  )
 }
 
 export function useProgress() {

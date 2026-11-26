@@ -8,6 +8,9 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState(null)
   const [profileLoading, setProfileLoading] = useState(true)
+  // Якщо сервер не відповідає — не чекаємо вічно на «Завантаження…»,
+  // а показуємо помилку з кнопкою «Спробувати знову».
+  const [profileError, setProfileError] = useState(false)
 
   const loadProfile = useCallback(async (uid) => {
     if (!uid) {
@@ -16,11 +19,21 @@ export function AuthProvider({ children }) {
       return
     }
     setProfileLoading(true)
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('user_id', uid)
-      .maybeSingle()
+    setProfileError(false)
+    let timer
+    const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve({ timedOut: true }), 15000) })
+    const res = await Promise.race([
+      supabase.from('profiles').select('full_name').eq('user_id', uid).maybeSingle(),
+      timeout,
+    ])
+    clearTimeout(timer)
+    if (res.timedOut) {
+      console.warn('Сервер не відповів на запит профілю за 15 с')
+      setProfileError(true)
+      setProfileLoading(false)
+      return
+    }
+    const { data, error } = res
     if (error) {
       console.warn('Не вдалося завантажити профіль', error)
       setProfile({ full_name: '' })
@@ -82,7 +95,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, profile, profileLoading, sendMagicLink, saveProfileName, logout }}>
+    <AuthContext.Provider value={{ user, loading, profile, profileLoading, profileError, retryProfile: () => loadProfile(user?.id), sendMagicLink, saveProfileName, logout }}>
       {children}
     </AuthContext.Provider>
   )

@@ -135,7 +135,7 @@ function ColorWheel({ hue, sat, value, onPick }) {
 // обʼєктом. Так однаково працюють усі пензлі й інструменти без їх
 // переписування. Гумка дає обʼєкт кольору фону (його можна видалити —
 // і стерте повернеться).
-const MAX_LAYERS = 80
+const MAX_LAYERS = 50
 let layerSeq = 0
 function newLayerId() {
   layerSeq += 1
@@ -324,8 +324,25 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
     composite()
     save()
   }
+  // Плоска картинка — JPEG у логічному розмірі (полотно непрозоре, файл
+  // у рази менший за PNG у подвоєних пікселях екрана).
   function save() {
-    onChangeImage(canvasToDataUrl(canvasRef.current), serializeLayers())
+    const c = document.createElement('canvas')
+    c.width = CANVAS_W
+    c.height = CANVAS_H
+    c.getContext('2d').drawImage(canvasRef.current, 0, 0, CANVAS_W, CANVAS_H)
+    onChangeImage(c.toDataURL('image/jpeg', 0.9), serializeLayers())
+  }
+  // PNG обʼєкта для збереження — у логічних пікселях (не ×2 для Retina).
+  function layerSrc(canvas, w, h) {
+    const tw = Math.max(1, Math.round(w))
+    const th = Math.max(1, Math.round(h))
+    if (canvas.width <= tw) return canvas.toDataURL('image/png')
+    const c = document.createElement('canvas')
+    c.width = tw
+    c.height = th
+    c.getContext('2d').drawImage(canvas, 0, 0, tw, th)
+    return c.toDataURL('image/png')
   }
   // Кінець дії: різниця «до/після» → новий обʼєкт.
   function commit() {
@@ -350,7 +367,7 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
           const cx = c.getContext('2d')
           cx.fillStyle = colorRef.current
           cx.fillRect(0, 0, c.width, c.height)
-          next = [{ ...layer, name: 'Фон', x: 0, y: 0, w: CANVAS_W, h: CANVAS_H, canvas: c, src: c.toDataURL('image/png') }, ...layersRef.current]
+          next = [{ ...layer, name: 'Фон', x: 0, y: 0, w: CANVAS_W, h: CANVAS_H, canvas: c, src: layerSrc(c, CANVAS_W, CANVAS_H) }, ...layersRef.current]
         } else {
           next = layer.kind === 'fillArea' ? placeFillUnderLines(layer) : [...layersRef.current, layer]
         }
@@ -405,7 +422,7 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
     }
     cx.putImageData(out, 0, 0)
     const r = W / CANVAS_W
-    return { id: newLayerId(), name: '', x: x0 / r, y: y0 / r, w: w / r, h: h / r, visible: true, canvas: c, src: c.toDataURL('image/png') }
+    return { id: newLayerId(), name: '', x: x0 / r, y: y0 / r, w: w / r, h: h / r, visible: true, canvas: c, src: layerSrc(c, w / r, h / r) }
   }
   // Обʼєднує перші `count` обʼєктів (знизу) в один — щоб малюнок не ріс безмежно.
   function mergeLayers(list, count) {
@@ -423,7 +440,7 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
     c.height = Math.max(1, Math.round((y1 - y0) * r))
     const cx = c.getContext('2d')
     for (const L of visible) cx.drawImage(L.canvas, (L.x - x0) * r, (L.y - y0) * r, L.w * r, L.h * r)
-    return [{ id: newLayerId(), name: 'Обʼєднані обʼєкти', x: x0, y: y0, w: x1 - x0, h: y1 - y0, visible: true, canvas: c, src: c.toDataURL('image/png') }, ...rest]
+    return [{ id: newLayerId(), name: 'Обʼєднані обʼєкти', x: x0, y: y0, w: x1 - x0, h: y1 - y0, visible: true, canvas: c, src: layerSrc(c, x1 - x0, y1 - y0) }, ...rest]
   }
   function mergeAll() {
     if (layersRef.current.length < 2) return
@@ -530,7 +547,7 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
       out.data[j] = fr; out.data[j + 1] = fg; out.data[j + 2] = fb; out.data[j + 3] = 255
     }
     cx.putImageData(out, 0, 0)
-    const grown = { ...layer, x: gx0 / r, y: gy0 / r, w: w / r, h: h / r, canvas: c, src: c.toDataURL('image/png') }
+    const grown = { ...layer, x: gx0 / r, y: gy0 / r, w: w / r, h: h / r, canvas: c, src: layerSrc(c, w / r, h / r) }
     return [...ls.slice(0, insertAt), grown, ...ls.slice(insertAt)]
   }
 
@@ -591,7 +608,7 @@ export default function FreePaintCanvas({ initialImage, initialLayers, onChangeI
         }
       }
       cx.putImageData(img, 0, 0)
-      return { ...F, canvas: c, src: c.toDataURL('image/png') }
+      return { ...F, canvas: c, src: layerSrc(c, F.w, F.h) }
     })
   }
   function deleteLayer(id) {

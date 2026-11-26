@@ -1436,7 +1436,8 @@ function ExportTab({ objects, duration, getScreenshot, onRecordVideo, recording,
 // стартував би з порожньою сценою й автозбереженням затер би справжню.
 export default function ThreeDAnimEditor() {
   const { projectId } = useParams()
-  const { threeDProjects, ready } = useProgress()
+  const { threeDProjects, ready, loadError } = useProgress()
+  if (loadError) return <p className="cl-tab-desc" style={{ padding: 24 }}>⚠ Прогрес не завантажився з сервера — онови сторінку трохи згодом.</p>
   if (!ready) return <p className="cl-tab-desc" style={{ padding: 24 }}>Завантаження 3D-проєкту…</p>
   if (!threeDProjects.some((p) => p.id === projectId)) return <NotFound />
   return <ThreeDAnimEditorInner key={projectId} />
