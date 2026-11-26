@@ -321,14 +321,25 @@ function distToSegment(p, a, b) {
 }
 
 // 2D-редактор контуру «Своєї форми»: тягни точки, клік по порожньому
-// місцю — нова точка (вставляється в найближчий відрізок), подвійний клік
-// по точці — видалити. Для «обертання» ліва половина — лише дзеркальне
-// превʼю: профіль задається праворуч від осі.
+// місцю — нова точка (вставляється в найближчий відрізок). Видалення:
+// подвійний клік чи права кнопка по точці, кнопка «Видалити точку» для
+// обраної, «Менше точок» — спрощення контуру. Для «обертання» ліва
+// половина — лише дзеркальне превʼю: профіль задається праворуч від осі.
+//
+// Важливо: захоплення вказівника (setPointerCapture) переадресовує click на
+// сам <svg>, тож «клік по точці» приходить як клік по фону. Раніше це
+// додавало нову точку на кожен клік/подвійний клік по точці — тепер клік,
+// що почався на точці або поряд з нею, ніколи не створює нову.
 function ProfileEditor({ mode, points, onChange }) {
   const svgRef = useRef(null)
   const dragIdx = useRef(null)
+  const downOnHandle = useRef(false)
+  const [sel, setSel] = useState(null)
   const closed = mode === 'extrude'
   const R = PROFILE_RANGE
+  const HIT = 0.1
+  const minPts = mode === 'lathe' ? 2 : 3
+  const selIdx = sel !== null && sel < points.length ? sel : null
 
   function toLocal(e) {
     const rect = svgRef.current.getBoundingClientRect()
@@ -340,6 +351,30 @@ function ProfileEditor({ mode, points, onChange }) {
     if (mode === 'lathe') x = Math.max(0, x)
     return { x, y }
   }
+  function nearest(p) {
+    let best = -1
+    let bestD = HIT
+    points.forEach((pt, i) => {
+      const d = Math.hypot(pt.x - p.x, pt.y - p.y)
+      if (d < bestD) { bestD = d; best = i }
+    })
+    return best
+  }
+  function removeAt(i) {
+    if (i < 0 || points.length <= minPts) return
+    onChange(points.filter((_, j) => j !== i))
+    setSel(null)
+  }
+  function simplify() {
+    let eps = 0.02
+    let pts = closed ? simplifyPath([...points, points[0]], eps).slice(0, -1) : simplifyPath(points, eps)
+    // Якщо вже нема чого прибрати — трохи сильніше спрощення.
+    while (pts.length >= points.length && eps < 0.2) {
+      eps *= 1.6
+      pts = closed ? simplifyPath([...points, points[0]], eps).slice(0, -1) : simplifyPath(points, eps)
+    }
+    if (pts.length >= minPts && pts.length < points.length) { onChange(pts); setSel(null) }
+  }
   function handleMove(e) {
     if (dragIdx.current === null) return
     const p = toLocal(e)
@@ -349,8 +384,9 @@ function ProfileEditor({ mode, points, onChange }) {
     dragIdx.current = null
   }
   function handleBgClick(e) {
-    if (e.target.dataset.handle) return
+    if (downOnHandle.current) { downOnHandle.current = false; return }
     const p = toLocal(e)
+    if (nearest(p) >= 0) return
     const segCount = closed ? points.length : points.length - 1
     let best = 0
     let bestD = Infinity
@@ -361,6 +397,14 @@ function ProfileEditor({ mode, points, onChange }) {
     const next = [...points]
     next.splice(best + 1, 0, p)
     onChange(next)
+    setSel(best + 1)
+  }
+  function handleDouble(e) {
+    removeAt(nearest(toLocal(e)))
+  }
+  function handleContext(e) {
+    e.preventDefault()
+    removeAt(nearest(toLocal(e)))
   }
   const toSvg = (pt) => `${pt.x},${-pt.y}`
   const path = points.map(toSvg).join(' ')
@@ -372,47 +416,56 @@ function ProfileEditor({ mode, points, onChange }) {
     grid.push(<line key={'h' + v} x1={-R} y1={v} x2={R} y2={v} stroke={major ? '#6b6b80' : '#2c2c38'} strokeWidth={major ? 0.015 : 0.008} />)
   }
   return (
-    <svg
-      ref={svgRef}
-      className="shape-profile-svg"
-      viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`}
-      onPointerMove={handleMove}
-      onPointerUp={handleUp}
-      onPointerLeave={handleUp}
-      onClick={handleBgClick}
-    >
-      <rect x={-R} y={-R} width={2 * R} height={2 * R} fill="#14141b" />
-      {grid}
-      {mode === 'lathe' && <rect x={-R} y={-R} width={R} height={2 * R} fill="rgba(0,0,0,0.35)" />}
-      {mode === 'lathe' && <polyline points={mirror} fill="none" stroke="#7d78ff" strokeWidth={0.02} strokeDasharray="0.06 0.05" opacity={0.6} />}
-      {closed
-        ? <polygon points={path} fill="rgba(125,120,255,0.25)" stroke="#9b97ff" strokeWidth={0.025} />
-        : <polyline points={path} fill="none" stroke="#9b97ff" strokeWidth={0.03} />}
-      {points.map((pt, i) => (
-        <circle
-          key={i}
-          data-handle="1"
-          cx={pt.x}
-          cy={-pt.y}
-          r={0.065}
-          fill={i === 0 ? '#ffd23f' : '#ffffff'}
-          stroke="#3E37E0"
-          strokeWidth={0.02}
-          style={{ cursor: 'grab' }}
-          onPointerDown={(e) => {
-            e.preventDefault()
-            dragIdx.current = i
-            svgRef.current.setPointerCapture?.(e.pointerId)
-          }}
-          onDoubleClick={(e) => {
-            e.stopPropagation()
-            if (points.length > 3) onChange(points.filter((_, j) => j !== i))
-          }}
-        >
-          <title>Точка {i + 1}: ({pt.x}; {pt.y}) — подвійний клік видаляє</title>
-        </circle>
-      ))}
-    </svg>
+    <div>
+      <svg
+        ref={svgRef}
+        className="shape-profile-svg"
+        viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`}
+        onPointerMove={handleMove}
+        onPointerUp={handleUp}
+        onPointerLeave={handleUp}
+        onClick={handleBgClick}
+        onDoubleClick={handleDouble}
+        onContextMenu={handleContext}
+      >
+        <rect x={-R} y={-R} width={2 * R} height={2 * R} fill="#14141b" />
+        {grid}
+        {mode === 'lathe' && <rect x={-R} y={-R} width={R} height={2 * R} fill="rgba(0,0,0,0.35)" />}
+        {mode === 'lathe' && <polyline points={mirror} fill="none" stroke="#7d78ff" strokeWidth={0.02} strokeDasharray="0.06 0.05" opacity={0.6} />}
+        {closed
+          ? <polygon points={path} fill="rgba(125,120,255,0.25)" stroke="#9b97ff" strokeWidth={0.025} />
+          : <polyline points={path} fill="none" stroke="#9b97ff" strokeWidth={0.03} />}
+        {points.map((pt, i) => (
+          <circle
+            key={i}
+            data-handle="1"
+            cx={pt.x}
+            cy={-pt.y}
+            r={i === selIdx ? 0.085 : 0.065}
+            fill={i === selIdx ? '#ff5d5d' : i === 0 ? '#ffd23f' : '#ffffff'}
+            stroke="#3E37E0"
+            strokeWidth={0.02}
+            style={{ cursor: 'grab' }}
+            onPointerDown={(e) => {
+              e.preventDefault()
+              if (e.button !== 0) return
+              downOnHandle.current = true
+              dragIdx.current = i
+              setSel(i)
+              svgRef.current.setPointerCapture?.(e.pointerId)
+            }}
+          >
+            <title>Точка {i + 1}: ({pt.x}; {pt.y}) — подвійний клік або права кнопка видаляє</title>
+          </circle>
+        ))}
+      </svg>
+      <div className="cl-btn-row" style={{ marginTop: 6 }}>
+        <button type="button" className="cl-mini-btn" disabled={selIdx === null || points.length <= minPts} onClick={() => removeAt(selIdx)}>
+          🗑 Видалити точку{selIdx !== null ? ` ${selIdx + 1}` : ''}
+        </button>
+        <button type="button" className="cl-mini-btn" disabled={points.length <= minPts} onClick={simplify} title="Прибирає точки, без яких форма майже не змінюється">✂ Менше точок</button>
+      </div>
+    </div>
   )
 }
 
@@ -1027,7 +1080,7 @@ function ShapeTab({
             points={profilePoints}
             onChange={(pts) => updateProfile({ points: { [profile.mode]: pts } })}
           />
-          <p className="cl-tab-desc" style={{ marginTop: 6 }}>Тягни точки · клік по порожньому місцю — додати точку · подвійний клік по точці — видалити ({profilePoints.length} точок).</p>
+          <p className="cl-tab-desc" style={{ marginTop: 6 }}>Тягни точки · клік по порожньому місцю — додати точку · подвійний клік чи права кнопка по точці — видалити ({profilePoints.length} точок).</p>
           {profile.mode === 'lathe' && (
             <div className="cl-editrow"><label>Кількість граней (полі)
               <input type="range" min={3} max={64} step={1} value={profile.segments || 48} onChange={(e) => updateProfile({ segments: parseInt(e.target.value, 10) })} />
