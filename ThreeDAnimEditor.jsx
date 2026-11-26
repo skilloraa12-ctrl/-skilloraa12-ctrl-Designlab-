@@ -1373,6 +1373,12 @@ function ThreeDAnimEditorInner() {
   const clipboardRef = useRef(null)
   const editModeRef = useRef(false)
   const paintModeRef = useRef(false)
+  // Обертання обʼєкта перетягуванням — лише за увімкненим перемикачем або
+  // з Alt; за замовчуванням будь-яке перетягування крутить камеру (ракурс),
+  // щоб можна було оглянути сцену з усіх боків, не зачіпаючи обʼєкт.
+  const [rotateObjMode, setRotateObjMode] = useState(false)
+  const rotateObjModeRef = useRef(false)
+  rotateObjModeRef.current = rotateObjMode
   const pointDragRef = useRef(null)
   const softRadiusRef = useRef(softRadius)
   const symmetryRef = useRef(symmetry)
@@ -1492,7 +1498,7 @@ function ThreeDAnimEditorInner() {
         return
       }
       const id = api.pickAt(e.clientX, e.clientY)
-      if (id && id === selectedIdRef.current) {
+      if (id && id === selectedIdRef.current && (rotateObjModeRef.current || e.altKey)) {
         rotating = true
         lastX = e.clientX
         lastY = e.clientY
@@ -2170,7 +2176,9 @@ function ThreeDAnimEditorInner() {
           <br /><br />
           ✏️ Вкладка «Форма» — тягни точки (вершини) фігури прямо у вʼюпорті, щоб змінити її форму; «Своя форма» — малюєш контур по точках.
           <br /><br />
-          🔄 Перетягни обраний об'єкт прямо у вʼюпорті, щоб обертати його (горизонтально — вісь Y, вертикально — вісь X, Shift — нахил по Z). Перетягування будь-де інде обертає камеру.
+          🎥 Ліва кнопка миші — крутити камеру навколо сцени, права кнопка — зсунути сцену вліво/вправо/вгору/вниз, коліщатко — наблизити/віддалити.
+          <br /><br />
+          🔄 Щоб обертати сам обʼєкт мишкою — увімкни «🔄 Крутити обʼєкт» під вʼюпортом або тягни його з затиснутим Alt (горизонтально — вісь Y, вертикально — вісь X, Shift — нахил по Z).
         </LabInfoTip>
       </div>
 
@@ -2193,7 +2201,14 @@ function ThreeDAnimEditorInner() {
             <p className="tl-rotate-hint">🖌 Малюй прямо на «{selected?.name || 'моделі'}». Тягни поза моделлю — крути камеру й малюй з іншого боку.</p>
           ) : editMode ? (
             <p className="tl-rotate-hint">✏️ Режим точок: тягни точку, щоб змінити форму. Тягни поза точками — обертай камеру, щоб рухати точку в іншій площині.</p>
-          ) : selected && <p className="tl-rotate-hint">🔄 Перетягни «{selected.name || 'обраний об\'єкт'}» прямо тут, щоб обертати (Shift — нахил по Z)</p>}
+          ) : (
+            <div className="tl-rotate-hint tl-view-hint">
+              <span>{rotateObjMode && selected
+                ? `🔄 Тягни «${selected.name || 'обраний обʼєкт'}», щоб обертати його (Shift — нахил по Z). Поза ним — камера.`
+                : '🎥 Ліва кнопка — крутити камеру · права — зсунути сцену · коліщатко — наблизити'}</span>
+              <button type="button" className={'cl-mini-btn' + (rotateObjMode ? ' active' : '')} onClick={() => setRotateObjMode((v) => !v)} title="Або тягни обʼєкт із затиснутим Alt">🔄 Крутити обʼєкт</button>
+            </div>
+          )}
 
           <div className="tl-controls">
             <button className="cl-mini-btn" onClick={() => stepFrame(-1)} title="←">⏮</button>

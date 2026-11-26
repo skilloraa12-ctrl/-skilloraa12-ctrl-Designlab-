@@ -254,7 +254,8 @@ export function createAnimScene(container, opts = {}) {
   const controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
   controls.dampingFactor = 0.08
-  controls.minDistance = 1.6
+  controls.minDistance = 0.4 // можна підійти зовсім близько до деталей
+  controls.screenSpacePanning = true // права кнопка рухає сцену паралельно екрану (вліво/вправо/вгору/вниз)
   controls.maxDistance = 16
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.55)
