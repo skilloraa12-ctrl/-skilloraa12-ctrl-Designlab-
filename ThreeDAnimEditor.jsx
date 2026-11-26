@@ -149,9 +149,24 @@ function AxisRow({ label, values, onChange, min = -5, max = 5, step = 0.05, disa
   )
 }
 
-function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScrub, onJumpToKeyframe }) {
+function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScrub, onJumpToKeyframe, onDeleteKeyframe, onClearKeyframes }) {
+  const sel = objects.find((o) => o.id === selectedId)
+  const kfHere = sel && sel.keyframes.find((k) => Math.abs(k.time - currentTime) < 0.01)
   return (
     <div className="tl-tracks">
+      {sel && sel.keyframes.length > 0 && (
+        <div className="tl-kf-bar">
+          {kfHere ? (
+            <>
+              <span>◆ Кадр на <b>{formatTime(kfHere.time)}</b> · «{sel.name || sel.type}»</span>
+              <button type="button" className="cl-mini-btn tl-kf-del" onClick={() => onDeleteKeyframe(sel.id, kfHere.time)}>🗑 Видалити кадр</button>
+            </>
+          ) : (
+            <span>Клікни ромбик ◆, щоб вибрати кадр. Правий чи подвійний клік по ромбику — одразу видалити.</span>
+          )}
+          <button type="button" className="cl-mini-btn" onClick={() => onClearKeyframes(sel.id)} title="Обʼєкт стане статичним у поточній позі">✕ Видалити всі кадри «{sel.name || sel.type}»</button>
+        </div>
+      )}
       {objects.length === 0 && <p className="cl-tab-desc" style={{ margin: 0 }}>Додай обʼєкт зліва, щоб побачити тут його доріжку.</p>}
       {treeOrder(objects).map(({ o, depth }) => {
         const meta = SHAPES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
@@ -174,14 +189,16 @@ function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScru
                 <button
                   key={k.time}
                   type="button"
-                  className="tl-keyframe"
+                  className={'tl-keyframe' + (o.id === selectedId && Math.abs(k.time - currentTime) < 0.01 ? ' active' : '')}
                   style={{ left: `${duration > 0 ? (k.time / duration) * 100 : 0}%` }}
-                  title={`${formatTime(k.time)} · ${k.easing || 'linear'}`}
+                  title={`${formatTime(k.time)} · ${k.easing || 'linear'} — правий чи подвійний клік видаляє`}
                   onClick={(e) => {
                     e.stopPropagation()
                     onSelect(o.id)
                     onJumpToKeyframe(k.time)
                   }}
+                  onDoubleClick={(e) => { e.stopPropagation(); onDeleteKeyframe(o.id, k.time) }}
+                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteKeyframe(o.id, k.time) }}
                 />
               ))}
             </div>
@@ -2293,6 +2310,16 @@ function ThreeDAnimEditorInner() {
     applyObjects(next)
     toastApi.show('✓ Ключовий кадр додано')
   }
+  // Прибрати всю анімацію обʼєкта: він лишається у позі поточного моменту.
+  function clearKeyframes(objId) {
+    const t = currentTimeRef.current
+    applyObjects(objectsRef.current.map((o) => {
+      if (o.id !== objId || o.keyframes.length === 0) return o
+      const pose = poseAt(o, t)
+      return { ...o, position: { ...pose.position }, rotation: { ...pose.rotation }, scale: { ...pose.scale }, keyframes: [] }
+    }))
+    toastApi.show('✓ Анімацію обʼєкта прибрано (Ctrl+Z — повернути)')
+  }
   function deleteKeyframe(objId, time) {
     const next = objectsRef.current.map((o) => (o.id === objId ? { ...o, keyframes: o.keyframes.filter((k) => Math.abs(k.time - time) > 0.01) } : o))
     applyObjects(next)
@@ -2569,7 +2596,7 @@ function ThreeDAnimEditorInner() {
             <input type="range" min={0} max={duration} step={1 / fps} value={currentTime} onChange={(e) => scrub(parseFloat(e.target.value))} />
             <span className="tl-time-label">{formatTime(currentTime)} / {formatTime(duration)}</span>
           </div>
-          <Timeline objects={objects} selectedId={selectedId} onSelect={applySelected} duration={duration} currentTime={currentTime} onScrub={scrub} onJumpToKeyframe={scrub} />
+          <Timeline objects={objects} selectedId={selectedId} onSelect={applySelected} duration={duration} currentTime={currentTime} onScrub={scrub} onJumpToKeyframe={scrub} onDeleteKeyframe={(id, t) => { deleteKeyframe(id, t); toastApi.show('🗑 Кадр видалено (Ctrl+Z — повернути)') }} onClearKeyframes={clearKeyframes} />
         </div>
 
         <div className="tl-editor-right">

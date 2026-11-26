@@ -1978,3 +1978,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .scene-build-box { border: 1px solid var(--line, #2c2c38); border-radius: 10px; padding: 10px; margin-bottom: 12px; }
 .rec-btn.active { background: #e53935 !important; color: #fff !important; border-color: #e53935 !important; }
 .progress-load-error { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 5000; max-width: min(640px, calc(100vw - 32px)); padding: 10px 14px; border-radius: 10px; background: #b3261e; color: #fff; font-size: 13px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+.tl-keyframe.active { background: #ff5d5d; border-color: #fff; transform: translate(-50%, -50%) rotate(45deg) scale(1.25); }
+.tl-kf-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; margin-bottom: 6px; border-radius: 8px; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.35); font-size: 12px; }
+.tl-kf-bar > span { flex: 1; min-width: 180px; }
+.tl-kf-del { background: #e53935 !important; color: #fff !important; border-color: #e53935 !important; }
