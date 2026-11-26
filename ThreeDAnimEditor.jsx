@@ -431,7 +431,7 @@ function strokeToProfilePoints(stroke, mode, startEps = 0.015, maxPoints = 48) {
   const r = (v) => Math.round(v * 100) / 100
   if (mode === 'lathe') {
     let out = pts.map((p) => ({ x: r(Math.abs(p.x) * 0.9), y: r(p.y * 0.9) }))
-    if (out[0].y < out[out.length - 1].y) out = out.reverse()
+    if (out[0].y > out[out.length - 1].y) out = out.reverse() // знизу вгору, як у LatheGeometry
     out = out.filter((p, i) => i === 0 || p.x !== out[i - 1].x || p.y !== out[i - 1].y)
     if (out[0].x > 0) out.unshift({ x: 0, y: out[0].y })
     if (out[out.length - 1].x > 0) out.push({ x: 0, y: out[out.length - 1].y })
@@ -455,6 +455,154 @@ function strokeToProfilePoints(stroke, mode, startEps = 0.015, maxPoints = 48) {
 // Шлях = вузли + для кожного відрізка необовʼязкова контрольна точка
 // квадратичної кривої Безьє (null — пряма). Будь-який інструмент редагує
 // той самий шлях, тож від руки намальоване можна потім вирівняти/вигнути.
+// ── Малюнок → контур ─────────────────────────────────────────────────
+// Малюнок від руки обробляється як картинка, а не як одна лінія: усі
+// штрихи растеризуються товстим пензлем (це ж закриває невеликі щілини
+// між кінцями ліній), усе, що обведене, зафарбовується, а потім обводиться
+// зовнішній контур найбільшої намальованої плями. Тому порядок штрихів,
+// перетини, кілька окремих ліній чи незамкнений на кілька пікселів
+// контур не мають значення: що намальовано — те й стане 3D.
+const TRACE_N = 240
+
+function rasterizeDrawing(strokes, path, closedPath) {
+  const N = TRACE_N
+  const cv = document.createElement('canvas')
+  cv.width = N
+  cv.height = N
+  const ctx = cv.getContext('2d')
+  const px = (p) => [((p.x + 1) / 2) * N, ((1 - p.y) / 2) * N]
+  const CLOSE = 7 // px: товщина пензля для закриття щілин
+  ctx.strokeStyle = '#000'
+  ctx.fillStyle = '#000'
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = CLOSE * 2
+  const draw = (pts, close) => {
+    if (pts.length === 1) { const [x, y] = px(pts[0]); ctx.beginPath(); ctx.arc(x, y, CLOSE, 0, Math.PI * 2); ctx.fill(); return }
+    ctx.beginPath()
+    pts.forEach((p, i) => { const [x, y] = px(p); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y) })
+    if (close) ctx.closePath()
+    ctx.stroke()
+  }
+  strokes.forEach((st) => draw(st, false))
+  if (path.length >= 2) draw(path, closedPath)
+  const data = ctx.getImageData(0, 0, N, N).data
+  const ink = new Uint8Array(N * N)
+  for (let i = 0; i < N * N; i++) ink[i] = data[i * 4 + 3] > 40 ? 1 : 0
+  // Зовнішній фон = заливка від країв по незафарбованих пікселях.
+  const outside = new Uint8Array(N * N)
+  const stack = []
+  for (let i = 0; i < N; i++) stack.push(i, (N - 1) * N + i, i * N, i * N + N - 1)
+  while (stack.length) {
+    const k = stack.pop()
+    if (outside[k] || ink[k]) continue
+    outside[k] = 1
+    const x = k % N
+    const y = (k / N) | 0
+    if (x > 0) stack.push(k - 1)
+    if (x < N - 1) stack.push(k + 1)
+    if (y > 0) stack.push(k - N)
+    if (y < N - 1) stack.push(k + N)
+  }
+  // Заповнена фігура, «стоншена» назад на півпензля мінус тонку лінію,
+  // щоб контур ліг посередині намальованої лінії, а не по її зовнішньому краю.
+  const filled = new Uint8Array(N * N)
+  for (let i = 0; i < N * N; i++) filled[i] = outside[i] ? 0 : 1
+  const R = CLOSE - 2
+  const eroded = new Uint8Array(N * N)
+  const offs = []
+  for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) if (dx * dx + dy * dy <= R * R) offs.push([dx, dy])
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (!filled[y * N + x]) continue
+      let ok = 1
+      for (const [dx, dy] of offs) {
+        const xx = x + dx
+        const yy = y + dy
+        if (xx < 0 || yy < 0 || xx >= N || yy >= N || !filled[yy * N + xx]) { ok = 0; break }
+      }
+      eroded[y * N + x] = ok
+    }
+  }
+  // Лишаємо тільки найбільшу пляму (випадкові крапки ігноруються).
+  const label = new Int32Array(N * N)
+  let best = 0
+  let bestSize = 0
+  let cur = 0
+  for (let i = 0; i < N * N; i++) {
+    if (!eroded[i] || label[i]) continue
+    cur += 1
+    let size = 0
+    const st = [i]
+    label[i] = cur
+    while (st.length) {
+      const k = st.pop()
+      size += 1
+      const x = k % N
+      const nb = [x > 0 ? k - 1 : -1, x < N - 1 ? k + 1 : -1, k - N, k + N]
+      for (const j of nb) if (j >= 0 && j < N * N && eroded[j] && !label[j]) { label[j] = cur; st.push(j) }
+    }
+    if (size > bestSize) { bestSize = size; best = cur }
+  }
+  if (!best || bestSize < 30) return null
+  const mask = new Uint8Array(N * N)
+  for (let i = 0; i < N * N; i++) mask[i] = label[i] === best ? 1 : 0
+  return mask
+}
+
+// Обхід зовнішнього контуру маски (Moore neighbor tracing) → точки -1..1.
+function traceMaskOutline(mask) {
+  const N = TRACE_N
+  const at = (x, y) => (x >= 0 && y >= 0 && x < N && y < N ? mask[y * N + x] : 0)
+  let start = -1
+  for (let i = 0; i < N * N; i++) if (mask[i]) { start = i; break }
+  if (start < 0) return []
+  const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+  const sx = start % N
+  const sy = (start / N) | 0
+  let x = sx
+  let y = sy
+  let dir = 7
+  const out = []
+  for (let guard = 0; guard < N * N * 2; guard++) {
+    out.push({ x: ((x + 0.5) / N) * 2 - 1, y: 1 - ((y + 0.5) / N) * 2 })
+    let found = false
+    for (let k = 0; k < 8; k++) {
+      const d = (dir + 6 + k) % 8 // починаємо огляд ліворуч від попереднього напрямку
+      const nx = x + dirs[d][0]
+      const ny = y + dirs[d][1]
+      if (at(nx, ny)) { x = nx; y = ny; dir = d; found = true; break }
+    }
+    if (!found || (x === sx && y === sy)) break
+  }
+  return out
+}
+
+// Превʼю/результат малюнка: для обʼємної фігури — замкнений контур, для
+// тіла обертання — силует (найбільший радіус у кожному ряду).
+function traceDrawing(strokes, path, closedPath, mode) {
+  const mask = rasterizeDrawing(strokes, path, closedPath)
+  if (!mask) return null
+  const N = TRACE_N
+  if (mode === 'lathe') {
+    const rows = []
+    for (let y = N - 1; y >= 0; y -= 2) {
+      let r = -1
+      for (let x = 0; x < N; x++) if (mask[y * N + x]) r = Math.max(r, Math.abs(((x + 0.5) / N) * 2 - 1))
+      if (r >= 0) rows.push({ x: r, y: 1 - ((y + 0.5) / N) * 2 })
+    }
+    if (rows.length < 2) return null
+    return simplifyPath(rows, 0.006)
+  }
+  const outline = traceMaskOutline(mask)
+  if (outline.length < 8) return null
+  // Допуск ~1.5 px сітки: прибирає тремтіння руки, але лишає кути.
+  let pts = simplifyPath([...outline, outline[0]], 0.013).slice(0, -1)
+  let eps = 0.013
+  while (pts.length > 80) { eps *= 1.4; pts = simplifyPath([...outline, outline[0]], eps).slice(0, -1) }
+  return pts.length >= 3 ? pts : null
+}
+
 const DRAW_GRID = 0.125
 const HIT_R = 0.06
 
@@ -469,9 +617,11 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
   const dragRef = useRef(null) // { kind: 'free' | 'node' | 'ctrl', index }
   const hoverRef = useRef(null)
   const [mode, setMode] = useState(initialMode)
-  const [tool, setTool] = useState('line')
+  const [tool, setTool] = useState('free')
   const [snap, setSnap] = useState(true)
   const [nodes, setNodes] = useState([])
+  const [inks, setInks] = useState([]) // штрихи від руки (кожен — масив точок)
+  const [order, setOrder] = useState([]) // 'ink' | 'node' — для «↶ Крок назад»
   const [ctrls, setCtrls] = useState([])
   const [depth, setDepth] = useState(0.5)
   const [bevel, setBevel] = useState(true)
@@ -501,6 +651,12 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
     if (closed && ns.length >= 3) out.pop() // останній збігається з першим
     return out
   }
+
+  const traced = useMemo(
+    () => (inks.length > 0 ? traceDrawing(inks, samplePath(), closed && nodes.length >= 3, mode) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [inks, nodes, ctrls, mode]
+  )
 
   function redraw() {
     const cv = canvasRef.current
@@ -550,13 +706,24 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
     }
     // Штрих від руки (поки малюється)
     if (dragRef.current?.kind === 'free') {
+      inks.forEach((st) => drawLine(st, '#bebbff', 4))
+      drawLine(samplePath(), '#bebbff', 4)
       drawLine(strokeRef.current, '#bebbff', 4)
       return
     }
+    // Превʼю того, що стане 3D (контур малюнка від руки).
+    if (traced) {
+      if (closed) drawLine(traced, 'rgba(255,210,63,0.9)', 2, 'rgba(125,120,255,0.28)')
+      else {
+        const prof = [{ x: 0, y: traced[0].y }, ...traced, { x: 0, y: traced[traced.length - 1].y }]
+        drawLine([...prof, ...[...prof].reverse().map((p) => ({ x: -p.x, y: p.y }))], 'rgba(255,210,63,0.9)', 2, 'rgba(125,120,255,0.28)')
+      }
+    }
+    inks.forEach((st) => drawLine(st.length === 1 ? [st[0], st[0]] : st, '#bebbff', 4))
     const path = samplePath()
     if (path.length >= 2) {
-      drawLine(path, '#bebbff', 4, closed && nodes.length >= 3 ? 'rgba(125,120,255,0.22)' : null)
-      if (mode === 'lathe') drawLine(path.map((p) => ({ x: -p.x, y: p.y })), 'rgba(190,187,255,0.3)', 3)
+      drawLine(path, '#bebbff', 4, !traced && closed && nodes.length >= 3 ? 'rgba(125,120,255,0.22)' : null)
+      if (mode === 'lathe' && !traced) drawLine(path.map((p) => ({ x: -p.x, y: p.y })), 'rgba(190,187,255,0.3)', 3)
     }
     // Превʼю наступного відрізка лінійкою + довжина й кут
     const hv = hoverRef.current
@@ -644,7 +811,7 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
     e.preventDefault()
     canvasRef.current.setPointerCapture?.(e.pointerId)
     const p = toLocal(e)
-    const hit = hitTest(p)
+    const hit = tool === 'free' ? null : hitTest(p) // від руки завжди малює, не чіпляє точки
     if (hit) { dragRef.current = hit; return }
     if (tool === 'free') {
       dragRef.current = { kind: 'free' }
@@ -656,6 +823,7 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
     const ns = nodesRef.current
     const q = constrain(p, e, ns[ns.length - 1])
     setNodes([...ns, q])
+    setOrder((o) => [...o, 'node'])
     setCtrls([...ctrlsRef.current.slice(0, Math.max(0, ns.length - 1)), null, null].slice(0, ns.length + 1))
   }
   function move(e) {
@@ -696,13 +864,9 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
     if (d?.kind === 'free') {
       const st = strokeRef.current
       strokeRef.current = []
-      if (st.length >= 3) {
-        let eps = 0.012
-        let pts = simplifyPath(st, eps)
-        while (pts.length > 40) { eps *= 1.4; pts = simplifyPath(st, eps) }
-        if (closed && pts.length > 3 && Math.hypot(pts[0].x - pts[pts.length - 1].x, pts[0].y - pts[pts.length - 1].y) < 0.08) pts = pts.slice(0, -1)
-        setNodes(pts)
-        setCtrls(pts.map(() => null))
+      if (st.length >= 1) {
+        setInks((arr) => [...arr, st])
+        setOrder((o) => [...o, 'ink'])
       }
     }
     force((v) => v + 1)
@@ -724,24 +888,31 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
     }
   }
   function undoLast() {
+    const last = order[order.length - 1] || (inks.length ? 'ink' : 'node')
+    setOrder(order.slice(0, -1))
+    if (last === 'ink') { setInks(inks.slice(0, -1)); return }
     setNodes(nodesRef.current.slice(0, -1))
     setCtrls(ctrlsRef.current.slice(0, Math.max(0, nodesRef.current.length - 1)))
   }
   function clear() {
     setNodes([])
     setCtrls([])
+    setInks([])
+    setOrder([])
   }
-  const canFinish = nodes.length >= (closed ? 3 : 2)
+  const canFinish = inks.length > 0 ? !!traced : nodes.length >= (closed ? 3 : 2)
   function finish() {
     // Шлях уже чистий (вузли + криві) — спрощуємо мінімально, щоб вигини
     // лишились плавними в 3D.
-    const pts = strokeToProfilePoints(samplePath(), mode, 0.002, 90)
+    const pts = inks.length > 0
+      ? (traced ? strokeToProfilePoints(traced, mode, 0.002, 90) : null)
+      : strokeToProfilePoints(samplePath(), mode, 0.002, 90)
     if (!pts) return
     onDone({ mode, points: pts, depth, bevel })
   }
 
   const hint = tool === 'free'
-    ? 'Малюй мишкою одним рухом — після відпускання лінія стане точками, які можна тягнути.'
+    ? 'Малюй мишкою скільки завгодно ліній — жовтий контур показує, що саме стане 3D (усе обведене зафарбовується).'
     : tool === 'line'
       ? 'Клікай — кожен клік ставить точку, між ними рівна лінія. Показано довжину й кут. Shift — кут кратний 15°.'
       : 'Тягни ромбик посередині відрізка — лінія вигнеться в той бік. Подвійний клік по ромбику — знову пряма.'
@@ -785,8 +956,8 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
           </>
         )}
         <div className="cl-picker-top" style={{ marginTop: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-          <button className="cl-mini-btn" onClick={undoLast} disabled={nodes.length === 0}>↶ Остання точка</button>
-          <button className="cl-mini-btn" onClick={clear} disabled={nodes.length === 0}>🧽 Стерти</button>
+          <button className="cl-mini-btn" onClick={undoLast} disabled={nodes.length === 0 && inks.length === 0}>↶ Крок назад</button>
+          <button className="cl-mini-btn" onClick={clear} disabled={nodes.length === 0 && inks.length === 0}>🧽 Стерти</button>
           <button className="cl-mini-btn" onClick={onCancel}>Скасувати</button>
           <button className="harmony-btn" onClick={finish} disabled={!canFinish}>✨ Перетворити на 3D</button>
         </div>
