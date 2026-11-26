@@ -4,6 +4,9 @@ import {
   strokeSegment, strokeCartoonPath, dot, drawShape, drawText, canvasToDataUrl, pointFromEvent,
   drawColorWheel, pickFromWheel, hsvToHex,
 } from './freePaintEngine.js'
+import { useProgress } from '../ProgressContext.jsx'
+import { renderThreeDSnapshot, SNAPSHOT_STYLES } from './threeSnapshot.js'
+import { CAMERA_VIEWS } from './threeAnimScene.js'
 
 const CANVAS_W = 1100
 const CANVAS_H = 760
@@ -17,6 +20,75 @@ const WHEEL_SIZE = 140
 // текст із попереднім переглядом обертання/масштабу перед нанесенням.
 // Повноекранний режим за замовчуванням — малювати в вузькій колонці
 // студії незручно. Автозбереження в imageDataUrl асета після кожної дії.
+// Вікно «Вставити з 3D»: вибір 3D-проєкту з 3D Design Studio, ракурсу й
+// стилю (кольоровий / білий макет / розмальовка-контур) з живим превʼю.
+// Знімок має прозорий фон і лягає поверх полотна (можна скасувати ↶).
+function ThreeDImportModal({ projects, width, height, onInsert, onClose }) {
+  const usable = projects.filter((p) => (p.anim?.objects || []).some((o) => o.type !== 'pointLight' && o.type !== 'spotLight'))
+  const [projectId, setProjectId] = useState(usable[0]?.id || null)
+  const [view, setView] = useState('iso')
+  const [style, setStyle] = useState('lines')
+  const [preview, setPreview] = useState(null)
+  const project = usable.find((p) => p.id === projectId)
+
+  useEffect(() => {
+    if (!project) { setPreview(null); return }
+    let cancelled = false
+    // Рендер у наступному кадрі, щоб вікно встигло відмалюватись.
+    const t = setTimeout(() => {
+      try {
+        const url = renderThreeDSnapshot(project, { width, height, view, style })
+        if (!cancelled) setPreview(url)
+      } catch (e) {
+        console.error(e)
+        if (!cancelled) setPreview(null)
+      }
+    }, 30)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [project, view, style, width, height])
+
+  return (
+    <div className="fpc-3d-backdrop" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="draw-modal fpc-3d-modal" role="dialog" aria-label="Вставити з 3D">
+        <div className="cl-section-title" style={{ marginTop: 0 }}>🧊 Вставити свою 3D-модель і розмалювати</div>
+        {usable.length === 0 ? (
+          <p className="cl-tab-desc">У тебе ще немає 3D-проєктів із фігурами. Створи модель у 3D Design Studio (редактор з анімацією) — і вона зʼявиться тут.</p>
+        ) : (
+          <>
+            <div className="cl-section-title">3D-проєкт</div>
+            <div className="cl-btn-row">
+              {usable.map((p) => (
+                <button key={p.id} type="button" className={'cl-mini-btn' + (p.id === projectId ? ' active' : '')} onClick={() => setProjectId(p.id)}>
+                  {p.name} ({p.anim.objects.length})
+                </button>
+              ))}
+            </div>
+            <div className="cl-section-title">Ракурс</div>
+            <div className="cl-btn-row">
+              {CAMERA_VIEWS.map((v) => (
+                <button key={v.key} type="button" className={'cl-mini-btn' + (v.key === view ? ' active' : '')} onClick={() => setView(v.key)}>{v.icon} {v.label}</button>
+              ))}
+            </div>
+            <div className="cl-section-title">Стиль</div>
+            <div className="cl-btn-row">
+              {SNAPSHOT_STYLES.map((st) => (
+                <button key={st.key} type="button" className={'cl-mini-btn' + (st.key === style ? ' active' : '')} onClick={() => setStyle(st.key)}>{st.label}</button>
+              ))}
+            </div>
+            <div className="fpc-3d-preview">
+              {preview ? <img src={preview} alt="Превʼю 3D-моделі" /> : <span className="cl-tab-desc">Рендер…</span>}
+            </div>
+          </>
+        )}
+        <div className="cl-picker-top" style={{ marginTop: 12, justifyContent: 'flex-end' }}>
+          <button type="button" className="cl-mini-btn" onClick={onClose}>Скасувати</button>
+          <button type="button" className="harmony-btn" disabled={!preview} onClick={() => onInsert(preview)}>✓ Вставити на полотно</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ColorWheel({ hue, sat, value, onPick }) {
   const wheelRef = useRef(null)
   useEffect(() => {
@@ -75,6 +147,8 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const [size, setSize] = useState(12)
   const [opacity, setOpacity] = useState(1)
   const [fullscreen, setFullscreen] = useState(true)
+  const [show3d, setShow3d] = useState(false)
+  const { threeDProjects = [] } = useProgress() || {}
   const [canUndo, setCanUndo] = useState(false)
 
   const [hue, setHue] = useState(0)
@@ -233,6 +307,21 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     onMessage?.('✓ Полотно очищено')
   }
 
+  // Знімок 3D-моделі (прозорий фон) лягає поверх поточного малюнка.
+  function insertImage(dataUrl) {
+    const ctx = ctxRef.current
+    if (!ctx || !dataUrl) return
+    const img = new Image()
+    img.onload = () => {
+      pushUndo(captureSnapshot())
+      ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H)
+      commit()
+      onMessage?.('✓ 3D-модель на полотні — розмальовуй!')
+    }
+    img.src = dataUrl
+    setShow3d(false)
+  }
+
   function addPaletteColor() { setPalette([...palette, color]) }
   function removePaletteColor(i) {
     if (palette.length <= 1) return
@@ -256,6 +345,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
         <button type="button" className={'cl-mini-btn' + (tool === 'text' ? ' active' : '')} onClick={() => setTool('text')}>Т Текст</button>
         <button type="button" className="cl-mini-btn" onClick={undo} disabled={!canUndo}>↶ Скасувати</button>
         <button type="button" className="cl-mini-btn" onClick={clearCanvas}>🗑 Очистити</button>
+        <button type="button" className="cl-mini-btn" onClick={() => setShow3d(true)}>🧊 З 3D</button>
         <button type="button" className="cl-mini-btn" onClick={() => setFullscreen(!fullscreen)}>{fullscreen ? '✕ Закрити' : '⛶ На весь екран'}</button>
       </div>
 
@@ -361,6 +451,9 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
           onPointerLeave={end}
         />
       </div>
+      {show3d && (
+        <ThreeDImportModal projects={threeDProjects} width={CANVAS_W} height={CANVAS_H} onInsert={insertImage} onClose={() => setShow3d(false)} />
+      )}
     </div>
   )
 }

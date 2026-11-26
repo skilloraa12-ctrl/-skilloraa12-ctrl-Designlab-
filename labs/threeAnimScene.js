@@ -157,14 +157,14 @@ export const CAMERA_VIEWS = [
   { key: 'top', icon: '⬛', label: 'Зверху', position: [0.001, 7, 0.001] },
 ]
 
-export function createAnimScene(container) {
+export function createAnimScene(container, opts = {}) {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0x16161d)
 
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100)
   camera.position.set(3.2, 2.6, 4.4)
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: !!opts.alpha })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   container.appendChild(renderer.domElement)
 
