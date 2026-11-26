@@ -793,6 +793,33 @@ export function createAnimScene(container, opts = {}) {
     scene.background = new THREE.Color(p.bg)
   }
 
+  // ── Кнопки навігації вʼюпорта ──
+  // Зсув сцени паралельно екрану (камера й точка, навколо якої вона
+  // крутиться, рухаються разом) — крок пропорційний відстані до сцени.
+  function panView(dx, dy) {
+    const dist = camera.position.distanceTo(controls.target)
+    const step = dist * 0.15
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0)
+    const up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1)
+    const off = right.multiplyScalar(dx * step).add(up.multiplyScalar(dy * step))
+    camera.position.add(off)
+    controls.target.add(off)
+    controls.update()
+  }
+  // Поворот камери навколо сцени (вліво/вправо) на кут у градусах.
+  function orbitView(deg) {
+    const off = camera.position.clone().sub(controls.target)
+    off.applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(deg))
+    camera.position.copy(controls.target).add(off)
+    controls.update()
+  }
+  function zoomView(factor) {
+    const off = camera.position.clone().sub(controls.target)
+    const len = THREE.MathUtils.clamp(off.length() * factor, controls.minDistance, controls.maxDistance)
+    camera.position.copy(controls.target).add(off.setLength(len))
+    controls.update()
+  }
+
   function setCameraView(viewKey) {
     const v = CAMERA_VIEWS.find((c) => c.key === viewKey) || CAMERA_VIEWS[0]
     camera.position.set(...v.position)
@@ -834,6 +861,9 @@ export function createAnimScene(container, opts = {}) {
     screenshot,
     setLighting,
     setCameraView,
+    panView,
+    orbitView,
+    zoomView,
     setFov,
     setControlsEnabled,
     showPointHandles,

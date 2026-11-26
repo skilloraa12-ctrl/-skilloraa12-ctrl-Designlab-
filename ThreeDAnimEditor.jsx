@@ -2176,7 +2176,7 @@ function ThreeDAnimEditorInner() {
           <br /><br />
           ✏️ Вкладка «Форма» — тягни точки (вершини) фігури прямо у вʼюпорті, щоб змінити її форму; «Своя форма» — малюєш контур по точках.
           <br /><br />
-          🎥 Ліва кнопка миші — крутити камеру навколо сцени, права кнопка — зсунути сцену вліво/вправо/вгору/вниз, коліщатко — наблизити/віддалити.
+          🎥 Ліва кнопка миші — крутити камеру навколо сцени; Shift+ліва або права кнопка — зсунути сцену вліво/вправо/вгору/вниз; коліщатко — наблизити/віддалити. Те саме — кнопками ▲◀▶▼ ⟲⟳ + − ⌂ у куті вʼюпорта.
           <br /><br />
           🔄 Щоб обертати сам обʼєкт мишкою — увімкни «🔄 Крутити обʼєкт» під вʼюпортом або тягни його з затиснутим Alt (горизонтально — вісь Y, вертикально — вісь X, Shift — нахил по Z).
         </LabInfoTip>
@@ -2190,6 +2190,19 @@ function ThreeDAnimEditorInner() {
         <div className="tl-editor-center">
           <div className="tl-viewport-wrap">
             <div ref={containerRef} className="tl-editor-viewport" />
+            <div className="tl-nav-bar" title="Навігація камерою">
+              <button type="button" className="cl-mini-btn" onClick={() => sceneApiRef.current?.orbitView(-20)} title="Повернути камеру вліво">⟲</button>
+              <span className="fpc-pad">
+                <button type="button" className="cl-mini-btn" style={{ gridArea: 'u' }} onClick={() => sceneApiRef.current?.panView(0, -1)} title="Сцена вгору">▲</button>
+                <button type="button" className="cl-mini-btn" style={{ gridArea: 'l' }} onClick={() => sceneApiRef.current?.panView(1, 0)} title="Сцена вліво">◀</button>
+                <button type="button" className="cl-mini-btn" style={{ gridArea: 'r' }} onClick={() => sceneApiRef.current?.panView(-1, 0)} title="Сцена вправо">▶</button>
+                <button type="button" className="cl-mini-btn" style={{ gridArea: 'd' }} onClick={() => sceneApiRef.current?.panView(0, 1)} title="Сцена вниз">▼</button>
+              </span>
+              <button type="button" className="cl-mini-btn" onClick={() => sceneApiRef.current?.orbitView(20)} title="Повернути камеру вправо">⟳</button>
+              <button type="button" className="cl-mini-btn" onClick={() => sceneApiRef.current?.zoomView(0.8)} title="Наблизити">+</button>
+              <button type="button" className="cl-mini-btn" onClick={() => sceneApiRef.current?.zoomView(1.25)} title="Віддалити">−</button>
+              <button type="button" className="cl-mini-btn" onClick={() => setCameraView(cameraView)} title="Повернути вигляд за замовчуванням">⌂</button>
+            </div>
             {sceneLost && (
               <div className="tl-viewport-lost">
                 <p>3D-перегляд зупинився (браузер вимкнув WebGL). Твоя сцена ціла.</p>
@@ -2205,7 +2218,7 @@ function ThreeDAnimEditorInner() {
             <div className="tl-rotate-hint tl-view-hint">
               <span>{rotateObjMode && selected
                 ? `🔄 Тягни «${selected.name || 'обраний обʼєкт'}», щоб обертати його (Shift — нахил по Z). Поза ним — камера.`
-                : '🎥 Ліва кнопка — крутити камеру · права — зсунути сцену · коліщатко — наблизити'}</span>
+                : '🎥 Тягни — крутити камеру · Shift+тягни або права кнопка — рухати сцену · коліщатко — наблизити · або кнопки у вʼюпорті'}</span>
               <button type="button" className={'cl-mini-btn' + (rotateObjMode ? ' active' : '')} onClick={() => setRotateObjMode((v) => !v)} title="Або тягни обʼєкт із затиснутим Alt">🔄 Крутити обʼєкт</button>
             </div>
           )}
