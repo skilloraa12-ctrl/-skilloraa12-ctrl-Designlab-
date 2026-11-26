@@ -329,10 +329,13 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFi
                 >
                   {depth > 0 && <span className="tree-branch">↳</span>}{meta?.icon} <span className="obj-name">{o.name || `${meta?.label || o.type} #${i + 1}`}</span> {o.keyframes.length > 0 && <span title="Анімований">🎬{o.keyframes.length}</span>}
                 </InlineName>
-                {editingId !== o.id && <button className="cl-mini-btn" onClick={() => { onSelect(o.id); setEditingId(o.id) }} title="Перейменувати (або подвійний клік по назві)">✏</button>}
-                <button className={'cl-mini-btn' + (o.locked ? ' active' : '')} onClick={() => onToggleLock(o.id)} title={o.locked ? 'Розблокувати' : 'Зафіксувати — не можна випадково зачепити чи зсунути'}>{o.locked ? '🔒' : '🔓'}</button>
-                <button className="cl-mini-btn" onClick={() => onDuplicate(o.id)} title="Дублювати (Ctrl+D)">⧉</button>
-                <button className="cl-mini-btn" onClick={() => onDelete(o.id)} title="Видалити (Del)" disabled={o.locked}>✕</button>
+                {/* Кнопки дій — при наведенні чи на обраному рядку, щоб назва мала місце. */}
+                <span className={'obj-actions' + (o.locked ? ' has-lock' : '')}>
+                  {editingId !== o.id && <button className="cl-mini-btn obj-act" onClick={() => { onSelect(o.id); setEditingId(o.id) }} title="Перейменувати (або подвійний клік по назві)">✏</button>}
+                  <button className={'cl-mini-btn obj-lock' + (o.locked ? ' active' : '')} onClick={() => onToggleLock(o.id)} title={o.locked ? 'Розблокувати' : 'Зафіксувати — не можна випадково зачепити чи зсунути'}>{o.locked ? '🔒' : '🔓'}</button>
+                  <button className="cl-mini-btn obj-act" onClick={() => onDuplicate(o.id)} title="Дублювати (Ctrl+D)">⧉</button>
+                  <button className="cl-mini-btn obj-act" onClick={() => onDelete(o.id)} title="Видалити (Del)" disabled={o.locked}>✕</button>
+                </span>
               </div>
             )
           })}

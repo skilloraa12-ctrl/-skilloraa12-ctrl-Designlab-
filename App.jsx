@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import NavBar from './NavBar.jsx'
 import Home from './Home.jsx'
@@ -61,8 +62,19 @@ export default function App() {
   const location = useLocation()
   const isWideLab = location.pathname.startsWith('/labs/ui-preview') || location.pathname.startsWith('/labs/game')
   const isFullBleed = /^\/3d-design-studio\/[^/]+\/editor/.test(location.pathname) || /^\/practice\/[^/]+/.test(location.pathname)
+  // У 3D-редакторі меню сайту сховане — редактор на весь екран;
+  // кнопка «☰ Меню» відкриває його поверх.
+  const isEditorFull = /^\/3d-design-studio\/[^/]+\/editor/.test(location.pathname)
+  const [navOpen, setNavOpen] = useState(false)
+  useEffect(() => { setNavOpen(false) }, [location.pathname])
   return (
-    <div className="app">
+    <div className={'app' + (isEditorFull ? ' app--nav-collapsible' : '') + (isEditorFull && navOpen ? ' app--nav-open' : '')}>
+      {isEditorFull && (
+        <button type="button" className="nav-toggle-btn" onClick={() => setNavOpen((v) => !v)} title={navOpen ? 'Сховати меню' : 'Показати меню сайту'}>
+          {navOpen ? '✕' : '☰ Меню'}
+        </button>
+      )}
+      {isEditorFull && navOpen && <div className="nav-backdrop" onClick={() => setNavOpen(false)} />}
       <NavBar />
       <main className={'main' + (isWideLab ? ' main--wide' : '') + (isFullBleed ? ' main--full-bleed' : '')}>
         <Routes>

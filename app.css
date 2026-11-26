@@ -1985,3 +1985,19 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .l3d-object-select { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .obj-name { display: inline; }
 .inline-name-input { flex: 1; min-width: 0; width: 100%; font-size: 13px; padding: 5px 8px; border-radius: 6px; border: 1px solid #7c4dff; background: var(--bg, #0c0a09); color: var(--ink, #fff); outline: none; }
+/* 3D-редактор на весь екран: меню сайту ховається, «☰ Меню» відкриває його поверх */
+.app--nav-collapsible > .sidebar { display: none; }
+.app--nav-collapsible.app--nav-open > .sidebar { display: block; position: fixed; left: 0; top: 0; bottom: 0; z-index: 4000; overflow-y: auto; box-shadow: 8px 0 30px rgba(0,0,0,0.4); }
+.nav-backdrop { position: fixed; inset: 0; z-index: 3999; background: rgba(0,0,0,0.4); }
+.nav-toggle-btn { position: fixed; left: 10px; bottom: 12px; z-index: 4001; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 13px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+.app--nav-open .nav-toggle-btn { left: 246px; }
+/* Список обʼєктів: назва займає рядок, кнопки — при наведенні / на обраному */
+.l3d-object-row { gap: 4px; }
+.obj-actions { display: flex; gap: 3px; flex: none; }
+.obj-actions .cl-mini-btn { padding: 2px 6px; font-size: 11px; min-width: 0; }
+.l3d-object-row .obj-act, .l3d-object-row .obj-lock { display: none; }
+.l3d-object-row .obj-lock.active { display: inline-flex; }
+.l3d-object-row:hover .obj-act, .l3d-object-row:hover .obj-lock,
+.l3d-object-row.active .obj-act, .l3d-object-row.active .obj-lock { display: inline-flex; }
+@media (hover: none) { .l3d-object-row .obj-act, .l3d-object-row .obj-lock { display: inline-flex; } }
+.tl-editor-left { width: 280px; }
