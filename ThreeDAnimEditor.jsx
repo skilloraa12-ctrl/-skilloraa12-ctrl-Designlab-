@@ -8,7 +8,7 @@ import { useLabHistory } from './labs/useLabHistory.js'
 import LabToast from './labs/LabToast.jsx'
 import LabInfoTip from './labs/LabInfoTip.jsx'
 import NotFound from './NotFound.jsx'
-import { createAnimScene, PRIMITIVES, CUSTOM_SHAPE, DEFAULT_PROFILE, pointKey, LIGHT_KINDS, LIGHT_PRESETS, CAMERA_VIEWS } from './labs/threeAnimScene.js'
+import { createAnimScene, PRIMITIVES, CUSTOM_SHAPE, DEFAULT_PROFILE, PRIMITIVE_PROFILES, pointKey, LIGHT_KINDS, LIGHT_PRESETS, CAMERA_VIEWS } from './labs/threeAnimScene.js'
 import { createEmptyAnimScene, makeAnimObject, makeKeyframeFromObject, LIGHT_TYPES } from './threeDProject.js'
 
 // Повноцінний 3D-редактор з анімацією для 3D Design Studio — окремий від
@@ -191,7 +191,7 @@ function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScru
   )
 }
 
-function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDelete, onDuplicate, onRename, selected }) {
+function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onDelete, onDuplicate, onRename, selected }) {
   return (
     <div>
       <p className="cl-tab-desc">Кожна фігура чи світло отримує власну доріжку на таймлайні. Обʼєкт без жодного ключового кадру лишається статичним — анімація потрібна лише там, де вона справді щось розповідає.</p>
@@ -200,6 +200,7 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDelete, onDuplic
         <p>Прожектор світить у напрямку, заданому його обертанням (вкладка «Трансформація») — так само, як ти б повертав будь-яку іншу фігуру.</p>
       </HelpBox>
 
+      <button className="harmony-btn draw-shape-btn" onClick={onDraw}>🖌 Намалювати форму → 3D</button>
       <div className="cl-section-title">Додати фігуру</div>
       <div className="cl-btn-row">
         {SHAPES.map((p) => (
@@ -400,15 +401,202 @@ function ProfileEditor({ mode, points, onChange }) {
   )
 }
 
+// Рамер–Дуглас–Пекер: прибирає зайві точки з мальованої від руки лінії,
+// лишаючи форму — щоб контур мав десятки точок, а не сотні.
+function simplifyPath(pts, eps) {
+  if (pts.length < 3) return pts
+  let maxD = 0
+  let idx = 0
+  const a = pts[0]
+  const b = pts[pts.length - 1]
+  for (let i = 1; i < pts.length - 1; i++) {
+    const d = distToSegment(pts[i], a, b)
+    if (d > maxD) { maxD = d; idx = i }
+  }
+  if (maxD <= eps) return [a, b]
+  const left = simplifyPath(pts.slice(0, idx + 1), eps)
+  const right = simplifyPath(pts.slice(idx), eps)
+  return [...left.slice(0, -1), ...right]
+}
+
+// Перетворює намальований штрих (координати -1..1) на контур профілю.
+// Видавлювання: замкнена форма, вписана в ~1.4 одиниці. Обертання: штрих
+// — половина силуету (ліва частина дзеркалиться), краї доводяться до осі,
+// щоб тіло вийшло суцільним.
+function strokeToProfilePoints(stroke, mode) {
+  if (stroke.length < 3) return null
+  let eps = 0.015
+  let pts = simplifyPath(stroke, eps)
+  while (pts.length > 48) { eps *= 1.5; pts = simplifyPath(stroke, eps) }
+  const r = (v) => Math.round(v * 100) / 100
+  if (mode === 'lathe') {
+    let out = pts.map((p) => ({ x: r(Math.abs(p.x) * 0.9), y: r(p.y * 0.9) }))
+    if (out[0].y < out[out.length - 1].y) out = out.reverse()
+    out = out.filter((p, i) => i === 0 || p.x !== out[i - 1].x || p.y !== out[i - 1].y)
+    if (out[0].x > 0) out.unshift({ x: 0, y: out[0].y })
+    if (out[out.length - 1].x > 0) out.push({ x: 0, y: out[out.length - 1].y })
+    return out.length >= 3 ? out : null
+  }
+  // Замкнена форма: кінець зʼєднується з початком; центруємо й масштабуємо.
+  if (pts.length > 3 && Math.hypot(pts[0].x - pts[pts.length - 1].x, pts[0].y - pts[pts.length - 1].y) < 0.05) pts = pts.slice(0, -1)
+  const xs = pts.map((p) => p.x)
+  const ys = pts.map((p) => p.y)
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2
+  const cy = (Math.min(...ys) + Math.max(...ys)) / 2
+  const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) || 1
+  const k = 1.4 / size
+  const out = pts.map((p) => ({ x: r((p.x - cx) * k), y: r((p.y - cy) * k) }))
+  return out.length >= 3 ? out : null
+}
+
+// Вікно «Намалюй форму»: малюєш мишкою/пальцем/стилусом — форма одразу
+// стає 3D-обʼєктом (видавлюванням з округленими краями або обертанням).
+function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
+  const canvasRef = useRef(null)
+  const strokeRef = useRef([])
+  const drawingRef = useRef(false)
+  const [mode, setMode] = useState(initialMode)
+  const [hasStroke, setHasStroke] = useState(false)
+  const [depth, setDepth] = useState(0.5)
+  const [bevel, setBevel] = useState(true)
+
+  function redraw() {
+    const c = canvasRef.current
+    if (!c) return
+    const ctx = c.getContext('2d')
+    const W = c.width
+    ctx.fillStyle = '#14141b'
+    ctx.fillRect(0, 0, W, W)
+    ctx.strokeStyle = '#262632'
+    ctx.lineWidth = 1
+    for (let i = 1; i < 8; i++) {
+      ctx.beginPath(); ctx.moveTo((i * W) / 8, 0); ctx.lineTo((i * W) / 8, W); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, (i * W) / 8); ctx.lineTo(W, (i * W) / 8); ctx.stroke()
+    }
+    if (mode === 'lathe') {
+      ctx.fillStyle = 'rgba(0,0,0,0.35)'
+      ctx.fillRect(0, 0, W / 2, W)
+      ctx.strokeStyle = '#8a86ff'
+      ctx.setLineDash([8, 6])
+      ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, W); ctx.stroke()
+      ctx.setLineDash([])
+    }
+    const st = strokeRef.current
+    if (st.length > 1) {
+      const toPx = (p) => [((p.x + 1) / 2) * W, ((1 - p.y) / 2) * W]
+      const paint = (pts, alpha) => {
+        ctx.beginPath()
+        pts.forEach((p, i) => { const [x, y] = toPx(p); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y) })
+        if (mode === 'extrude' && !drawingRef.current) { ctx.closePath(); ctx.fillStyle = 'rgba(125,120,255,0.25)'; ctx.fill() }
+        ctx.strokeStyle = `rgba(190,187,255,${alpha})`
+        ctx.lineWidth = 4
+        ctx.lineJoin = 'round'
+        ctx.lineCap = 'round'
+        ctx.stroke()
+      }
+      paint(st, 1)
+      if (mode === 'lathe') paint(st.map((p) => ({ x: -p.x, y: p.y })), 0.35)
+    }
+  }
+  useEffect(() => {
+    const c = canvasRef.current
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    c.width = Math.round(c.clientWidth * dpr)
+    c.height = c.width
+    redraw()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(redraw)
+
+  function toLocal(e) {
+    const rect = canvasRef.current.getBoundingClientRect()
+    return { x: ((e.clientX - rect.left) / rect.width) * 2 - 1, y: 1 - ((e.clientY - rect.top) / rect.height) * 2 }
+  }
+  function down(e) {
+    e.preventDefault()
+    canvasRef.current.setPointerCapture?.(e.pointerId)
+    drawingRef.current = true
+    strokeRef.current = [toLocal(e)]
+    setHasStroke(false)
+    redraw()
+  }
+  function move(e) {
+    if (!drawingRef.current) return
+    const p = toLocal(e)
+    const last = strokeRef.current[strokeRef.current.length - 1]
+    if (Math.hypot(p.x - last.x, p.y - last.y) < 0.008) return
+    strokeRef.current.push(p)
+    redraw()
+  }
+  function up() {
+    if (!drawingRef.current) return
+    drawingRef.current = false
+    setHasStroke(strokeRef.current.length >= 3)
+    redraw()
+  }
+  function clear() {
+    strokeRef.current = []
+    setHasStroke(false)
+    redraw()
+  }
+  function finish() {
+    const pts = strokeToProfilePoints(strokeRef.current, mode)
+    if (!pts) return
+    onDone({ mode, points: pts, depth, bevel })
+  }
+
+  return (
+    <div className="draw-modal-backdrop" onPointerDown={(e) => { if (e.target === e.currentTarget) onCancel() }}>
+      <div className="draw-modal" role="dialog" aria-label="Намалюй форму">
+        <div className="cl-section-title" style={{ marginTop: 0 }}>🖌 Намалюй форму — вона стане 3D</div>
+        <div className="cl-btn-row" style={{ marginBottom: 10 }}>
+          <button className={'cl-mini-btn' + (mode === 'extrude' ? ' active' : '')} onClick={() => setMode('extrude')}>⭐ Обʼємна фігура</button>
+          <button className={'cl-mini-btn' + (mode === 'lathe' ? ' active' : '')} onClick={() => setMode('lathe')}>🏺 Тіло обертання</button>
+        </div>
+        <p className="cl-tab-desc" style={{ marginBottom: 8 }}>
+          {mode === 'extrude'
+            ? 'Обведи контур одним рухом (серце, зірку, листок, букву…) — він замкнеться сам і отримає товщину.'
+            : 'Намалюй половину силуету праворуч від пунктирної осі (як контур вази чи келиха) — він обернеться по колу.'}
+        </p>
+        <canvas
+          ref={canvasRef}
+          className="draw-modal-canvas"
+          onPointerDown={down}
+          onPointerMove={move}
+          onPointerUp={up}
+          onPointerCancel={up}
+        />
+        {mode === 'extrude' && (
+          <>
+            <div className="cl-editrow"><label>Товщина
+              <input type="range" min={0.1} max={1.5} step={0.05} value={depth} onChange={(e) => setDepth(parseFloat(e.target.value))} />
+              <span>{depth.toFixed(2)}</span>
+            </label></div>
+            <label className="cl-editrow"><input type="checkbox" checked={bevel} onChange={(e) => setBevel(e.target.checked)} /> Округлені краї</label>
+          </>
+        )}
+        <div className="cl-picker-top" style={{ marginTop: 12, justifyContent: 'flex-end' }}>
+          <button className="cl-mini-btn" onClick={clear} disabled={!hasStroke}>🧽 Стерти</button>
+          <button className="cl-mini-btn" onClick={onCancel}>Скасувати</button>
+          <button className="harmony-btn" onClick={finish} disabled={!hasStroke}>✨ Перетворити на 3D</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ShapeTab({
   selected, pointsVisible, onTogglePoints, selectedPointKey, pointBase, softRadius, onSoftRadius,
-  symmetry, onToggleSymmetry, onSetPointCoord, onResetShape, onSetProfile,
+  symmetry, onToggleSymmetry, onSetPointCoord, onResetShape, onSetProfile, onRedraw,
 }) {
   if (!selected) return <p className="cl-tab-desc">Вибери фігуру зліва, щоб змінювати її форму.</p>
   if (LIGHT_TYPES.includes(selected.type)) return <p className="cl-tab-desc">У світла немає форми — вибери фігуру.</p>
   const edits = selected.vertexEdits || {}
   const editedCount = Object.keys(edits).length
-  const profile = selected.type === 'custom' ? (selected.profile || DEFAULT_PROFILE) : null
+  const isCustom = selected.type === 'custom'
+  const primitiveProfile = !isCustom && PRIMITIVE_PROFILES[selected.type] ? PRIMITIVE_PROFILES[selected.type]() : null
+  const profile = isCustom ? (selected.profile || DEFAULT_PROFILE) : primitiveProfile
+  const typeLabel = SHAPES.find((p) => p.type === selected.type)?.label
   const profilePoints = profile ? (profile.points?.[profile.mode] || DEFAULT_PROFILE.points[profile.mode]) : null
   const d = selectedPointKey ? edits[selectedPointKey] : null
   const cur = pointBase ? { x: pointBase.x + (d?.x || 0), y: pointBase.y + (d?.y || 0), z: pointBase.z + (d?.z || 0) } : null
@@ -431,7 +619,8 @@ function ShapeTab({
 
       {profile && (
         <>
-          <div className="cl-section-title">Контур своєї форми</div>
+          <div className="cl-section-title">{isCustom ? 'Контур своєї форми' : `Контур фігури «${typeLabel}»`}</div>
+          {!isCustom && <p className="cl-tab-desc">Тягни точки контуру — фігура зміниться. Після першої зміни вона стане «Своєю формою» з таким самим виглядом.</p>}
           <div className="cl-btn-row" style={{ marginBottom: 10 }}>
             <button className={'cl-mini-btn' + (profile.mode === 'lathe' ? ' active' : '')} onClick={() => updateProfile({ mode: 'lathe' })}>🏺 Обертання</button>
             <button className={'cl-mini-btn' + (profile.mode === 'extrude' ? ' active' : '')} onClick={() => updateProfile({ mode: 'extrude' })}>⭐ Видавлювання</button>
@@ -442,6 +631,15 @@ function ShapeTab({
             onChange={(pts) => updateProfile({ points: { [profile.mode]: pts } })}
           />
           <p className="cl-tab-desc" style={{ marginTop: 6 }}>Тягни точки · клік по порожньому місцю — додати точку · подвійний клік по точці — видалити ({profilePoints.length} точок).</p>
+          {profile.mode === 'lathe' && (
+            <div className="cl-editrow"><label>Кількість граней (полі)
+              <input type="range" min={3} max={64} step={1} value={profile.segments || 48} onChange={(e) => updateProfile({ segments: parseInt(e.target.value, 10) })} />
+              <span>{profile.segments || 48}</span>
+            </label></div>
+          )}
+          {profile.mode === 'extrude' && (
+            <label className="cl-editrow"><input type="checkbox" checked={!!profile.bevel} onChange={(e) => updateProfile({ bevel: e.target.checked })} /> Округлені краї</label>
+          )}
           {profile.mode === 'extrude' && (
             <div className="cl-editrow"><label>Товщина
               <input type="range" min={0.05} max={2} step={0.05} value={profile.depth || 0.6} onChange={(e) => updateProfile({ depth: parseFloat(e.target.value) })} />
@@ -449,12 +647,14 @@ function ShapeTab({
             </label></div>
           )}
           <div className="cl-btn-row" style={{ marginBottom: 6 }}>
+            <button className="cl-mini-btn" onClick={onRedraw}>🖌 Намалювати від руки</button>
             <button className="cl-mini-btn" onClick={() => updateProfile({ points: { [profile.mode]: DEFAULT_PROFILE.points[profile.mode] } })}>↺ Стандартний контур</button>
           </div>
           {editedCount > 0 && <p className="cl-tab-desc">⚠ Зміна контуру скидає ручні зсуви 3D-точок нижче.</p>}
         </>
       )}
 
+      {!profile && <p className="cl-tab-desc">«{typeLabel}» не описується 2D-контуром — змінюй його форму точками у вʼюпорті нижче.</p>}
       <div className="cl-section-title">Точки у вʼюпорті</div>
       <label className="cl-editrow" style={{ marginBottom: 8 }}>
         <input type="checkbox" checked={pointsVisible} onChange={onTogglePoints} /> ✏️ Показати й редагувати точки
@@ -641,10 +841,13 @@ export default function ThreeDAnimEditor() {
   const [recording, setRecording] = useState(false)
   const [snapEnabled, setSnapEnabled] = useState(false)
   const [hasClipboard, setHasClipboard] = useState(false)
-  const [pointsVisible, setPointsVisible] = useState(true)
+  // Точки у вʼюпорті: для фігур із 2D-контуром за замовчуванням сховані
+  // (контур зручніший, а округлені краї дають сотні точок), для решти — видно.
+  const [pointsPref, setPointsPref] = useState({ profile: false, other: true })
   const [selectedPointKey, setSelectedPointKey] = useState(null)
   const [softRadius, setSoftRadius] = useState(0)
   const [symmetry, setSymmetry] = useState(false)
+  const [drawTarget, setDrawTarget] = useState(null) // null | 'new' | id обʼєкта
 
   const hist = useLabHistory({ objects: anim0.objects, selectedId: anim0.objects[0]?.id ?? null })
   const [objects, setObjectsState] = useState(hist.value.objects)
@@ -849,6 +1052,8 @@ export default function ThreeDAnimEditor() {
 
   // Маркери точок обраної фігури — лише на вкладці «Форма».
   const selectedForEdit = objects.find((o) => o.id === selectedId) || null
+  const hasProfileEditor = !!selectedForEdit && (selectedForEdit.type === 'custom' || !!PRIMITIVE_PROFILES[selectedForEdit.type])
+  const pointsVisible = hasProfileEditor ? pointsPref.profile : pointsPref.other
   const editMode = tab === 'shape' && pointsVisible && !!selectedForEdit && !LIGHT_TYPES.includes(selectedForEdit.type)
   editModeRef.current = editMode
   useEffect(() => {
@@ -904,6 +1109,24 @@ export default function ThreeDAnimEditor() {
 
   const selected = useMemo(() => objects.find((o) => o.id === selectedId) || null, [objects, selectedId])
   const animatedCount = useMemo(() => objects.filter((o) => o.keyframes.length > 0).length, [objects])
+
+  function finishDrawing({ mode, points, depth, bevel }) {
+    const target = drawTarget
+    setDrawTarget(null)
+    const existing = target && target !== 'new' ? objectsRef.current.find((o) => o.id === target) : null
+    const base = existing?.profile || (existing && PRIMITIVE_PROFILES[existing.type]?.()) || DEFAULT_PROFILE
+    const profile = { ...base, mode, depth, bevel, points: { ...DEFAULT_PROFILE.points, ...base.points, [mode]: points } }
+    if (existing) {
+      setProfile(profile)
+      toastApi.show('✓ Форму перемальовано')
+      return
+    }
+    const obj = { ...makeAnimObject('custom', nextId), profile, name: 'Намальована форма' }
+    applyObjects([...objectsRef.current, obj])
+    applySelected(obj.id)
+    setTab('shape')
+    toastApi.show('✨ Малюнок перетворено на 3D')
+  }
 
   function addObject(type) {
     const obj = makeAnimObject(type, nextId)
@@ -1089,7 +1312,8 @@ export default function ThreeDAnimEditor() {
     const id = selectedIdRef.current
     if (!id) return
     setSelectedPointKey(null)
-    applyObjects(objectsRef.current.map((o) => (o.id === id ? { ...o, profile, vertexEdits: {} } : o)))
+    // Стандартна фігура при першому редагуванні контуру стає «Своєю формою».
+    applyObjects(objectsRef.current.map((o) => (o.id === id ? { ...o, type: 'custom', profile, vertexEdits: {} } : o)))
   }
 
   function addKeyframeHere() {
@@ -1314,7 +1538,7 @@ export default function ThreeDAnimEditor() {
 
       <div className="tl-editor-shell">
         <div className="tl-editor-left">
-          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} />
+          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} />
         </div>
 
         <div className="tl-editor-center">
@@ -1373,7 +1597,7 @@ export default function ThreeDAnimEditor() {
               <ShapeTab
                 selected={selected}
                 pointsVisible={pointsVisible}
-                onTogglePoints={() => setPointsVisible((v) => !v)}
+                onTogglePoints={() => setPointsPref((p) => (hasProfileEditor ? { ...p, profile: !p.profile } : { ...p, other: !p.other }))}
                 selectedPointKey={selectedPointKey}
                 pointBase={selected && selectedPointKey ? (sceneApiRef.current?.getPoints(selected.id).find((p) => p.key === selectedPointKey) || null) : null}
                 softRadius={softRadius}
@@ -1383,6 +1607,7 @@ export default function ThreeDAnimEditor() {
                 onSetPointCoord={setPointCoord}
                 onResetShape={resetShape}
                 onSetProfile={setProfile}
+                onRedraw={() => setDrawTarget(selectedId)}
               />
             )}
             {tab === 'material' && <MaterialTab selected={selected} setMaterial={setMaterial} setLightProp={setLightProp} />}
@@ -1394,6 +1619,16 @@ export default function ThreeDAnimEditor() {
           </div>
         </div>
       </div>
+      {drawTarget && (
+        <DrawShapeModal
+          initialMode={(() => {
+            const o = drawTarget !== 'new' ? objects.find((x) => x.id === drawTarget) : null
+            return o?.profile?.mode || (o && PRIMITIVE_PROFILES[o.type]?.().mode) || 'extrude'
+          })()}
+          onCancel={() => setDrawTarget(null)}
+          onDone={finishDrawing}
+        />
+      )}
       <LabToast message={toastApi.toast} />
     </div>
   )

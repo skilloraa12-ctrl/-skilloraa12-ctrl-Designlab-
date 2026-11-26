@@ -51,18 +51,56 @@ export const DEFAULT_PROFILE = {
   },
 }
 
+// Еквівалентні контури стандартних фігур — щоб будь-яку з них можна було
+// редагувати 2D-контуром так само, як «Свою форму» (перше редагування
+// контуру перетворює фігуру на «Свою форму» з тим самим виглядом).
+// Тор/тетраедр/ікосаедр/додекаедр/вузол тора контуром не описуються —
+// у них лишається редагування точок у вʼюпорті.
+function arc(cx, cy, r, from, to, steps) {
+  const out = []
+  for (let i = 0; i <= steps; i++) {
+    const a = THREE.MathUtils.degToRad(from + ((to - from) * i) / steps)
+    out.push({ x: Math.round(Math.max(0, cx + Math.cos(a) * r) * 1000) / 1000, y: Math.round((cy + Math.sin(a) * r) * 1000) / 1000 })
+  }
+  return out
+}
+const square = (h) => [{ x: -h, y: -h }, { x: h, y: -h }, { x: h, y: h }, { x: -h, y: h }]
+export const PRIMITIVE_PROFILES = {
+  box: () => ({ mode: 'extrude', depth: 1, bevel: false, points: { extrude: square(0.5) } }),
+  plane: () => ({ mode: 'extrude', depth: 0.02, bevel: false, points: { extrude: square(0.65) } }),
+  cylinder: () => ({ mode: 'lathe', segments: 32, points: { lathe: [{ x: 0, y: -0.6 }, { x: 0.6, y: -0.6 }, { x: 0.6, y: 0.6 }, { x: 0, y: 0.6 }] } }),
+  cone: () => ({ mode: 'lathe', segments: 32, points: { lathe: [{ x: 0, y: -0.65 }, { x: 0.65, y: -0.65 }, { x: 0, y: 0.65 }] } }),
+  sphere: () => ({ mode: 'lathe', segments: 32, points: { lathe: arc(0, 0, 0.65, -90, 90, 16) } }),
+  capsule: () => ({ mode: 'lathe', segments: 16, points: { lathe: [...arc(0, -0.375, 0.42, -90, 0, 6), ...arc(0, 0.375, 0.42, 0, 90, 6)] } }),
+  octahedron: () => ({ mode: 'lathe', segments: 4, points: { lathe: [{ x: 0, y: -0.75 }, { x: 0.75, y: 0 }, { x: 0, y: 0.75 }] } }),
+}
+
 function buildCustomGeometry(profile) {
   const p = profile || DEFAULT_PROFILE
   if (p.mode === 'extrude') {
     const pts = p.points?.extrude || DEFAULT_PROFILE.points.extrude
     const shape = new THREE.Shape(pts.map((v) => new THREE.Vector2(v.x, v.y)))
     const depth = p.depth || 0.6
-    const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 })
+    // «Округлені краї» (bevel) — фаска навколо контуру, щоб намальована
+    // форма виглядала обʼємною й мʼякою, а не вирізаною з картону.
+    const bevel = p.bevel ? Math.min(0.12, depth / 3) : 0
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth, curveSegments: 1,
+      bevelEnabled: !!p.bevel, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 4,
+    })
     geo.translate(0, 0, -depth / 2)
     return geo
   }
   const pts = p.points?.lathe || DEFAULT_PROFILE.points.lathe
-  return new THREE.LatheGeometry(pts.map((v) => new THREE.Vector2(Math.max(0, v.x), v.y)), 48)
+  const segments = Math.max(3, Math.min(96, Math.round(p.segments || 48)))
+  const geo = new THREE.LatheGeometry(pts.map((v) => new THREE.Vector2(Math.max(0, v.x), v.y)), segments)
+  if (segments > 12) return geo
+  // Low-poly: пласкі грані замість згладжування, щоб багатогранник
+  // виглядав гранованим (як справжній октаедр/кристал).
+  const flat = geo.toNonIndexed()
+  geo.dispose()
+  flat.computeVertexNormals()
+  return flat
 }
 
 // Ключ точки = її початкова (до редагування) позиція, округлена до 0.001.
