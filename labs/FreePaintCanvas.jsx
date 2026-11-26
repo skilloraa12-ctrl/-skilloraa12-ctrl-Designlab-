@@ -148,6 +148,13 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const [opacity, setOpacity] = useState(1)
   const [fullscreen, setFullscreen] = useState(true)
   const [show3d, setShow3d] = useState(false)
+  // Масштаб і зсув перегляду полотна (лише вигляд — сам малюнок 1100×760
+  // не змінюється, тому пензлі, undo й збереження працюють як раніше).
+  const [view, setView] = useState({ zoom: 1, x: 0, y: 0 })
+  const [handTool, setHandTool] = useState(false)
+  const [spaceDown, setSpaceDown] = useState(false)
+  const wrapRef = useRef(null)
+  const panRef = useRef(null)
   const { threeDProjects = [] } = useProgress() || {}
   const [canUndo, setCanUndo] = useState(false)
 
@@ -228,7 +235,70 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     setTextActive(false)
   }
 
+  // ── Масштаб / переміщення перегляду ──
+  const MIN_ZOOM = 0.5
+  const MAX_ZOOM = 8
+  // Масштабування навколо точки (clientX/Y), щоб те, що під курсором,
+  // лишалось під курсором. Канва трансформується від центру обгортки.
+  function zoomAt(factor, clientX, clientY) {
+    setView((v) => {
+      const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, v.zoom * factor))
+      if (zoom === v.zoom) return v
+      const r = wrapRef.current?.getBoundingClientRect()
+      const mx = r && clientX != null ? clientX - (r.left + r.width / 2) : 0
+      const my = r && clientY != null ? clientY - (r.top + r.height / 2) : 0
+      const k = zoom / v.zoom
+      return { zoom, x: mx - (mx - v.x) * k, y: my - (my - v.y) * k }
+    })
+  }
+  function resetView() { setView({ zoom: 1, x: 0, y: 0 }) }
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    function onWheel(e) {
+      e.preventDefault()
+      if (e.ctrlKey || e.metaKey || !e.shiftKey) zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY)
+      else setView((v) => ({ ...v, x: v.x - e.deltaY, y: v.y }))
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fullscreen])
+  // Пробіл (утримувати) — тимчасова «рука», як у Photoshop/Krita.
+  useEffect(() => {
+    function down(e) {
+      if (e.code !== 'Space' || textActive) return
+      const t = document.activeElement?.tagName
+      if (t === 'INPUT' || t === 'TEXTAREA') return
+      e.preventDefault()
+      setSpaceDown(true)
+    }
+    function up(e) { if (e.code === 'Space') setSpaceDown(false) }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
+  }, [textActive])
+  const panning = handTool || spaceDown
+  function panStart(e) {
+    if (e.target.closest?.('.fpc-zoom-bar')) return // кнопки масштабу — звичайні кліки
+    if (!(panning || e.button === 1)) return
+    e.preventDefault()
+    e.stopPropagation()
+    wrapRef.current.setPointerCapture?.(e.pointerId)
+    panRef.current = { x: e.clientX, y: e.clientY }
+  }
+  function panMove(e) {
+    const pr = panRef.current
+    if (!pr) return
+    const dx = e.clientX - pr.x
+    const dy = e.clientY - pr.y
+    panRef.current = { x: e.clientX, y: e.clientY }
+    setView((v) => ({ ...v, x: v.x + dx, y: v.y + dy }))
+  }
+  function panEnd() { panRef.current = null }
+
   function start(e) {
+    if (panRef.current) return
     const ctx = ctxRef.current
     if (!ctx) return
     const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
@@ -441,10 +511,24 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   return (
     <div className={'fpc' + (fullscreen ? ' fpc-fullscreen' : '')}>
       {Toolbar}
-      <div className="fpc-canvas-wrap">
+      <div
+        ref={wrapRef}
+        className={'fpc-canvas-wrap' + (panning ? ' fpc-panning' : '')}
+        onPointerDownCapture={panStart}
+        onPointerMove={panMove}
+        onPointerUp={panEnd}
+        onPointerCancel={panEnd}
+      >
+        <div className="fpc-zoom-bar">
+          <button type="button" className="cl-mini-btn" onClick={() => zoomAt(1 / 1.25)} title="Віддалити (коліщатко миші вниз)">−</button>
+          <button type="button" className="cl-mini-btn fpc-zoom-label" onClick={resetView} title="Показати все полотно">{Math.round(view.zoom * 100)}%</button>
+          <button type="button" className="cl-mini-btn" onClick={() => zoomAt(1.25)} title="Приблизити (коліщатко миші вгору)">+</button>
+          <button type="button" className={'cl-mini-btn' + (handTool ? ' active' : '')} onClick={() => setHandTool((v) => !v)} title="Рука: тягни, щоб рухати полотно (або тримай Пробіл)">✋</button>
+        </div>
         <canvas
           ref={canvasRef}
           className="fpc-canvas"
+          style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` }}
           onPointerDown={start}
           onPointerMove={move}
           onPointerUp={end}

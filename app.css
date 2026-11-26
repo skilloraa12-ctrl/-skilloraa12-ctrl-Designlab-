@@ -1942,3 +1942,11 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .paint-art-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tl-viewport-wrap { position: relative; flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .tl-viewport-lost { position: absolute; inset: 0 0 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; text-align: center; background: rgba(12,10,9,0.85); border-radius: var(--radius); color: var(--muted); font-size: 14px; }
+/* Масштаб полотна малювалки */
+.fpc-canvas-wrap { position: relative; overflow: hidden; }
+.fpc-canvas { transform-origin: center center; will-change: transform; }
+.fpc-panning, .fpc-panning .fpc-canvas { cursor: grab; }
+.fpc-panning:active, .fpc-panning:active .fpc-canvas { cursor: grabbing; }
+.fpc-zoom-bar { position: absolute; right: 12px; bottom: 12px; z-index: 2; display: flex; gap: 4px; padding: 4px; border-radius: 10px; background: rgba(20,18,28,0.85); box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+.fpc-zoom-bar .cl-mini-btn { min-width: 32px; justify-content: center; }
+.fpc-zoom-label { min-width: 56px !important; }
