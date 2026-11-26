@@ -152,6 +152,9 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const [placing, setPlacing] = useState(null) // вставлена модель, яку ще можна рухати/масштабувати
   const placeBaseRef = useRef(null)
   const placeDragRef = useRef(null)
+  const placeUndoRef = useRef(null) // знімок ДО виділення (для ↶ і «Не вставляти»)
+  const lassoRef = useRef(null) // точки ласо під час обведення
+  const lassoBaseRef = useRef(null)
   const [fillMode, setFillMode] = useState('area')
   // Масштаб і зсув перегляду полотна (лише вигляд — сам малюнок 1100×760
   // не змінюється, тому пензлі, undo й збереження працюють як раніше).
@@ -325,6 +328,11 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
 
     if (placing) { placingStart(p); return }
+    if (tool === 'select') {
+      lassoBaseRef.current = captureSnapshot()
+      lassoRef.current = [p]
+      return
+    }
     if (tool === 'fill') {
       const snap = captureSnapshot()
       if (floodFill(ctx, p.x, p.y, color, { opacity, tolerance: fillTolerance, mode: fillMode })) {
@@ -370,6 +378,23 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   }
 
   function move(e) {
+    if (lassoRef.current) {
+      const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
+      lassoRef.current.push(p)
+      const ctx = ctxRef.current
+      ctx.putImageData(lassoBaseRef.current, 0, 0)
+      ctx.save()
+      ctx.beginPath()
+      lassoRef.current.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)))
+      ctx.lineWidth = 2 / view.zoom
+      ctx.strokeStyle = '#ffffff'
+      ctx.stroke()
+      ctx.setLineDash([6 / view.zoom, 5 / view.zoom])
+      ctx.strokeStyle = '#7c4dff'
+      ctx.stroke()
+      ctx.restore()
+      return
+    }
     if (placing) {
       if (placeDragRef.current) placingMove(pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H))
       return
@@ -396,6 +421,13 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
 
   function end() {
     placeDragRef.current = null
+    if (lassoRef.current) {
+      const poly = lassoRef.current
+      lassoRef.current = null
+      ctxRef.current.putImageData(lassoBaseRef.current, 0, 0)
+      if (poly.length < 5 || !liftSelection(poly)) onMessage?.('Обведи мишкою те, що хочеш перемістити (одним рухом довкола)')
+      return
+    }
     if (!drawingRef.current) return
     drawingRef.current = false
     commit()
@@ -443,6 +475,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
       crop.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, w, h)
       // Координати знімка = логічні координати полотна (знімок того ж розміру).
       const k = CANVAS_W / img.width
+      placeUndoRef.current = null
       placeBaseRef.current = captureSnapshot()
       setPlacing({ img: crop, x: x0 * k, y: y0 * k, w: w * k, h: h * k, ratio: w / h })
       setTool('brush')
@@ -481,15 +514,111 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   function finishPlacing() {
     if (!placing) return
     drawPlacing(placing, false)
-    pushUndo(placeBaseRef.current)
+    pushUndo(placeUndoRef.current || placeBaseRef.current)
+    placeUndoRef.current = null
     commit()
     setPlacing(null)
-    onMessage?.('✓ Модель на полотні — розмальовуй!')
+    onMessage?.('✓ Готово — розмальовуй!')
   }
   function cancelPlacing() {
     if (!placing) return
-    ctxRef.current.putImageData(placeBaseRef.current, 0, 0)
+    // Для виділеної частини малюнка — повертаємо все як було до виділення.
+    ctxRef.current.putImageData(placeUndoRef.current || placeBaseRef.current, 0, 0)
+    placeUndoRef.current = null
     setPlacing(null)
+  }
+
+  // ── ✂ Виділити й перемістити (ласо) ──
+  // Обводиш частину малюнка — вона «піднімається» в рамку (як свіжо
+  // вставлена модель: тягни, змінюй розмір, «Готово»), а дірка на її місці
+  // заповнюється кольорами фону довкола (інтерполяція від країв + розмиття),
+  // щоб не лишалось білої плями.
+  function liftSelection(poly) {
+    const ctx = ctxRef.current
+    const canvas = canvasRef.current
+    const ratio = canvas.width / CANVAS_W
+    const xs = poly.map((q) => q.x)
+    const ys = poly.map((q) => q.y)
+    const lx0 = Math.max(0, Math.floor(Math.min(...xs)))
+    const ly0 = Math.max(0, Math.floor(Math.min(...ys)))
+    const lx1 = Math.min(CANVAS_W, Math.ceil(Math.max(...xs)))
+    const ly1 = Math.min(CANVAS_H, Math.ceil(Math.max(...ys)))
+    if (lx1 - lx0 < 4 || ly1 - ly0 < 4) return false
+    const original = captureSnapshot()
+    // Вирізаний фрагмент (у реальних пікселях) із маскою-полігоном.
+    const W = Math.round((lx1 - lx0) * ratio)
+    const H = Math.round((ly1 - ly0) * ratio)
+    const piece = document.createElement('canvas')
+    piece.width = W
+    piece.height = H
+    const pc = piece.getContext('2d')
+    pc.drawImage(canvas, lx0 * ratio, ly0 * ratio, W, H, 0, 0, W, H)
+    pc.globalCompositeOperation = 'destination-in'
+    pc.beginPath()
+    poly.forEach((q, i) => { const x = (q.x - lx0) * ratio; const y = (q.y - ly0) * ratio; if (i) pc.lineTo(x, y); else pc.moveTo(x, y) })
+    pc.closePath()
+    pc.fill()
+    // Маска дірки на всьому полотні (реальні пікселі).
+    const CW = canvas.width
+    const CH = canvas.height
+    const mc = document.createElement('canvas')
+    mc.width = CW
+    mc.height = CH
+    const mctx = mc.getContext('2d')
+    mctx.beginPath()
+    poly.forEach((q, i) => { if (i) mctx.lineTo(q.x * ratio, q.y * ratio); else mctx.moveTo(q.x * ratio, q.y * ratio) })
+    mctx.closePath()
+    mctx.lineWidth = 2
+    mctx.fill()
+    mctx.stroke()
+    const md = mctx.getImageData(0, 0, CW, CH).data
+    const img = ctx.getImageData(0, 0, CW, CH)
+    const d = img.data
+    const bx0 = Math.max(0, Math.floor(lx0 * ratio) - 2), bx1 = Math.min(CW - 1, Math.ceil(lx1 * ratio) + 2)
+    const by0 = Math.max(0, Math.floor(ly0 * ratio) - 2), by1 = Math.min(CH - 1, Math.ceil(ly1 * ratio) + 2)
+    const hole = (x, y) => md[(y * CW + x) * 4 + 3] > 0
+    const fillPx = []
+    for (let y = by0; y <= by1; y++) {
+      for (let x = bx0; x <= bx1; x++) {
+        if (!hole(x, y)) continue
+        // Найближчі «живі» пікселі ліворуч/праворуч/вгорі/внизу → зважене середнє.
+        let acc = [0, 0, 0]
+        let wsum = 0
+        const take = (xx, yy, dist) => {
+          const j = (yy * CW + xx) * 4
+          const w = 1 / dist
+          acc[0] += d[j] * w; acc[1] += d[j + 1] * w; acc[2] += d[j + 2] * w; wsum += w
+        }
+        for (let xx = x - 1; xx >= 0; xx--) if (!hole(xx, y)) { take(xx, y, x - xx); break }
+        for (let xx = x + 1; xx < CW; xx++) if (!hole(xx, y)) { take(xx, y, xx - x); break }
+        for (let yy = y - 1; yy >= 0; yy--) if (!hole(x, yy)) { take(x, yy, y - yy); break }
+        for (let yy = y + 1; yy < CH; yy++) if (!hole(x, yy)) { take(x, yy, yy - y); break }
+        if (wsum) fillPx.push([(y * CW + x) * 4, acc[0] / wsum, acc[1] / wsum, acc[2] / wsum])
+      }
+    }
+    for (const [j, r, g, b] of fillPx) { d[j] = r; d[j + 1] = g; d[j + 2] = b; d[j + 3] = 255 }
+    // Кілька проходів розмиття всередині дірки — прибирає «хрест» інтерполяції.
+    for (let pass = 0; pass < 3; pass++) {
+      for (const [j] of fillPx) {
+        const k = j / 4
+        const x = k % CW
+        const y = (k - x) / CW
+        let r = 0, g = 0, b = 0, n = 0
+        for (let dy = -3; dy <= 3; dy += 3) for (let dx = -3; dx <= 3; dx += 3) {
+          const xx = x + dx, yy = y + dy
+          if (xx < 0 || yy < 0 || xx >= CW || yy >= CH) continue
+          const q = (yy * CW + xx) * 4
+          r += d[q]; g += d[q + 1]; b += d[q + 2]; n++
+        }
+        d[j] = r / n; d[j + 1] = g / n; d[j + 2] = b / n
+      }
+    }
+    ctx.putImageData(img, 0, 0)
+    placeUndoRef.current = original
+    placeBaseRef.current = captureSnapshot()
+    setPlacing({ img: piece, x: lx0, y: ly0, w: lx1 - lx0, h: ly1 - ly0, ratio: (lx1 - lx0) / (ly1 - ly0) })
+    onMessage?.('Тягни виділене на нове місце, за кут — змінити розмір, потім «✓ Готово»')
+    return true
   }
   // Зміна розміру навколо центру (повзунок / коліщатко).
   function scalePlacing(factor) {
@@ -543,6 +672,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
         <button type="button" className={'cl-mini-btn' + (tool === 'brush' ? ' active' : '')} onClick={() => setTool('brush')}>✏️ Пензель</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'eraser' ? ' active' : '')} onClick={() => setTool('eraser')}>🧹 Гумка</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'fill' ? ' active' : '')} onClick={() => setTool('fill')}>🪣 Заливка</button>
+        <button type="button" className={'cl-mini-btn' + (tool === 'select' ? ' active' : '')} onClick={() => setTool('select')} title="Обведи частину малюнка, щоб перемістити або змінити розмір">✂ Виділити й перемістити</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'shape' ? ' active' : '')} onClick={() => setTool('shape')}>◆ Форми</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'text' ? ' active' : '')} onClick={() => setTool('text')}>Т Текст</button>
         <button type="button" className="cl-mini-btn" onClick={undo} disabled={!canUndo}>↶ Скасувати</button>
@@ -553,8 +683,8 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
 
       {placing && (
         <div className="fpc-place-panel">
-          <div className="cl-section-title" style={{ margin: '0 0 6px' }}>📐 Розмісти модель</div>
-          <p className="cl-tab-desc" style={{ margin: '0 0 8px' }}>Тягни модель — перемістити. Тягни за білий квадратик у куті — збільшити/зменшити. Alt+коліщатко — теж розмір.</p>
+          <div className="cl-section-title" style={{ margin: '0 0 6px' }}>📐 Розмісти на полотні</div>
+          <p className="cl-tab-desc" style={{ margin: '0 0 8px' }}>Тягни всередині рамки — перемістити. Тягни за білий квадратик у куті — збільшити/зменшити. Alt+коліщатко — теж розмір.</p>
           <div className="fpc-slider-field">
             Розмір: {Math.round((placing.w / CANVAS_W) * 100)}%
             <input type="range" min={5} max={250} step={1} value={Math.round((placing.w / CANVAS_W) * 100)} onChange={(e) => scalePlacing((parseInt(e.target.value, 10) / 100) * CANVAS_W / placing.w)} />
@@ -590,6 +720,9 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
         </div>
       )}
 
+      {tool === 'select' && !placing && (
+        <p className="cl-tab-desc" style={{ margin: '6px 0' }}>✂ Обведи мишкою одним рухом те, що хочеш перемістити (напр. будиночок). Воно стане рухомим: тягни, змінюй розмір за кути, потім «✓ Готово». Місце під ним заповниться кольорами фону.</p>
+      )}
       {tool === 'fill' && (
         <div>
           <div className="cl-btn-row" style={{ marginBottom: 8 }}>
