@@ -122,7 +122,28 @@ function ColorWheel({ hue, sat, value, onPick }) {
   )
 }
 
-export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage, assetKey }) {
+// ── Обʼєкти (шари), як у Figma ─────────────────────────────────────────
+// Кожна завершена дія (мазок, фігура, заливка, текст, вставлена 3D-модель,
+// переміщене виділення) стає окремим обʼєктом: прямокутний фрагмент
+// (PNG) з позицією. Полотно = білий фон + усі видимі обʼєкти по черзі.
+// Обʼєкт виділяється кліком інструментом «↖ Вибрати», видаляється Delete,
+// перетягується, ховається — і все це зберігається разом з малюнком, тож
+// працює й після оновлення сторінки.
+//
+// Як обʼєкт отримується: перед дією запамʼятовується знімок полотна, після
+// — порівнюється з новим; змінені пікселі (зі збереженим кольором) і є
+// обʼєктом. Так однаково працюють усі пензлі й інструменти без їх
+// переписування. Гумка дає обʼєкт кольору фону (його можна видалити —
+// і стерте повернеться).
+const MAX_LAYERS = 80
+let layerSeq = 0
+function newLayerId() {
+  layerSeq += 1
+  return `L${Date.now().toString(36)}${layerSeq}`
+}
+const OP_NAMES = { brush: 'Мазок', eraser: 'Гумка', fill: 'Заливка', shape: 'Фігура', text: 'Текст', place3d: '3D-модель', move: 'Переміщене', fillAll: 'Заливка полотна' }
+
+export default function FreePaintCanvas({ initialImage, initialLayers, onChangeImage, onMessage, assetKey }) {
   const canvasRef = useRef(null)
   const ctxRef = useRef(null)
   const drawingRef = useRef(false)
@@ -135,6 +156,8 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const cartoonPointsRef = useRef([])
 
   const [tool, setTool] = useState('brush')
+  const toolRef = useRef('brush')
+  toolRef.current = tool
   const [brushType, setBrushTypeRaw] = useState('hard')
   const [variant, setVariant] = useState(BRUSH_VARIANTS.hard[0].key)
   function setBrushType(key) {
@@ -143,9 +166,13 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     setVariant(list ? list[0].key : null)
   }
   const [color, setColor] = useState('#1a1a1a')
+  const colorRef = useRef('#1a1a1a')
+  colorRef.current = color
   const [palette, setPalette] = useState(DEFAULT_PALETTE)
   const [size, setSize] = useState(12)
   const [opacity, setOpacity] = useState(1)
+  const opacityRef = useRef(1)
+  opacityRef.current = opacity
   const [fullscreen, setFullscreen] = useState(true)
   const [show3d, setShow3d] = useState(false)
   const [fillTolerance, setFillTolerance] = useState(40)
@@ -156,6 +183,8 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const lassoRef = useRef(null) // точки ласо під час обведення
   const lassoBaseRef = useRef(null)
   const [fillMode, setFillMode] = useState('area')
+  const fillModeRef = useRef('area')
+  fillModeRef.current = fillMode
   // Масштаб і зсув перегляду полотна (лише вигляд — сам малюнок 1100×760
   // не змінюється, тому пензлі, undo й збереження працюють як раніше).
   const [view, setView] = useState({ zoom: 1, x: 0, y: 0 })
@@ -165,6 +194,9 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const panRef = useRef(null)
   const { threeDProjects = [] } = useProgress() || {}
   const [canUndo, setCanUndo] = useState(false)
+  const selectedIdRef = useRef(null)
+  const viewZoomRef = useRef(1)
+  viewZoomRef.current = view.zoom
 
   const [hue, setHue] = useState(0)
   const [sat, setSat] = useState(0)
@@ -182,6 +214,50 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const [textFlipY, setTextFlipY] = useState(false)
   const [textPos, setTextPos] = useState({ x: CANVAS_W / 2, y: CANVAS_H / 2 })
 
+  const layersRef = useRef([]) // [{ id, name, x, y, w, h, visible, canvas, src }]
+  const [layersVersion, setLayersVersion] = useState(0)
+  const [selectedLayerId, setSelectedLayerId] = useState(null)
+  selectedIdRef.current = selectedLayerId
+  const opBeforeRef = useRef(null) // знімок полотна перед поточною дією
+  const opKindRef = useRef(null)
+  const layerDragRef = useRef(null)
+
+  function setLayers(next) {
+    layersRef.current = next
+    setLayersVersion((v) => v + 1)
+  }
+  function ratio() {
+    return canvasRef.current.width / CANVAS_W
+  }
+  // Перемальовує полотно з обʼєктів (+ рамка обраного в режимі «Вибрати»).
+  function composite(withFrame = true) {
+    const ctx = ctxRef.current
+    if (!ctx) return
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.globalAlpha = 1
+    ctx.globalCompositeOperation = 'source-over'
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+    ctx.restore()
+    for (const L of layersRef.current) {
+      if (L.visible === false || !L.canvas) continue
+      ctx.drawImage(L.canvas, L.x, L.y, L.w, L.h)
+    }
+    const sel = withFrame && toolRef.current === 'pick' && layersRef.current.find((L) => L.id === selectedIdRef.current)
+    if (sel) {
+      ctx.save()
+      ctx.lineWidth = 2 / viewZoomRef.current
+      ctx.strokeStyle = '#7c4dff'
+      ctx.setLineDash([7 / viewZoomRef.current, 5 / viewZoomRef.current])
+      ctx.strokeRect(sel.x - 2, sel.y - 2, sel.w + 4, sel.h + 4)
+      ctx.restore()
+    }
+  }
+  function serializeLayers() {
+    return layersRef.current.map(({ id, name, x, y, w, h, visible, src, kind, fillColor }) => ({ id, name, x, y, w, h, visible: visible !== false, src, ...(kind ? { kind, fillColor } : {}) }))
+  }
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -190,28 +266,373 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     undoStackRef.current = []
     setCanUndo(false)
     setTextActive(false)
-    loadImageToCanvas(ctx, CANVAS_W, CANVAS_H, initialImage, () => {})
+    setSelectedLayerId(null)
+    layersRef.current = []
+    let cancelled = false
+    const loadImg = (src) => new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = () => resolve(null)
+      img.src = src
+    })
+    const toCanvas = (img, w, h) => {
+      const c = document.createElement('canvas')
+      c.width = w
+      c.height = h
+      c.getContext('2d').drawImage(img, 0, 0, w, h)
+      return c
+    }
+    ;(async () => {
+      let layers = []
+      if (Array.isArray(initialLayers) && initialLayers.length > 0) {
+        for (const L of initialLayers) {
+          const img = L.src ? await loadImg(L.src) : null
+          if (img) layers.push({ ...L, canvas: toCanvas(img, img.width, img.height) })
+        }
+      } else if (initialImage) {
+        // Старий малюнок без обʼєктів — один обʼєкт на все полотно.
+        const img = await loadImg(initialImage)
+        if (img) layers.push({ id: newLayerId(), name: 'Попередній малюнок', x: 0, y: 0, w: CANVAS_W, h: CANVAS_H, visible: true, canvas: toCanvas(img, Math.round(CANVAS_W * ratio()), Math.round(CANVAS_H * ratio())), src: initialImage })
+      }
+      if (cancelled) return
+      setLayers(layers)
+      composite()
+    })()
+    composite()
+    return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assetKey])
 
   function captureSnapshot() {
     return ctxRef.current.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height)
   }
-  function pushUndo(snap) {
-    undoStackRef.current.push(snap)
+  // Початок дії: знімок «до» + запис у історію (↶ повертає список обʼєктів).
+  function pushUndo(snap, kind) {
+    opBeforeRef.current = snap
+    opKindRef.current = kind || null
+    undoStackRef.current.push(layersRef.current)
     if (undoStackRef.current.length > UNDO_LIMIT) undoStackRef.current.shift()
     setCanUndo(true)
   }
   function undo() {
-    const ctx = ctxRef.current
     const stack = undoStackRef.current
-    if (!ctx || stack.length === 0) return
-    ctx.putImageData(stack.pop(), 0, 0)
+    if (!ctxRef.current || stack.length === 0) return
+    opBeforeRef.current = null
+    setLayers(stack.pop())
     setCanUndo(stack.length > 0)
-    commit()
+    setSelectedLayerId(null)
+    composite()
+    save()
   }
+  function save() {
+    onChangeImage(canvasToDataUrl(canvasRef.current), serializeLayers())
+  }
+  // Кінець дії: різниця «до/після» → новий обʼєкт.
   function commit() {
-    onChangeImage(canvasToDataUrl(canvasRef.current))
+    const before = opBeforeRef.current
+    opBeforeRef.current = null
+    if (before) {
+      const layer = extractLayer(before, captureSnapshot())
+      if (layer) {
+        layer.name = `${OP_NAMES[opKindRef.current || toolRef.current] || 'Обʼєкт'} ${layersRef.current.length + 1}`
+        // Заливка області суцільним кольором — запамʼятовуємо колір, щоб при
+        // видаленні лінії, що її обмежувала, заливка затекла на звільнене місце.
+        if (opKindRef.current === 'fill' && fillModeRef.current === 'area' && opacityRef.current >= 1) {
+          layer.kind = 'fillArea'
+          layer.fillColor = colorRef.current
+        }
+        let next
+        if (opKindRef.current === 'fillAll' && opacityRef.current >= 1) {
+          // «Залити все полотно» = фон: суцільний прямокутник у самому низу.
+          const c = document.createElement('canvas')
+          c.width = canvasRef.current.width
+          c.height = canvasRef.current.height
+          const cx = c.getContext('2d')
+          cx.fillStyle = colorRef.current
+          cx.fillRect(0, 0, c.width, c.height)
+          next = [{ ...layer, name: 'Фон', x: 0, y: 0, w: CANVAS_W, h: CANVAS_H, canvas: c, src: c.toDataURL('image/png') }, ...layersRef.current]
+        } else {
+          next = layer.kind === 'fillArea' ? placeFillUnderLines(layer) : [...layersRef.current, layer]
+        }
+        if (next.length > MAX_LAYERS) next = mergeLayers(next, next.length - MAX_LAYERS + 10)
+        setLayers(next)
+      } else {
+        undoStackRef.current.pop() // нічого не змінилось — і в історії нема чого відміняти
+        setCanUndo(undoStackRef.current.length > 0)
+      }
+      composite()
+    }
+    save()
+  }
+  function extractLayer(before, after) {
+    const W = after.width
+    const H = after.height
+    const a = after.data
+    const b = before.data
+    let x0 = W, y0 = H, x1 = -1, y1 = -1
+    for (let y = 0; y < H; y++) {
+      const row = y * W * 4
+      for (let x = 0; x < W; x++) {
+        const j = row + x * 4
+        if (a[j] !== b[j] || a[j + 1] !== b[j + 1] || a[j + 2] !== b[j + 2] || a[j + 3] !== b[j + 3]) {
+          if (x < x0) x0 = x
+          if (x > x1) x1 = x
+          if (y < y0) y0 = y
+          if (y > y1) y1 = y
+        }
+      }
+    }
+    if (x1 < 0) return null
+    const w = x1 - x0 + 1
+    const h = y1 - y0 + 1
+    const c = document.createElement('canvas')
+    c.width = w
+    c.height = h
+    const cx = c.getContext('2d')
+    const out = cx.createImageData(w, h)
+    const o = out.data
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const j = ((y + y0) * W + (x + x0)) * 4
+        if (a[j] === b[j] && a[j + 1] === b[j + 1] && a[j + 2] === b[j + 2] && a[j + 3] === b[j + 3]) continue
+        const k = (y * w + x) * 4
+        const al = a[j + 3] / 255 // прозоре (гумка) → колір фону
+        o[k] = Math.round(a[j] * al + 255 * (1 - al))
+        o[k + 1] = Math.round(a[j + 1] * al + 255 * (1 - al))
+        o[k + 2] = Math.round(a[j + 2] * al + 255 * (1 - al))
+        o[k + 3] = 255
+      }
+    }
+    cx.putImageData(out, 0, 0)
+    const r = W / CANVAS_W
+    return { id: newLayerId(), name: '', x: x0 / r, y: y0 / r, w: w / r, h: h / r, visible: true, canvas: c, src: c.toDataURL('image/png') }
+  }
+  // Обʼєднує перші `count` обʼєктів (знизу) в один — щоб малюнок не ріс безмежно.
+  function mergeLayers(list, count) {
+    const parts = list.slice(0, count)
+    const rest = list.slice(count)
+    const r = ratio()
+    const visible = parts.filter((L) => L.visible !== false)
+    if (visible.length === 0) return rest
+    const x0 = Math.min(...visible.map((L) => L.x))
+    const y0 = Math.min(...visible.map((L) => L.y))
+    const x1 = Math.max(...visible.map((L) => L.x + L.w))
+    const y1 = Math.max(...visible.map((L) => L.y + L.h))
+    const c = document.createElement('canvas')
+    c.width = Math.max(1, Math.round((x1 - x0) * r))
+    c.height = Math.max(1, Math.round((y1 - y0) * r))
+    const cx = c.getContext('2d')
+    for (const L of visible) cx.drawImage(L.canvas, (L.x - x0) * r, (L.y - y0) * r, L.w * r, L.h * r)
+    return [{ id: newLayerId(), name: 'Обʼєднані обʼєкти', x: x0, y: y0, w: x1 - x0, h: y1 - y0, visible: true, canvas: c, src: c.toDataURL('image/png') }, ...rest]
+  }
+  function mergeAll() {
+    if (layersRef.current.length < 2) return
+    undoStackRef.current.push(layersRef.current)
+    setCanUndo(true)
+    setLayers(mergeLayers(layersRef.current, layersRef.current.length))
+    setSelectedLayerId(null)
+    composite()
+    save()
+  }
+  function updateLayers(mutator, recordUndo = true) {
+    if (recordUndo) {
+      undoStackRef.current.push(layersRef.current)
+      if (undoStackRef.current.length > UNDO_LIMIT) undoStackRef.current.shift()
+      setCanUndo(true)
+    }
+    setLayers(mutator(layersRef.current))
+    composite()
+    save()
+  }
+  // Заливка області лягає ПІД лінії, що її обмежують: вставляється одразу
+  // над найвищим обʼєктом, на який вона реально лягла (напр. попередня
+  // заливка), а не на самий верх; і «підтікає» під сусідні лінії (до 60 px),
+  // тож видалення чи переміщення лінії не лишає дірки.
+  function placeFillUnderLines(layer) {
+    const ls = layersRef.current
+    const r = ratio()
+    const CW = canvasRef.current.width
+    const CH = canvasRef.current.height
+    const fx0 = Math.round(layer.x * r), fy0 = Math.round(layer.y * r)
+    const fd = layer.canvas.getContext('2d').getImageData(0, 0, layer.canvas.width, layer.canvas.height).data
+    const fw = layer.canvas.width, fh = layer.canvas.height
+    // 1) Найвищий обʼєкт, що має фарбу під залитою областю.
+    let insertAt = 0
+    for (let t = ls.length - 1; t >= 0 && insertAt === 0; t--) {
+      const L = ls[t]
+      if (L.visible === false) continue
+      const lx0 = L.x * r, ly0 = L.y * r, lsc = L.canvas.width / (L.w * r)
+      const ox0 = Math.max(fx0, Math.floor(lx0)), oy0 = Math.max(fy0, Math.floor(ly0))
+      const ox1 = Math.min(fx0 + fw, Math.ceil(lx0 + L.w * r)), oy1 = Math.min(fy0 + fh, Math.ceil(ly0 + L.h * r))
+      if (ox1 <= ox0 || oy1 <= oy0) continue
+      const ld = L.canvas.getContext('2d').getImageData(0, 0, L.canvas.width, L.canvas.height).data
+      // Яку частку ЦЬОГО обʼєкта накрила заливка: лінію-межу — лише
+      // згладжений край (мало), попередню заливку під нею — більшість.
+      let hits = 0
+      let total = 0
+      for (let y = oy0; y < oy1; y += 2) for (let x = ox0; x < ox1; x += 2) {
+        const lx = Math.floor((x - lx0) * lsc), ly = Math.floor((y - ly0) * lsc)
+        if (lx < 0 || ly < 0 || lx >= L.canvas.width || ly >= L.canvas.height) continue
+        if (ld[(ly * L.canvas.width + lx) * 4 + 3] <= 10) continue
+        total++
+        if (fd[((y - fy0) * fw + (x - fx0)) * 4 + 3] > 0) hits++
+      }
+      if (hits >= 20 && hits > total * 0.5) insertAt = t + 1
+    }
+    // 2) Пікселі, закриті обʼєктами, що будуть НАД заливкою.
+    const above = ls.slice(insertAt).filter((L) => L.visible !== false)
+    if (above.length === 0) return [...ls.slice(0, insertAt), layer]
+    const cov = document.createElement('canvas')
+    cov.width = CW
+    cov.height = CH
+    const cc = cov.getContext('2d')
+    for (const L of above) cc.drawImage(L.canvas, L.x * r, L.y * r, L.w * r, L.h * r)
+    const covD = cc.getImageData(0, 0, CW, CH).data
+    // 3) BFS від заливки в закриті пікселі (не далі 60 px).
+    const MAXD = Math.round(60 * r)
+    const mask = new Uint8Array(CW * CH)
+    let queue = []
+    for (let y = 0; y < fh; y++) for (let x = 0; x < fw; x++) {
+      if (fd[(y * fw + x) * 4 + 3] === 0) continue
+      const gx = x + fx0, gy = y + fy0
+      if (gx < 0 || gy < 0 || gx >= CW || gy >= CH) continue
+      const k = gy * CW + gx
+      mask[k] = 1
+      queue.push(k)
+    }
+    let gx0 = CW, gy0 = CH, gx1 = -1, gy1 = -1
+    for (let dist = 0; dist < MAXD && queue.length; dist++) {
+      const nextQ = []
+      for (const k of queue) {
+        const x = k % CW, y = (k - x) / CW
+        if (x < gx0) gx0 = x; if (x > gx1) gx1 = x; if (y < gy0) gy0 = y; if (y > gy1) gy1 = y
+        for (const n of [x > 0 ? k - 1 : -1, x < CW - 1 ? k + 1 : -1, y > 0 ? k - CW : -1, y < CH - 1 ? k + CW : -1]) {
+          if (n < 0 || mask[n] || covD[n * 4 + 3] < 10) continue
+          mask[n] = 1
+          nextQ.push(n)
+        }
+      }
+      queue = dist === 0 ? nextQ : nextQ
+    }
+    for (const k of queue) { const x = k % CW, y = (k - x) / CW; if (x < gx0) gx0 = x; if (x > gx1) gx1 = x; if (y < gy0) gy0 = y; if (y > gy1) gy1 = y }
+    if (gx1 < 0) return [...ls.slice(0, insertAt), layer, ...ls.slice(insertAt)]
+    const w = gx1 - gx0 + 1, h = gy1 - gy0 + 1
+    const c = document.createElement('canvas')
+    c.width = w
+    c.height = h
+    const cx = c.getContext('2d')
+    const out = cx.createImageData(w, h)
+    const hex = layer.fillColor.replace('#', '')
+    const fr = parseInt(hex.slice(0, 2), 16), fg = parseInt(hex.slice(2, 4), 16), fb = parseInt(hex.slice(4, 6), 16)
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (!mask[(y + gy0) * CW + (x + gx0)]) continue
+      const j = (y * w + x) * 4
+      out.data[j] = fr; out.data[j + 1] = fg; out.data[j + 2] = fb; out.data[j + 3] = 255
+    }
+    cx.putImageData(out, 0, 0)
+    const grown = { ...layer, x: gx0 / r, y: gy0 / r, w: w / r, h: h / r, canvas: c, src: c.toDataURL('image/png') }
+    return [...ls.slice(0, insertAt), grown, ...ls.slice(insertAt)]
+  }
+
+  // Заливки над видаленим обʼєктом «затікають» у пікселі, які він займав,
+  // якщо ці пікселі прилягають до заливки (BFS по масці видаленого обʼєкта).
+  function healFillsAfterDelete(ls, del) {
+    const idx = ls.findIndex((L) => L.id === del.id)
+    const r = ratio()
+    const D = del.canvas.getContext('2d').getImageData(0, 0, del.canvas.width, del.canvas.height).data
+    const dW = del.canvas.width
+    const dScale = dW / del.w
+    return ls.map((F, i) => {
+      if (i <= idx || F.kind !== 'fillArea' || !F.fillColor) return F
+      const ix0 = Math.max(F.x, del.x), iy0 = Math.max(F.y, del.y)
+      const ix1 = Math.min(F.x + F.w, del.x + del.w), iy1 = Math.min(F.y + F.h, del.y + del.h)
+      if (ix1 <= ix0 || iy1 <= iy0) return F
+      const c = document.createElement('canvas')
+      c.width = F.canvas.width
+      c.height = F.canvas.height
+      const cx = c.getContext('2d')
+      cx.drawImage(F.canvas, 0, 0)
+      const img = cx.getImageData(0, 0, c.width, c.height)
+      const d = img.data
+      const fW = c.width, fH = c.height
+      const fScale = fW / F.w
+      // Маска «звільнених» пікселів у координатах заливки.
+      const inDel = (fx, fy) => {
+        const lx = F.x + (fx + 0.5) / fScale
+        const ly = F.y + (fy + 0.5) / fScale
+        const dx = Math.floor((lx - del.x) * dScale)
+        const dy = Math.floor((ly - del.y) * dScale)
+        if (dx < 0 || dy < 0 || dx >= dW || dy >= del.canvas.height) return false
+        return D[(dy * dW + dx) * 4 + 3] > 10
+      }
+      const hex = F.fillColor.replace('#', '')
+      const fr = parseInt(hex.slice(0, 2), 16), fg = parseInt(hex.slice(2, 4), 16), fb = parseInt(hex.slice(4, 6), 16)
+      const x0 = Math.max(0, Math.floor((ix0 - F.x) * fScale) - 1), y0 = Math.max(0, Math.floor((iy0 - F.y) * fScale) - 1)
+      const x1 = Math.min(fW - 1, Math.ceil((ix1 - F.x) * fScale) + 1), y1 = Math.min(fH - 1, Math.ceil((iy1 - F.y) * fScale) + 1)
+      const queue = []
+      const seen = new Uint8Array(fW * fH)
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const k = y * fW + x
+        if (d[k * 4 + 3] > 0 || !inDel(x, y)) continue
+        if ((x > 0 && d[(k - 1) * 4 + 3] > 0) || (x < fW - 1 && d[(k + 1) * 4 + 3] > 0) || (y > 0 && d[(k - fW) * 4 + 3] > 0) || (y < fH - 1 && d[(k + fW) * 4 + 3] > 0)) { queue.push(k); seen[k] = 1 }
+      }
+      if (!queue.length) return F
+      while (queue.length) {
+        const k = queue.pop()
+        const j = k * 4
+        d[j] = fr; d[j + 1] = fg; d[j + 2] = fb; d[j + 3] = 255
+        const x = k % fW, y = (k - x) / fW
+        for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
+          if (nx < 0 || ny < 0 || nx >= fW || ny >= fH) continue
+          const n = ny * fW + nx
+          if (seen[n] || d[n * 4 + 3] > 0 || !inDel(nx, ny)) continue
+          seen[n] = 1
+          queue.push(n)
+        }
+      }
+      cx.putImageData(img, 0, 0)
+      return { ...F, canvas: c, src: c.toDataURL('image/png') }
+    })
+  }
+  function deleteLayer(id) {
+    updateLayers((ls) => {
+      const del = ls.find((L) => L.id === id)
+      return (del ? healFillsAfterDelete(ls, del) : ls).filter((L) => L.id !== id)
+    })
+    if (selectedIdRef.current === id) setSelectedLayerId(null)
+    onMessage?.('✓ Обʼєкт видалено (↶ — повернути)')
+  }
+  function toggleLayer(id) {
+    updateLayers((ls) => ls.map((L) => (L.id === id ? { ...L, visible: L.visible === false } : L)))
+  }
+  function moveLayerOrder(id, dir) {
+    updateLayers((ls) => {
+      const i = ls.findIndex((L) => L.id === id)
+      const j = i + dir
+      if (i < 0 || j < 0 || j >= ls.length) return ls
+      const next = [...ls]
+      ;[next[i], next[j]] = [next[j], next[i]]
+      return next
+    })
+  }
+  // Найвищий видимий обʼєкт, у якого під точкою є фарба (з запасом у кілька
+  // пікселів — щоб тонку лінію було легко влучити).
+  function hitLayer(p) {
+    const r = ratio()
+    const ls = layersRef.current
+    for (let i = ls.length - 1; i >= 0; i--) {
+      const L = ls[i]
+      if (L.visible === false || p.x < L.x - 4 || p.y < L.y - 4 || p.x > L.x + L.w + 4 || p.y > L.y + L.h + 4) continue
+      const cx = Math.round((p.x - L.x) * (L.canvas.width / L.w))
+      const cy = Math.round((p.y - L.y) * (L.canvas.height / L.h))
+      const R = Math.round(4 * r)
+      const sx = Math.max(0, cx - R), sy = Math.max(0, cy - R)
+      const ex = Math.min(L.canvas.width, cx + R + 1), ey = Math.min(L.canvas.height, cy + R + 1)
+      if (ex <= sx || ey <= sy) continue
+      const d = L.canvas.getContext('2d').getImageData(sx, sy, ex - sx, ey - sy).data
+      for (let k = 3; k < d.length; k += 4) if (d[k] > 10) return L
+    }
+    return null
   }
 
   // Живий перегляд тексту: щоразу, як текст чи його трансформація
@@ -328,6 +749,14 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
 
     if (placing) { placingStart(p); return }
+    if (tool === 'pick') {
+      const L = hitLayer(p)
+      setSelectedLayerId(L ? L.id : null)
+      selectedIdRef.current = L ? L.id : null
+      if (L) layerDragRef.current = { id: L.id, sx: p.x, sy: p.y, ox: L.x, oy: L.y, before: layersRef.current, moved: false }
+      composite()
+      return
+    }
     if (tool === 'select') {
       lassoBaseRef.current = captureSnapshot()
       lassoRef.current = [p]
@@ -336,7 +765,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     if (tool === 'fill') {
       const snap = captureSnapshot()
       if (floodFill(ctx, p.x, p.y, color, { opacity, tolerance: fillTolerance, mode: fillMode })) {
-        pushUndo(snap)
+        pushUndo(snap, 'fill')
         commit()
       } else if (fillMode === 'object') {
         onMessage?.('Клікни по самому обʼєкту, а не по фону')
@@ -346,7 +775,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     if (tool === 'text') {
       if (textActive) return
       const snap = captureSnapshot()
-      pushUndo(snap)
+      pushUndo(snap, 'text')
       textBaseRef.current = snap
       setTextPos(p)
       setTextValue('')
@@ -378,6 +807,16 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   }
 
   function move(e) {
+    const ld = layerDragRef.current
+    if (ld) {
+      const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
+      const nx = ld.ox + (p.x - ld.sx)
+      const ny = ld.oy + (p.y - ld.sy)
+      ld.moved = true
+      layersRef.current = layersRef.current.map((L) => (L.id === ld.id ? { ...L, x: nx, y: ny } : L))
+      composite()
+      return
+    }
     if (lassoRef.current) {
       const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
       lassoRef.current.push(p)
@@ -421,6 +860,18 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
 
   function end() {
     placeDragRef.current = null
+    const ld = layerDragRef.current
+    if (ld) {
+      layerDragRef.current = null
+      if (ld.moved) {
+        undoStackRef.current.push(ld.before)
+        setCanUndo(true)
+        setLayers(layersRef.current)
+        composite()
+        save()
+      }
+      return
+    }
     if (lassoRef.current) {
       const poly = lassoRef.current
       lassoRef.current = null
@@ -434,16 +885,9 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   }
 
   function clearCanvas() {
-    pushUndo(captureSnapshot())
-    const ctx = ctxRef.current
-    ctx.save()
-    ctx.setTransform(1, 0, 0, 1, 0, 0)
-    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
-    ctx.restore()
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
-    commit()
-    onMessage?.('✓ Полотно очищено')
+    updateLayers(() => [])
+    setSelectedLayerId(null)
+    onMessage?.('✓ Полотно очищено (↶ — повернути)')
   }
 
   // Знімок 3D-моделі (прозорий фон) лягає поверх поточного малюнка.
@@ -514,7 +958,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   function finishPlacing() {
     if (!placing) return
     drawPlacing(placing, false)
-    pushUndo(placeUndoRef.current || placeBaseRef.current)
+    pushUndo(placeUndoRef.current || placeBaseRef.current, placeUndoRef.current ? 'move' : 'place3d')
     placeUndoRef.current = null
     commit()
     setPlacing(null)
@@ -666,9 +1110,57 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     setColor(hsvToHex(hue, sat, v))
   }
 
+  // Рамка обраного обʼєкта зʼявляється/зникає разом з інструментом «Вибрати».
+  useEffect(() => {
+    if (!placing && !textActive) composite()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tool, selectedLayerId])
+  // Delete / Backspace — видалити обраний обʼєкт; Esc — зняти виділення.
+  useEffect(() => {
+    function onKey(e) {
+      const t = document.activeElement?.tagName
+      if (t === 'INPUT' || t === 'TEXTAREA') return
+      if (toolRef.current !== 'pick' || !selectedIdRef.current) return
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteLayer(selectedIdRef.current) }
+      else if (e.key === 'Escape') setSelectedLayerId(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const layersList = layersRef.current
+  const LayersPanel = (
+    <details className="fpc-layers" open={tool === 'pick' || undefined}>
+      <summary>🗂 Обʼєкти ({layersList.length}) <span className="fpc-layers-hint">— клікни, щоб вибрати й видалити</span></summary>
+      {layersList.length === 0 ? (
+        <p className="cl-tab-desc" style={{ margin: '6px 0' }}>Поки порожньо. Кожен мазок, заливка, текст чи 3D-модель зʼявиться тут окремим обʼєктом.</p>
+      ) : (
+        <div className="fpc-layer-list" data-v={layersVersion}>
+          {[...layersList].reverse().map((L) => (
+            <div key={L.id} className={'fpc-layer-row' + (L.id === selectedLayerId ? ' active' : '') + (L.visible === false ? ' hidden' : '')}>
+              <button type="button" className="fpc-layer-main" onClick={() => { setTool('pick'); setSelectedLayerId(L.id) }} title="Вибрати">
+                <img src={L.src} alt="" />
+                <span>{L.name}</span>
+              </button>
+              <button type="button" className="cl-mini-btn" onClick={() => moveLayerOrder(L.id, 1)} title="Вище">▲</button>
+              <button type="button" className="cl-mini-btn" onClick={() => moveLayerOrder(L.id, -1)} title="Нижче">▼</button>
+              <button type="button" className="cl-mini-btn" onClick={() => toggleLayer(L.id)} title={L.visible === false ? 'Показати' : 'Сховати'}>{L.visible === false ? '🙈' : '👁'}</button>
+              <button type="button" className="cl-mini-btn" onClick={() => deleteLayer(L.id)} title="Видалити">🗑</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {layersList.length > 1 && (
+        <button type="button" className="cl-mini-btn" style={{ marginTop: 6 }} onClick={mergeAll} title="Зменшує розмір файлу; окремо видаляти вже не вийде">⧉ Обʼєднати все в один</button>
+      )}
+    </details>
+  )
+
   const Toolbar = (
     <div className="fpc-toolbar">
       <div className="cl-btn-row">
+        <button type="button" className={'cl-mini-btn' + (tool === 'pick' ? ' active' : '')} onClick={() => setTool('pick')} title="Клікни по лінії чи обʼєкту, щоб вибрати; тягни — перемістити; Delete — видалити">↖ Вибрати</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'brush' ? ' active' : '')} onClick={() => setTool('brush')}>✏️ Пензель</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'eraser' ? ' active' : '')} onClick={() => setTool('eraser')}>🧹 Гумка</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'fill' ? ' active' : '')} onClick={() => setTool('fill')}>🪣 Заливка</button>
@@ -681,6 +1173,18 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
         <button type="button" className="cl-mini-btn" onClick={() => setFullscreen(!fullscreen)}>{fullscreen ? '✕ Закрити' : '⛶ На весь екран'}</button>
       </div>
 
+      {tool === 'pick' && (
+        <div className="fpc-place-panel">
+          <p className="cl-tab-desc" style={{ margin: 0 }}>↖ Клікни по лінії чи обʼєкту — він виділиться рамкою. Тягни — перемістити. <b>Delete</b> або 🗑 — видалити.</p>
+          {selectedLayerId && (
+            <div className="cl-btn-row" style={{ marginTop: 8 }}>
+              <button type="button" className="harmony-btn" onClick={() => deleteLayer(selectedLayerId)}>🗑 Видалити обраний</button>
+              <button type="button" className="cl-mini-btn" onClick={() => toggleLayer(selectedLayerId)}>👁 Сховати/показати</button>
+            </div>
+          )}
+        </div>
+      )}
+      {LayersPanel}
       {placing && (
         <div className="fpc-place-panel">
           <div className="cl-section-title" style={{ margin: '0 0 6px' }}>📐 Розмісти на полотні</div>
@@ -741,7 +1245,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
           <p className="cl-tab-desc" style={{ margin: '4px 0 8px', fontSize: 11 }}>Менше — заливає лише точно такий колір; більше — захоплює й схожі відтінки (тіні, градієнт).</p>
           <button type="button" className="cl-mini-btn" onClick={() => {
             const ctx = ctxRef.current
-            pushUndo(captureSnapshot())
+            pushUndo(captureSnapshot(), 'fillAll')
             ctx.save()
             ctx.globalAlpha = opacity
             ctx.fillStyle = color

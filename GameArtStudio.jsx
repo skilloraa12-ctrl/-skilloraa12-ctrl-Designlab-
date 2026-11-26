@@ -177,13 +177,14 @@ function AssetSection({ kind, label, labLink, project, onPatch, toastApi, drawMo
                 <FreePaintCanvas
                   assetKey={selected.id}
                   initialImage={selected.imageDataUrl}
-                  onChangeImage={(dataUrl) => update(selected.id, { imageDataUrl: dataUrl })}
+                  initialLayers={selected.paintLayers}
+                  onChangeImage={(dataUrl, layers) => update(selected.id, layers ? { imageDataUrl: dataUrl, paintLayers: layers } : { imageDataUrl: dataUrl })}
                   onMessage={toastApi.show}
                 />
               )}
               <label className="harmony-btn" style={{ cursor: 'pointer', display: 'inline-block', marginTop: 8 }}>
                 📤 Завантажити зображення
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => e.target.files[0] && readImageFile(e.target.files[0], (dataUrl) => update(selected.id, { imageDataUrl: dataUrl }))} />
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => e.target.files[0] && readImageFile(e.target.files[0], (dataUrl) => update(selected.id, { imageDataUrl: dataUrl, paintLayers: null }))} />
               </label>
               {drawMode === 'pixel' && selected.imageDataUrl && <img src={selected.imageDataUrl} alt={selected.title} className="gfx-concept-preview" />}
             </>
