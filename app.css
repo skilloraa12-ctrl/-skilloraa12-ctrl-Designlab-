@@ -1958,3 +1958,4 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .tl-nav-bar { position: absolute; right: 10px; bottom: 14px; z-index: 3; display: flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 10px; background: rgba(20,18,28,0.85); box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
 .tl-nav-bar > .cl-mini-btn { min-width: 30px; justify-content: center; }
 .tl-nav-bar .fpc-pad { margin: 0 2px; }
+.fpc-place-panel { border: 2px solid #7c4dff; border-radius: 12px; padding: 10px; margin: 6px 0; background: rgba(124,77,255,0.08); }

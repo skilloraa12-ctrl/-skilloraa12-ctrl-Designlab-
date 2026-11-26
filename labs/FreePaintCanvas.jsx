@@ -149,6 +149,9 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const [fullscreen, setFullscreen] = useState(true)
   const [show3d, setShow3d] = useState(false)
   const [fillTolerance, setFillTolerance] = useState(40)
+  const [placing, setPlacing] = useState(null) // вставлена модель, яку ще можна рухати/масштабувати
+  const placeBaseRef = useRef(null)
+  const placeDragRef = useRef(null)
   const [fillMode, setFillMode] = useState('area')
   // Масштаб і зсув перегляду полотна (лише вигляд — сам малюнок 1100×760
   // не змінюється, тому пензлі, undo й збереження працюють як раніше).
@@ -259,6 +262,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     if (!el) return
     function onWheel(e) {
       e.preventDefault()
+      if (placingRef.current && e.altKey) { scalePlacingRef.current(Math.exp(-e.deltaY * 0.0015)); return }
       // Коліщатко — масштаб; Shift+коліщатко — вліво/вправо;
       // тачпад (свайп двома пальцями дає deltaX) — рух у всі боки, щипок — масштаб.
       if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY)
@@ -320,6 +324,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     if (!ctx) return
     const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
 
+    if (placing) { placingStart(p); return }
     if (tool === 'fill') {
       const snap = captureSnapshot()
       if (floodFill(ctx, p.x, p.y, color, { opacity, tolerance: fillTolerance, mode: fillMode })) {
@@ -365,6 +370,10 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   }
 
   function move(e) {
+    if (placing) {
+      if (placeDragRef.current) placingMove(pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H))
+      return
+    }
     if (!drawingRef.current) return
     const ctx = ctxRef.current
     const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
@@ -386,6 +395,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   }
 
   function end() {
+    placeDragRef.current = null
     if (!drawingRef.current) return
     drawingRef.current = false
     commit()
@@ -405,18 +415,112 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   }
 
   // Знімок 3D-моделі (прозорий фон) лягає поверх поточного малюнка.
+  // Вставлена картинка спершу «плаває»: її можна перетягнути й змінити
+  // розмір (за кути, повзунком або Shift+коліщатком) і лише кнопкою
+  // «Готово» вона назавжди лягає на малюнок. Прозорі поля знімка
+  // обрізаються, щоб рамка охоплювала саму модель.
   function insertImage(dataUrl) {
     const ctx = ctxRef.current
     if (!ctx || !dataUrl) return
     const img = new Image()
     img.onload = () => {
-      pushUndo(captureSnapshot())
-      ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H)
-      commit()
-      onMessage?.('✓ 3D-модель на полотні — розмальовуй!')
+      const c = document.createElement('canvas')
+      c.width = img.width
+      c.height = img.height
+      const cx = c.getContext('2d')
+      cx.drawImage(img, 0, 0)
+      const data = cx.getImageData(0, 0, c.width, c.height).data
+      let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+        if (data[(y * c.width + x) * 4 + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y }
+      }
+      if (x1 < 0) return
+      const w = x1 - x0 + 1
+      const h = y1 - y0 + 1
+      const crop = document.createElement('canvas')
+      crop.width = w
+      crop.height = h
+      crop.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, w, h)
+      // Координати знімка = логічні координати полотна (знімок того ж розміру).
+      const k = CANVAS_W / img.width
+      placeBaseRef.current = captureSnapshot()
+      setPlacing({ img: crop, x: x0 * k, y: y0 * k, w: w * k, h: h * k, ratio: w / h })
+      setTool('brush')
+      onMessage?.('Перетягни модель на потрібне місце, тягни за кут — змінити розмір, потім «✓ Готово»')
     }
     img.src = dataUrl
     setShow3d(false)
+  }
+  function drawPlacing(pl, withFrame) {
+    const ctx = ctxRef.current
+    ctx.putImageData(placeBaseRef.current, 0, 0)
+    ctx.drawImage(pl.img, pl.x, pl.y, pl.w, pl.h)
+    if (!withFrame) return
+    ctx.save()
+    ctx.strokeStyle = '#7c4dff'
+    ctx.lineWidth = 2 / view.zoom
+    ctx.setLineDash([8 / view.zoom, 6 / view.zoom])
+    ctx.strokeRect(pl.x, pl.y, pl.w, pl.h)
+    ctx.setLineDash([])
+    const hs = 14 / view.zoom
+    ctx.fillStyle = '#ffffff'
+    for (const [hx, hy] of [[pl.x, pl.y], [pl.x + pl.w, pl.y], [pl.x, pl.y + pl.h], [pl.x + pl.w, pl.y + pl.h]]) {
+      ctx.fillRect(hx - hs / 2, hy - hs / 2, hs, hs)
+      ctx.strokeRect(hx - hs / 2, hy - hs / 2, hs, hs)
+    }
+    ctx.restore()
+  }
+  useEffect(() => {
+    if (placing) drawPlacing(placing, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placing, view.zoom])
+  const placingRef = useRef(null)
+  placingRef.current = placing
+  const scalePlacingRef = useRef(null)
+  scalePlacingRef.current = scalePlacing
+  function finishPlacing() {
+    if (!placing) return
+    drawPlacing(placing, false)
+    pushUndo(placeBaseRef.current)
+    commit()
+    setPlacing(null)
+    onMessage?.('✓ Модель на полотні — розмальовуй!')
+  }
+  function cancelPlacing() {
+    if (!placing) return
+    ctxRef.current.putImageData(placeBaseRef.current, 0, 0)
+    setPlacing(null)
+  }
+  // Зміна розміру навколо центру (повзунок / коліщатко).
+  function scalePlacing(factor) {
+    setPlacing((pl) => {
+      if (!pl) return pl
+      const w = Math.max(20, Math.min(CANVAS_W * 4, pl.w * factor))
+      const h = w / pl.ratio
+      return { ...pl, x: pl.x + (pl.w - w) / 2, y: pl.y + (pl.h - h) / 2, w, h }
+    })
+  }
+  function placingStart(p) {
+    const pl = placing
+    const hs = 18 / view.zoom
+    const corners = [[pl.x, pl.y, 'tl'], [pl.x + pl.w, pl.y, 'tr'], [pl.x, pl.y + pl.h, 'bl'], [pl.x + pl.w, pl.y + pl.h, 'br']]
+    const corner = corners.find(([cx, cy]) => Math.abs(p.x - cx) < hs && Math.abs(p.y - cy) < hs)
+    if (corner) { placeDragRef.current = { kind: corner[2], start: pl }; return }
+    if (p.x >= pl.x && p.x <= pl.x + pl.w && p.y >= pl.y && p.y <= pl.y + pl.h) {
+      placeDragRef.current = { kind: 'move', dx: p.x - pl.x, dy: p.y - pl.y }
+    }
+  }
+  function placingMove(p) {
+    const d = placeDragRef.current
+    if (!d) return
+    if (d.kind === 'move') { setPlacing((pl) => ({ ...pl, x: p.x - d.dx, y: p.y - d.dy })); return }
+    // Кут: протилежний кут лишається на місці, пропорції зберігаються.
+    const s0 = d.start
+    const ax = d.kind.includes('l') ? s0.x + s0.w : s0.x
+    const ay = d.kind.includes('t') ? s0.y + s0.h : s0.y
+    const w = Math.max(20, Math.max(Math.abs(p.x - ax), Math.abs(p.y - ay) * s0.ratio))
+    const h = w / s0.ratio
+    setPlacing((pl) => ({ ...pl, w, h, x: d.kind.includes('l') ? ax - w : ax, y: d.kind.includes('t') ? ay - h : ay }))
   }
 
   function addPaletteColor() { setPalette([...palette, color]) }
@@ -447,6 +551,25 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
         <button type="button" className="cl-mini-btn" onClick={() => setFullscreen(!fullscreen)}>{fullscreen ? '✕ Закрити' : '⛶ На весь екран'}</button>
       </div>
 
+      {placing && (
+        <div className="fpc-place-panel">
+          <div className="cl-section-title" style={{ margin: '0 0 6px' }}>📐 Розмісти модель</div>
+          <p className="cl-tab-desc" style={{ margin: '0 0 8px' }}>Тягни модель — перемістити. Тягни за білий квадратик у куті — збільшити/зменшити. Alt+коліщатко — теж розмір.</p>
+          <div className="fpc-slider-field">
+            Розмір: {Math.round((placing.w / CANVAS_W) * 100)}%
+            <input type="range" min={5} max={250} step={1} value={Math.round((placing.w / CANVAS_W) * 100)} onChange={(e) => scalePlacing((parseInt(e.target.value, 10) / 100) * CANVAS_W / placing.w)} />
+          </div>
+          <div className="cl-btn-row" style={{ marginTop: 8 }}>
+            <button type="button" className="cl-mini-btn" onClick={() => scalePlacing(0.9)}>➖ Менше</button>
+            <button type="button" className="cl-mini-btn" onClick={() => scalePlacing(1.1)}>➕ Більше</button>
+            <button type="button" className="cl-mini-btn" onClick={() => setPlacing((pl) => ({ ...pl, x: (CANVAS_W - pl.w) / 2, y: (CANVAS_H - pl.h) / 2 }))}>⊕ У центр</button>
+          </div>
+          <div className="cl-btn-row" style={{ marginTop: 8 }}>
+            <button type="button" className="harmony-btn" onClick={finishPlacing}>✓ Готово</button>
+            <button type="button" className="cl-mini-btn" onClick={cancelPlacing}>✕ Не вставляти</button>
+          </div>
+        </div>
+      )}
       {(tool === 'brush' || tool === 'eraser') && (
         <div className="cl-btn-row" style={{ marginTop: 6 }}>
           {BRUSH_TYPES.map((b) => (
