@@ -1982,3 +1982,6 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .tl-kf-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; margin-bottom: 6px; border-radius: 8px; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.35); font-size: 12px; }
 .tl-kf-bar > span { flex: 1; min-width: 180px; }
 .tl-kf-del { background: #e53935 !important; color: #fff !important; border-color: #e53935 !important; }
+.l3d-object-select { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.obj-name { display: inline; }
+.inline-name-input { flex: 1; min-width: 0; width: 100%; font-size: 13px; padding: 5px 8px; border-radius: 6px; border: 1px solid #7c4dff; background: var(--bg, #0c0a09); color: var(--ink, #fff); outline: none; }

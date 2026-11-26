@@ -149,7 +149,8 @@ function AxisRow({ label, values, onChange, min = -5, max = 5, step = 0.05, disa
   )
 }
 
-function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScrub, onJumpToKeyframe, onDeleteKeyframe, onClearKeyframes }) {
+function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScrub, onJumpToKeyframe, onDeleteKeyframe, onClearKeyframes, onRenameId }) {
+  const [editingId, setEditingId] = useState(null)
   const sel = objects.find((o) => o.id === selectedId)
   const kfHere = sel && sel.keyframes.find((k) => Math.abs(k.time - currentTime) < 0.01)
   return (
@@ -172,9 +173,22 @@ function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScru
         const meta = SHAPES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
         return (
           <div key={o.id} className="tl-track-row">
-            <button type="button" className={'tl-track-label' + (o.id === selectedId ? ' active' : '')} onClick={() => onSelect(o.id)} title={o.name || o.type} style={{ paddingLeft: 8 + depth * 14 }}>
-              {depth > 0 && <span className="tree-branch">↳</span>}{o.locked && '🔒'}{meta?.icon} {o.name || meta?.label || o.type}
-            </button>
+            {editingId === o.id ? (
+              <div className="tl-track-label" style={{ paddingLeft: 8 + depth * 14 }}>
+                <InlineName editing value={o.name || ''} placeholder={meta?.label || o.type} onCommit={(name) => { onRenameId(o.id, name); setEditingId(null) }} onCancel={() => setEditingId(null)} />
+              </div>
+            ) : (
+              <InlineName
+                className={'tl-track-label' + (o.id === selectedId ? ' active' : '')}
+                editing={false}
+                value={o.name || ''}
+                onClick={() => onSelect(o.id)}
+                onStart={() => { onSelect(o.id); setEditingId(o.id) }}
+                title={`${o.name || o.type} — подвійний клік, щоб перейменувати`}
+              >
+                {depth > 0 && <span className="tree-branch">↳</span>}{o.locked && '🔒'}{meta?.icon} {o.name || meta?.label || o.type}
+              </InlineName>
+            )}
             <div
               className="tl-track-lane"
               onClick={(e) => {
@@ -209,6 +223,37 @@ function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScru
   )
 }
 
+// Назва, яку можна перейменувати на місці: подвійний клік (або ✏) →
+// поле; Enter / клік поза полем — зберегти, Esc — скасувати.
+function InlineName({ editing, value, placeholder, onStart, onCommit, onCancel, className, onClick, title, children }) {
+  const [draft, setDraft] = useState(value || '')
+  useEffect(() => { if (editing) setDraft(value || '') }, [editing, value])
+  if (editing) {
+    return (
+      <input
+        className="inline-name-input"
+        autoFocus
+        value={draft}
+        placeholder={placeholder}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Enter') onCommit(draft.trim())
+          else if (e.key === 'Escape') onCancel()
+        }}
+        onBlur={() => onCommit(draft.trim())}
+        onFocus={(e) => e.target.select()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    )
+  }
+  return (
+    <button type="button" className={className} onClick={onClick} onDoubleClick={(e) => { e.stopPropagation(); onStart() }} title={title || 'Подвійний клік — перейменувати'}>
+      {children}
+    </button>
+  )
+}
+
 // Список обʼєктів деревом: прикріплені (🔗) — під своїм батьком із відступом.
 function treeOrder(objects) {
   const ids = new Set(objects.map((o) => o.id))
@@ -225,7 +270,8 @@ function treeOrder(objects) {
   return out
 }
 
-function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFile, pendingImport, onImportApply, onImportCancel, onDelete, onDuplicate, onRename, onToggleLock, selected }) {
+function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFile, pendingImport, onImportApply, onImportCancel, onDelete, onDuplicate, onRename, onRenameId, onToggleLock, selected }) {
+  const [editingId, setEditingId] = useState(null)
   return (
     <div>
       <p className="cl-tab-desc">Кожна фігура чи світло отримує власну доріжку на таймлайні. Обʼєкт без жодного ключового кадру лишається статичним — анімація потрібна лише там, де вона справді щось розповідає.</p>
@@ -271,9 +317,19 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFi
             const meta = SHAPES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
             return (
               <div key={o.id} className={'l3d-object-row' + (o.id === selectedId ? ' active' : '') + (o.locked ? ' locked' : '')} style={{ paddingLeft: depth * 16 }}>
-                <button className="l3d-object-select" onClick={() => onSelect(o.id)}>
-                  {depth > 0 && <span className="tree-branch">↳</span>}{meta?.icon} {o.name || `${meta?.label || o.type} #${i + 1}`} {o.keyframes.length > 0 && <span title="Анімований">🎬{o.keyframes.length}</span>}
-                </button>
+                <InlineName
+                  className="l3d-object-select"
+                  editing={editingId === o.id}
+                  value={o.name || ''}
+                  placeholder={`${meta?.label || o.type} #${i + 1}`}
+                  onClick={() => onSelect(o.id)}
+                  onStart={() => { onSelect(o.id); setEditingId(o.id) }}
+                  onCommit={(name) => { onRenameId(o.id, name); setEditingId(null) }}
+                  onCancel={() => setEditingId(null)}
+                >
+                  {depth > 0 && <span className="tree-branch">↳</span>}{meta?.icon} <span className="obj-name">{o.name || `${meta?.label || o.type} #${i + 1}`}</span> {o.keyframes.length > 0 && <span title="Анімований">🎬{o.keyframes.length}</span>}
+                </InlineName>
+                {editingId !== o.id && <button className="cl-mini-btn" onClick={() => { onSelect(o.id); setEditingId(o.id) }} title="Перейменувати (або подвійний клік по назві)">✏</button>}
                 <button className={'cl-mini-btn' + (o.locked ? ' active' : '')} onClick={() => onToggleLock(o.id)} title={o.locked ? 'Розблокувати' : 'Зафіксувати — не можна випадково зачепити чи зсунути'}>{o.locked ? '🔒' : '🔓'}</button>
                 <button className="cl-mini-btn" onClick={() => onDuplicate(o.id)} title="Дублювати (Ctrl+D)">⧉</button>
                 <button className="cl-mini-btn" onClick={() => onDelete(o.id)} title="Видалити (Del)" disabled={o.locked}>✕</button>
@@ -1920,7 +1976,7 @@ function ThreeDAnimEditorInner() {
     const clone = {
       ...obj,
       id: nextId(),
-      name: obj.name ? `${obj.name} (копія)` : null,
+      name: copyName(obj.name),
       locked: false,
       position: { ...obj.position, x: obj.position.x + 0.4 },
       keyframes: obj.keyframes.map((k) => ({ ...k, position: { ...k.position, x: k.position.x + 0.4 } })),
@@ -1929,6 +1985,18 @@ function ThreeDAnimEditorInner() {
     applyObjects(next)
     applySelected(clone.id)
     toastApi.show('✓ Здубльовано')
+  }
+  function renameObject(id, name) {
+    applyObjects(objectsRef.current.map((o) => (o.id === id ? { ...o, name: name || null } : o)))
+  }
+  // Назва копії: «Вікно» → «Вікно (2)», «Вікно (2)» → «Вікно (3)»… (без
+  // ланцюжків «(копія) (копія)»; старі такі хвости прибираються).
+  function copyName(name) {
+    if (!name) return null
+    const base = name.replace(/(\s*\(копія\))+\s*$/u, '').replace(/\s*\(\d+\)\s*$/, '').trim() || name
+    const taken = new Set(objectsRef.current.map((o) => o.name))
+    for (let n = 2; n < 1000; n++) if (!taken.has(`${base} (${n})`)) return `${base} (${n})`
+    return base
   }
   function renameSelected(name) {
     if (!selectedIdRef.current) return
@@ -2532,7 +2600,7 @@ function ThreeDAnimEditorInner() {
 
       <div className="tl-editor-shell">
         <div className="tl-editor-left">
-          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onImportFile={importSceneFile} pendingImport={pendingImport} onImportApply={applyImport} onImportCancel={() => setPendingImport(null)} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} onToggleLock={toggleLock} />
+          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onImportFile={importSceneFile} pendingImport={pendingImport} onImportApply={applyImport} onImportCancel={() => setPendingImport(null)} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} onRenameId={renameObject} onToggleLock={toggleLock} />
         </div>
 
         <div className="tl-editor-center">
@@ -2596,7 +2664,7 @@ function ThreeDAnimEditorInner() {
             <input type="range" min={0} max={duration} step={1 / fps} value={currentTime} onChange={(e) => scrub(parseFloat(e.target.value))} />
             <span className="tl-time-label">{formatTime(currentTime)} / {formatTime(duration)}</span>
           </div>
-          <Timeline objects={objects} selectedId={selectedId} onSelect={applySelected} duration={duration} currentTime={currentTime} onScrub={scrub} onJumpToKeyframe={scrub} onDeleteKeyframe={(id, t) => { deleteKeyframe(id, t); toastApi.show('🗑 Кадр видалено (Ctrl+Z — повернути)') }} onClearKeyframes={clearKeyframes} />
+          <Timeline objects={objects} selectedId={selectedId} onSelect={applySelected} duration={duration} currentTime={currentTime} onScrub={scrub} onJumpToKeyframe={scrub} onDeleteKeyframe={(id, t) => { deleteKeyframe(id, t); toastApi.show('🗑 Кадр видалено (Ctrl+Z — повернути)') }} onClearKeyframes={clearKeyframes} onRenameId={renameObject} />
         </div>
 
         <div className="tl-editor-right">
