@@ -588,6 +588,49 @@ export function createAnimScene(container, opts = {}) {
   function endPointDrag() {
     drag = null
   }
+  // ── Перетягування обʼєкта мишкою ──
+  // Звичайно — по підлозі (горизонтальна площина через обʼєкт), з Shift —
+  // вгору/вниз (вертикальна площина, повернута до камери). Повертає зсув у
+  // координатах батька (для прикріплених обʼєктів), тож його можна просто
+  // додати до position.
+  let moveDrag = null
+  function beginMoveDrag(id, clientX, clientY, vertical) {
+    const node = nodeMap.get(id)
+    if (!node) return false
+    node.updateMatrixWorld(true)
+    const start = new THREE.Vector3().setFromMatrixPosition(node.matrixWorld)
+    let normal
+    if (vertical) {
+      normal = new THREE.Vector3()
+      camera.getWorldDirection(normal)
+      normal.y = 0
+      if (normal.lengthSq() < 1e-6) normal.set(0, 0, 1)
+      normal.normalize()
+    } else normal = new THREE.Vector3(0, 1, 0)
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, start)
+    setPointer(clientX, clientY)
+    raycaster.setFromCamera(pointer, camera)
+    const hit = new THREE.Vector3()
+    if (!raycaster.ray.intersectPlane(plane, hit)) return false
+    moveDrag = { node, plane, hit0: hit.clone(), start, vertical }
+    return true
+  }
+  function dragMoveTo(clientX, clientY) {
+    if (!moveDrag) return null
+    setPointer(clientX, clientY)
+    raycaster.setFromCamera(pointer, camera)
+    const hit = new THREE.Vector3()
+    if (!raycaster.ray.intersectPlane(moveDrag.plane, hit)) return null
+    const d = hit.sub(moveDrag.hit0)
+    if (moveDrag.vertical) { d.x = 0; d.z = 0 } else d.y = 0
+    const parent = moveDrag.node.parent
+    parent.updateMatrixWorld(true)
+    const a = parent.worldToLocal(moveDrag.start.clone())
+    const b = parent.worldToLocal(moveDrag.start.clone().add(d))
+    return { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z }
+  }
+  function endMoveDrag() { moveDrag = null }
+
   function getPoints(id) {
     const node = nodeMap.get(id)
     if (!node || node.isLight || !node.userData.obj) return []
@@ -923,6 +966,9 @@ export function createAnimScene(container, opts = {}) {
     endPointDrag,
     getPoints,
     getLocalBounds,
+    beginMoveDrag,
+    dragMoveTo,
+    endMoveDrag,
     paintStroke,
     commitPaint,
     fillPaint,

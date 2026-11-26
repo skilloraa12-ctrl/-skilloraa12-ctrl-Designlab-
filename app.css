@@ -1976,3 +1976,4 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .l3d-object-row.locked .l3d-object-select { opacity: 0.75; }
 .tree-branch { color: var(--muted); margin-right: 4px; }
 .scene-build-box { border: 1px solid var(--line, #2c2c38); border-radius: 10px; padding: 10px; margin-bottom: 12px; }
+.rec-btn.active { background: #e53935 !important; color: #fff !important; border-color: #e53935 !important; }

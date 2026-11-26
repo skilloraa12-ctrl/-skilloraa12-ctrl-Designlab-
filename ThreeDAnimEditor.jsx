@@ -153,12 +153,12 @@ function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScru
   return (
     <div className="tl-tracks">
       {objects.length === 0 && <p className="cl-tab-desc" style={{ margin: 0 }}>Додай обʼєкт зліва, щоб побачити тут його доріжку.</p>}
-      {objects.map((o) => {
+      {treeOrder(objects).map(({ o, depth }) => {
         const meta = SHAPES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
         return (
           <div key={o.id} className="tl-track-row">
-            <button type="button" className={'tl-track-label' + (o.id === selectedId ? ' active' : '')} onClick={() => onSelect(o.id)} title={o.name || o.type}>
-              {meta?.icon} {o.name || meta?.label || o.type}
+            <button type="button" className={'tl-track-label' + (o.id === selectedId ? ' active' : '')} onClick={() => onSelect(o.id)} title={o.name || o.type} style={{ paddingLeft: 8 + depth * 14 }}>
+              {depth > 0 && <span className="tree-branch">↳</span>}{o.locked && '🔒'}{meta?.icon} {o.name || meta?.label || o.type}
             </button>
             <div
               className="tl-track-lane"
@@ -317,7 +317,7 @@ function TransformTab({ selected, time, onEdit, onAddKeyframe, onDeleteKeyframe,
     )
   }
   const existingKf = findKeyframeAt(selected, time)
-  const pose = existingKf || selected
+  const pose = existingKf || (selected.keyframes.length ? poseAt(selected, time) : selected)
   return (
     <div>
       {sceneControls}
@@ -340,7 +340,7 @@ function TransformTab({ selected, time, onEdit, onAddKeyframe, onDeleteKeyframe,
           </>
         ) : (
           <>
-            <span className="gfx-status-pill">Базова поза (кадру тут немає)</span>
+            <span className="gfx-status-pill">{selected.keyframes.length ? 'Між кадрами — зміна створить кадр тут' : 'Базова поза (кадру тут немає)'}</span>
             <button className="harmony-btn" onClick={onAddKeyframe}>◆ Додати ключовий кадр тут</button>
           </>
         )}
@@ -1503,6 +1503,12 @@ function ThreeDAnimEditorInner() {
   // з Alt; за замовчуванням будь-яке перетягування крутить камеру (ракурс),
   // щоб можна було оглянути сцену з усіх боків, не зачіпаючи обʼєкт.
   const [rotateObjMode, setRotateObjMode] = useState(false)
+  const [moveObjMode, setMoveObjMode] = useState(false)
+  const moveObjModeRef = useRef(false)
+  moveObjModeRef.current = moveObjMode
+  const [autoKey, setAutoKey] = useState(false)
+  const autoKeyRef = useRef(false)
+  autoKeyRef.current = autoKey
   const rotateObjModeRef = useRef(false)
   rotateObjModeRef.current = rotateObjMode
   const pointDragRef = useRef(null)
@@ -1591,6 +1597,7 @@ function ThreeDAnimEditorInner() {
     api.syncStructure(objectsRef.current, selectedIdRef.current)
 
     let rotating = false
+    let movingObj = false
     let painting = false
     let pointDragging = false
     let suppressClick = false
@@ -1624,6 +1631,15 @@ function ThreeDAnimEditorInner() {
         return
       }
       const id = api.pickAt(e.clientX, e.clientY)
+      // ✥ Рухати: режим «Рухати обʼєкт» або Ctrl+тягни по обраному обʼєкту.
+      if (id && id === selectedIdRef.current && (moveObjModeRef.current || e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (beginObjectMoveRef.current(e.clientX, e.clientY, e.shiftKey)) {
+          movingObj = true
+          api.setControlsEnabled(false)
+          el.style.cursor = 'move'
+        }
+        return
+      }
       if (id && id === selectedIdRef.current && (rotateObjModeRef.current || e.altKey)) {
         rotating = true
         lastX = e.clientX
@@ -1633,6 +1649,10 @@ function ThreeDAnimEditorInner() {
       }
     }
     function handlePointerMove(e) {
+      if (movingObj) {
+        objectMoveToRef.current(e.clientX, e.clientY)
+        return
+      }
       if (painting) {
         api.paintStroke(selectedIdRef.current, e.clientX, e.clientY, paintBrushFor(selectedIdRef.current), false)
         return
@@ -1650,6 +1670,15 @@ function ThreeDAnimEditorInner() {
       applyRotationDeltaRef.current(dx, dy, e.shiftKey)
     }
     function handlePointerUp() {
+      if (movingObj) {
+        movingObj = false
+        suppressClick = true
+        setTimeout(() => { suppressClick = false }, 0)
+        endObjectMoveRef.current()
+        api.setControlsEnabled(true)
+        el.style.cursor = 'grab'
+        return
+      }
       if (painting) {
         painting = false
         suppressClick = true
@@ -1883,22 +1912,79 @@ function ThreeDAnimEditorInner() {
   // current time, patches that keyframe in place; otherwise patches the
   // object's base (rest) transform. Position edits snap to the grid when
   // snapEnabled is on.
-  function editPose(group, axis, value) {
-    if (!selectedIdRef.current || isLocked(selectedIdRef.current)) return
-    if (group === 'position' && snapEnabled) value = Math.round(value / SNAP_SIZE) * SNAP_SIZE
-    const t = currentTimeRef.current
+  // Єдина точка зміни пози обʼєкта на поточному часі:
+  //  - є кадр саме тут → змінюється він;
+  //  - в обʼєкта вже є кадри, або увімкнено «⏺ Запис руху» → тут
+  //    створюється новий кадр (з поточної інтерпольованої пози), щоб зміна
+  //    не губилась між кадрами й рух записувався;
+  //  - інакше — базова (статична) поза.
+  function setPoseGroup(id, group, vec, silent) {
+    const t = Math.round(currentTimeRef.current * 100) / 100
+    let created = false
     const next = objectsRef.current.map((o) => {
-      if (o.id !== selectedIdRef.current) return o
+      if (o.id !== id) return o
       const idx = o.keyframes.findIndex((k) => Math.abs(k.time - t) < 0.01)
       if (idx >= 0) {
         const kfs = [...o.keyframes]
-        kfs[idx] = { ...kfs[idx], [group]: { ...kfs[idx][group], [axis]: value } }
+        kfs[idx] = { ...kfs[idx], [group]: vec }
         return { ...o, keyframes: kfs }
       }
-      return { ...o, [group]: { ...o[group], [axis]: value } }
+      if (o.keyframes.length > 0 || autoKeyRef.current) {
+        const cur = poseAt(o, t)
+        // Перший записаний кадр: стартова поза на 0с, щоб рух мав звідки йти.
+        const extra = o.keyframes.length === 0 && t > 0.01 ? [{ ...makeKeyframeFromObject(o, 0) }] : []
+        const kf = { time: t, position: { ...cur.position }, rotation: { ...cur.rotation }, scale: { ...cur.scale }, easing: 'linear', [group]: vec }
+        created = true
+        return { ...o, keyframes: [...o.keyframes, ...extra, kf].sort((a, b) => a.time - b.time) }
+      }
+      return { ...o, [group]: vec }
     })
     applyObjects(next)
+    if (created && !silent) toastApi.show(`⏺ Рух записано на ${formatTime(t)}`)
   }
+  function currentPose(id) {
+    const o = objectsRef.current.find((x) => x.id === id)
+    if (!o) return null
+    const t = currentTimeRef.current
+    return findKeyframeAt(o, t) || (o.keyframes.length ? poseAt(o, t) : o)
+  }
+  function editPose(group, axis, value) {
+    const id = selectedIdRef.current
+    if (!id || isLocked(id)) return
+    if (group === 'position' && snapEnabled) value = Math.round(value / SNAP_SIZE) * SNAP_SIZE
+    const cur = currentPose(id)
+    setPoseGroup(id, group, { ...cur[group], [axis]: value })
+  }
+  // Перетягування обʼєкта у вʼюпорті (режим «✥ Рухати обʼєкт» або Ctrl).
+  const moveStartRef = useRef(null)
+  function beginObjectMove(x, y, vertical) {
+    const id = selectedIdRef.current
+    const api = sceneApiRef.current
+    if (!id || !api || isLocked(id)) return false
+    if (!api.beginMoveDrag(id, x, y, vertical)) return false
+    moveStartRef.current = { id, pos: { ...currentPose(id).position }, recorded: false }
+    return true
+  }
+  function objectMoveTo(x, y) {
+    const st = moveStartRef.current
+    const d = st && sceneApiRef.current?.dragMoveTo(x, y)
+    if (!d) return
+    let pos = { x: st.pos.x + d.x, y: st.pos.y + d.y, z: st.pos.z + d.z }
+    if (snapEnabled) pos = { x: Math.round(pos.x / SNAP_SIZE) * SNAP_SIZE, y: Math.round(pos.y / SNAP_SIZE) * SNAP_SIZE, z: Math.round(pos.z / SNAP_SIZE) * SNAP_SIZE }
+    const r = (v) => Math.round(v * 1000) / 1000
+    setPoseGroup(st.id, 'position', { x: r(pos.x), y: r(pos.y), z: r(pos.z) }, st.recorded)
+    st.recorded = true
+  }
+  function endObjectMove() {
+    sceneApiRef.current?.endMoveDrag()
+    moveStartRef.current = null
+  }
+  const endObjectMoveRef = useRef(endObjectMove)
+  endObjectMoveRef.current = endObjectMove
+  const beginObjectMoveRef = useRef(beginObjectMove)
+  beginObjectMoveRef.current = beginObjectMove
+  const objectMoveToRef = useRef(objectMoveTo)
+  objectMoveToRef.current = objectMoveTo
 
   // Direct-manipulation rotation: dragging the selected object in the
   // viewport spins it (horizontal → Y, vertical → X; hold Shift to roll Z
@@ -1908,23 +1994,12 @@ function ThreeDAnimEditorInner() {
   function applyRotationDelta(dx, dy, roll) {
     const id = selectedIdRef.current
     if (!id || isLocked(id)) return
-    const t = currentTimeRef.current
     const wrap = (v) => ((v % 360) + 360) % 360
-    const next = objectsRef.current.map((o) => {
-      if (o.id !== id) return o
-      const idx = o.keyframes.findIndex((k) => Math.abs(k.time - t) < 0.01)
-      const source = idx >= 0 ? o.keyframes[idx].rotation : o.rotation
-      const nextRot = roll
-        ? { x: source.x, y: source.y, z: wrap(source.z + dx * 0.6) }
-        : { x: wrap(source.x + dy * 0.6), y: wrap(source.y + dx * 0.6), z: source.z }
-      if (idx >= 0) {
-        const kfs = [...o.keyframes]
-        kfs[idx] = { ...kfs[idx], rotation: nextRot }
-        return { ...o, keyframes: kfs }
-      }
-      return { ...o, rotation: nextRot }
-    })
-    applyObjects(next)
+    const source = currentPose(id).rotation
+    const nextRot = roll
+      ? { x: source.x, y: source.y, z: wrap(source.z + dx * 0.6) }
+      : { x: wrap(source.x + dy * 0.6), y: wrap(source.y + dx * 0.6), z: source.z }
+    setPoseGroup(id, 'rotation', nextRot, true)
   }
   const applyRotationDeltaRef = useRef(applyRotationDelta)
   applyRotationDeltaRef.current = applyRotationDelta
@@ -2444,10 +2519,16 @@ function ThreeDAnimEditorInner() {
             <p className="tl-rotate-hint">✏️ Режим точок: тягни точку, щоб змінити форму. Тягни поза точками — обертай камеру, щоб рухати точку в іншій площині.</p>
           ) : (
             <div className="tl-rotate-hint tl-view-hint">
-              <span>{rotateObjMode && selected
-                ? `🔄 Тягни «${selected.name || 'обраний обʼєкт'}», щоб обертати його (Shift — нахил по Z). Поза ним — камера.`
-                : '🎥 Тягни — крутити камеру · Shift+тягни або права кнопка — рухати сцену · коліщатко — наблизити · або кнопки у вʼюпорті'}</span>
-              <button type="button" className={'cl-mini-btn' + (rotateObjMode ? ' active' : '')} onClick={() => setRotateObjMode((v) => !v)} title="Або тягни обʼєкт із затиснутим Alt">🔄 Крутити обʼєкт</button>
+              <span>{moveObjMode && selected
+                ? `✥ Тягни «${selected.name || 'обраний обʼєкт'}» — рухати по підлозі, з Shift — вгору/вниз. Поза ним — камера.`
+                : rotateObjMode && selected
+                  ? `🔄 Тягни «${selected.name || 'обраний обʼєкт'}», щоб обертати його (Shift — нахил по Z). Поза ним — камера.`
+                  : '🎥 Тягни — крутити камеру · Ctrl+тягни обʼєкт — рухати його · коліщатко — наблизити · кнопки у вʼюпорті'}</span>
+              <span className="cl-btn-row" style={{ gap: 4 }}>
+                <button type="button" className={'cl-mini-btn' + (moveObjMode ? ' active' : '')} onClick={() => { setMoveObjMode((v) => !v); setRotateObjMode(false) }} title="Або тягни обʼєкт із затиснутим Ctrl">✥ Рухати обʼєкт</button>
+                <button type="button" className={'cl-mini-btn' + (rotateObjMode ? ' active' : '')} onClick={() => { setRotateObjMode((v) => !v); setMoveObjMode(false) }} title="Або тягни обʼєкт із затиснутим Alt">🔄 Крутити обʼєкт</button>
+                <button type="button" className={'cl-mini-btn rec-btn' + (autoKey ? ' active' : '')} onClick={() => setAutoKey((v) => !v)} title="Кожна зміна положення/повороту/розміру записується ключовим кадром на поточному часі">{autoKey ? '⏺ Запис руху: УВІМК' : '⏺ Запис руху'}</button>
+              </span>
             </div>
           )}
 
