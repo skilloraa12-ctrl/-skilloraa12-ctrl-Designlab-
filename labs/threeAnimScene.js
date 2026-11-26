@@ -244,7 +244,10 @@ export function createAnimScene(container, opts = {}) {
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100)
   camera.position.set(3.2, 2.6, 4.4)
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: !!opts.alpha })
+  // opts.renderer — спільний рендерер (знімки для Game Art): не створюємо
+  // новий WebGL-контекст на кожен знімок, бо браузер тримає їх обмежено
+  // (~16) і, перевищивши ліміт, мовчки «гасить» найстаріший — 3D-вʼюпорт.
+  const renderer = opts.renderer || new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: !!opts.alpha })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   container.appendChild(renderer.domElement)
 
@@ -815,7 +818,10 @@ export function createAnimScene(container, opts = {}) {
     for (const id of [...nodeMap.keys()]) removeNode(id)
     for (const entry of baseCache.values()) entry.geometry.dispose()
     baseCache.clear()
-    renderer.dispose()
+    if (!opts.renderer) {
+      renderer.dispose()
+      renderer.forceContextLoss() // одразу звільнити контекст, не чекаючи збирача сміття
+    }
     if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement)
   }
 

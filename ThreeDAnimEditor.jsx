@@ -1303,7 +1303,20 @@ function ExportTab({ objects, duration, getScreenshot, onRecordVideo, recording,
   )
 }
 
+// Обгортка: редактор монтується лише ПІСЛЯ того, як прогрес завантажився
+// з сервера. Внутрішній редактор бере сцену з проєкту один раз — при
+// монтуванні (далі живе власним станом з undo/redo й автозбереженням).
+// Якщо змонтувати його раніше (пряме відкриття/оновлення сторінки), він
+// стартував би з порожньою сценою й автозбереженням затер би справжню.
 export default function ThreeDAnimEditor() {
+  const { projectId } = useParams()
+  const { threeDProjects, ready } = useProgress()
+  if (!ready) return <p className="cl-tab-desc" style={{ padding: 24 }}>Завантаження 3D-проєкту…</p>
+  if (!threeDProjects.some((p) => p.id === projectId)) return <NotFound />
+  return <ThreeDAnimEditorInner key={projectId} />
+}
+
+function ThreeDAnimEditorInner() {
   const { projectId } = useParams()
   const { threeDProjects, saveThreeDProject, gameArtProjects = [] } = useProgress()
   const artImages = useMemo(() => gameArtProjects.flatMap((p) =>
@@ -1333,6 +1346,8 @@ export default function ThreeDAnimEditor() {
   const [symmetry, setSymmetry] = useState(false)
   const [drawTarget, setDrawTarget] = useState(null) // null | 'new' | id обʼєкта
   const [pendingImport, setPendingImport] = useState(null)
+  const [sceneKey, setSceneKey] = useState(0)
+  const [sceneLost, setSceneLost] = useState(false)
   const [brush, setBrushState] = useState({ mode: 'brush', color: '#e53935', size: 14, opacity: 1 })
   const brushRef = useRef(brush)
   function setBrush(b) { brushRef.current = b; setBrushState(b) }
@@ -1437,6 +1452,9 @@ export default function ThreeDAnimEditor() {
     if (!containerRef.current) return
     const el = containerRef.current
     const api = createAnimScene(el)
+    const glCanvas = api.getRenderer().domElement
+    const onLost = () => setSceneLost(true)
+    glCanvas.addEventListener('webglcontextlost', onLost)
     sceneApiRef.current = api
     api.syncStructure(objectsRef.current, selectedIdRef.current)
 
@@ -1534,10 +1552,11 @@ export default function ThreeDAnimEditor() {
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
       api.dispose()
+      glCanvas.removeEventListener('webglcontextlost', onLost)
       sceneApiRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [sceneKey])
 
   // Structural resync on edits — also re-applies each object's base
   // transform, which the pose effect below then overrides with the correct
@@ -2161,7 +2180,15 @@ export default function ThreeDAnimEditor() {
         </div>
 
         <div className="tl-editor-center">
-          <div ref={containerRef} className="tl-editor-viewport" />
+          <div className="tl-viewport-wrap">
+            <div ref={containerRef} className="tl-editor-viewport" />
+            {sceneLost && (
+              <div className="tl-viewport-lost">
+                <p>3D-перегляд зупинився (браузер вимкнув WebGL). Твоя сцена ціла.</p>
+                <button className="harmony-btn" onClick={() => { setSceneLost(false); setSceneKey((k) => k + 1) }}>🔄 Перезапустити 3D</button>
+              </div>
+            )}
+          </div>
           {paintMode ? (
             <p className="tl-rotate-hint">🖌 Малюй прямо на «{selected?.name || 'моделі'}». Тягни поза моделлю — крути камеру й малюй з іншого боку.</p>
           ) : editMode ? (

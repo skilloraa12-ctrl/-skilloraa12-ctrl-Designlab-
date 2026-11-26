@@ -88,12 +88,20 @@ function renderLineArt(renderer, scene, camera, W, H) {
   return c.toDataURL('image/png')
 }
 
+let sharedRenderer = null
+function getSharedRenderer() {
+  if (!sharedRenderer || sharedRenderer.getContext().isContextLost()) {
+    sharedRenderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true })
+  }
+  return sharedRenderer
+}
+
 export function renderThreeDSnapshot(project, { width = 1100, height = 760, view = 'iso', style = 'color' } = {}) {
   const objects = project?.anim?.objects || []
   const container = document.createElement('div')
   container.style.cssText = `position:fixed;left:-20000px;top:0;width:${width}px;height:${height}px;pointer-events:none;`
   document.body.appendChild(container)
-  const api = createAnimScene(container, { alpha: true })
+  const api = createAnimScene(container, { alpha: true, renderer: getSharedRenderer() })
   try {
     const renderer = api.getRenderer()
     renderer.setPixelRatio(1)
@@ -155,7 +163,6 @@ export function renderThreeDSnapshot(project, { width = 1100, height = 760, view
     renderer.render(scene, camera)
     return renderer.domElement.toDataURL('image/png')
   } finally {
-    api.getRenderer().forceContextLoss()
     api.dispose()
     container.remove()
   }
