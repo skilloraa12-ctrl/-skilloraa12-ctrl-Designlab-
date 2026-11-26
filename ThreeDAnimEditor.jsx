@@ -134,15 +134,15 @@ function HelpBox({ children }) {
   )
 }
 
-function AxisRow({ label, values, onChange, min = -5, max = 5, step = 0.05 }) {
+function AxisRow({ label, values, onChange, min = -5, max = 5, step = 0.05, disabled = false }) {
   return (
     <div className="l3d-axis-row">
       <span className="l3d-axis-label">{label}</span>
       {['x', 'y', 'z'].map((axis) => (
         <label key={axis} className="l3d-axis-field">
           <span>{axis.toUpperCase()}</span>
-          <input type="range" min={min} max={max} step={step} value={values[axis]} onChange={(e) => onChange(axis, parseFloat(e.target.value))} />
-          <input type="number" step={step} value={Math.round(values[axis] * 100) / 100} onChange={(e) => onChange(axis, parseFloat(e.target.value) || 0)} />
+          <input type="range" min={min} max={max} step={step} value={values[axis]} disabled={disabled} onChange={(e) => onChange(axis, parseFloat(e.target.value))} />
+          <input type="number" step={step} value={Math.round(values[axis] * 100) / 100} disabled={disabled} onChange={(e) => onChange(axis, parseFloat(e.target.value) || 0)} />
         </label>
       ))}
     </div>
@@ -192,7 +192,23 @@ function Timeline({ objects, selectedId, onSelect, duration, currentTime, onScru
   )
 }
 
-function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFile, pendingImport, onImportApply, onImportCancel, onDelete, onDuplicate, onRename, selected }) {
+// Список обʼєктів деревом: прикріплені (🔗) — під своїм батьком із відступом.
+function treeOrder(objects) {
+  const ids = new Set(objects.map((o) => o.id))
+  const out = []
+  const visit = (parentId, depth) => {
+    objects.forEach((o, i) => {
+      const p = o.parentId && ids.has(o.parentId) ? o.parentId : null
+      if (p !== parentId) return
+      out.push({ o, depth, i })
+      if (depth < 20) visit(o.id, depth + 1)
+    })
+  }
+  visit(null, 0)
+  return out
+}
+
+function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFile, pendingImport, onImportApply, onImportCancel, onDelete, onDuplicate, onRename, onToggleLock, selected }) {
   return (
     <div>
       <p className="cl-tab-desc">Кожна фігура чи світло отримує власну доріжку на таймлайні. Обʼєкт без жодного ключового кадру лишається статичним — анімація потрібна лише там, де вона справді щось розповідає.</p>
@@ -234,15 +250,16 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFi
         <p className="cl-tab-desc">Сцена порожня — додай фігуру чи світло вище.</p>
       ) : (
         <div className="l3d-object-list">
-          {objects.map((o, i) => {
+          {treeOrder(objects).map(({ o, depth, i }) => {
             const meta = SHAPES.find((p) => p.type === o.type) || LIGHT_KINDS.find((p) => p.type === o.type)
             return (
-              <div key={o.id} className={'l3d-object-row' + (o.id === selectedId ? ' active' : '')}>
+              <div key={o.id} className={'l3d-object-row' + (o.id === selectedId ? ' active' : '') + (o.locked ? ' locked' : '')} style={{ paddingLeft: depth * 16 }}>
                 <button className="l3d-object-select" onClick={() => onSelect(o.id)}>
-                  {meta?.icon} {o.name || `${meta?.label || o.type} #${i + 1}`} {o.keyframes.length > 0 && <span title="Анімований">🎬{o.keyframes.length}</span>}
+                  {depth > 0 && <span className="tree-branch">↳</span>}{meta?.icon} {o.name || `${meta?.label || o.type} #${i + 1}`} {o.keyframes.length > 0 && <span title="Анімований">🎬{o.keyframes.length}</span>}
                 </button>
+                <button className={'cl-mini-btn' + (o.locked ? ' active' : '')} onClick={() => onToggleLock(o.id)} title={o.locked ? 'Розблокувати' : 'Зафіксувати — не можна випадково зачепити чи зсунути'}>{o.locked ? '🔒' : '🔓'}</button>
                 <button className="cl-mini-btn" onClick={() => onDuplicate(o.id)} title="Дублювати (Ctrl+D)">⧉</button>
-                <button className="cl-mini-btn" onClick={() => onDelete(o.id)} title="Видалити (Del)">✕</button>
+                <button className="cl-mini-btn" onClick={() => onDelete(o.id)} title="Видалити (Del)" disabled={o.locked}>✕</button>
               </div>
             )
           })}
@@ -265,12 +282,45 @@ const PIVOT_AXES = [
   { axis: 'z', options: [['min', 'Зад'], ['center', 'Центр'], ['max', 'Перед']] },
 ]
 
-function TransformTab({ selected, time, onEdit, onAddKeyframe, onDeleteKeyframe, onSetEasing, onCopy, onPaste, canPaste, snapEnabled, onToggleSnap, pivotState, onSetPivot }) {
+function TransformTab({ selected, time, onEdit, onAddKeyframe, onDeleteKeyframe, onSetEasing, onCopy, onPaste, canPaste, snapEnabled, onToggleSnap, pivotState, onSetPivot, objects, onSetParent, onToggleLock }) {
   if (!selected) return <p className="cl-tab-desc">Вибери обʼєкт зліва, щоб керувати позою й ключовими кадрами.</p>
+  const locked = !!selected.locked
+  // Прикріпити можна до будь-якого обʼєкта, крім себе й своїх «нащадків».
+  const descendants = new Set([selected.id])
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const o of objects) if (o.parentId && descendants.has(o.parentId) && !descendants.has(o.id)) { descendants.add(o.id); grew = true }
+  }
+  const parentOptions = objects.filter((o) => !descendants.has(o.id))
+  const sceneControls = (
+    <div className="scene-build-box">
+      <div className="cl-btn-row" style={{ alignItems: 'center' }}>
+        <button className={'cl-mini-btn' + (locked ? ' active' : '')} onClick={() => onToggleLock(selected.id)}>{locked ? '🔒 Зафіксовано — розблокувати' : '🔓 Зафіксувати'}</button>
+      </div>
+      <label className="cl-editrow" style={{ marginTop: 8, flexWrap: 'wrap', gap: 6 }}>
+        🔗 Прикріпити до:
+        <select value={selected.parentId || ''} disabled={locked} onChange={(e) => onSetParent(selected.id, e.target.value || null)} className="cl-hex-input" style={{ textTransform: 'none', maxWidth: 200 }}>
+          <option value="">— нічого (окремо) —</option>
+          {parentOptions.map((o) => <option key={o.id} value={o.id}>{o.name || o.type}</option>)}
+        </select>
+      </label>
+      <p className="cl-tab-desc" style={{ margin: '4px 0 0', fontSize: 11 }}>Прикріплений обʼєкт рухається, обертається й масштабується разом із батьком (напр. вікна й двері — до будинку). 🔒 — обʼєкт не виділяється кліком у вʼюпорті й не змінюється випадково.</p>
+    </div>
+  )
+  if (locked) {
+    return (
+      <div>
+        {sceneControls}
+        <p className="cl-tab-desc" style={{ marginTop: 10 }}>🔒 Обʼєкт зафіксовано: позицію, обертання, розмір, форму й малюнок змінити не можна, доки не розблокуєш.</p>
+      </div>
+    )
+  }
   const existingKf = findKeyframeAt(selected, time)
   const pose = existingKf || selected
   return (
     <div>
+      {sceneControls}
       <p className="cl-tab-desc">Постав повзунки в потрібну позу, потім натисни «Додати ключовий кадр тут», щоб зафіксувати її на поточному часі таймлайна.</p>
       <HelpBox>
         <p>Якщо на поточному часі вже є ключовий кадр цього обʼєкта — повзунки редагують саме його. Якщо кадру тут немає — повзунки редагують «базову» позу (стартова точка, коли на обʼєкті взагалі немає кадрів).</p>
@@ -1062,6 +1112,7 @@ function ShapeTab({
 }) {
   if (!selected) return <p className="cl-tab-desc">Вибери фігуру зліва, щоб змінювати її форму.</p>
   if (LIGHT_TYPES.includes(selected.type)) return <p className="cl-tab-desc">У світла немає форми — вибери фігуру.</p>
+  if (selected.locked) return <p className="cl-tab-desc">🔒 Обʼєкт зафіксовано — розблокуй його (вкладка «Трансформація» або 🔒 у списку), щоб змінювати форму.</p>
   const edits = selected.vertexEdits || {}
   const editedCount = Object.keys(edits).length
   const isCustom = selected.type === 'custom'
@@ -1164,6 +1215,7 @@ function PaintTab({ selected, brush, setBrush, onFill, onStamp, onClearPaint, ar
   const [side, setSide] = useState('front')
   if (!selected) return <p className="cl-tab-desc">Вибери фігуру зліва, щоб малювати на ній.</p>
   if (LIGHT_TYPES.includes(selected.type)) return <p className="cl-tab-desc">На світлі малювати не можна — вибери фігуру.</p>
+  if (selected.locked) return <p className="cl-tab-desc">🔒 Обʼєкт зафіксовано — розблокуй його, щоб малювати на ньому.</p>
   function stampFromUrl(url) {
     const img = new Image()
     img.onload = () => onStamp(img, side)
@@ -1747,8 +1799,54 @@ function ThreeDAnimEditorInner() {
     if (type === 'custom') setTab('shape')
     toastApi.show('✓ Додано')
   }
+  function isLocked(id) {
+    return !!objectsRef.current.find((o) => o.id === id)?.locked
+  }
+  function toggleLock(id) {
+    applyObjects(objectsRef.current.map((o) => (o.id === id ? { ...o, locked: !o.locked } : o)))
+  }
+  // Матриця обʼєкта у світі (базова поза + усі батьки).
+  function localMatrix(pose) {
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(THREE.MathUtils.degToRad(pose.rotation.x), THREE.MathUtils.degToRad(pose.rotation.y), THREE.MathUtils.degToRad(pose.rotation.z)))
+    return new THREE.Matrix4().compose(new THREE.Vector3(pose.position.x, pose.position.y, pose.position.z), q, new THREE.Vector3(pose.scale.x, pose.scale.y, pose.scale.z))
+  }
+  function worldMatrix(id, objs, depth = 0) {
+    const o = objs.find((x) => x.id === id)
+    if (!o) return new THREE.Matrix4()
+    const m = localMatrix(o)
+    return o.parentId && depth < 20 ? worldMatrix(o.parentId, objs, depth + 1).multiply(m) : m
+  }
+  function decompose(m) {
+    const pos = new THREE.Vector3()
+    const q = new THREE.Quaternion()
+    const sc = new THREE.Vector3()
+    m.decompose(pos, q, sc)
+    const e = new THREE.Euler().setFromQuaternion(q)
+    const deg = (r) => { const d = ((THREE.MathUtils.radToDeg(r) % 360) + 360) % 360; return Math.round(d * 100) / 100 }
+    const r4 = (v) => Math.round(v * 1e4) / 1e4
+    return { position: { x: r4(pos.x), y: r4(pos.y), z: r4(pos.z) }, rotation: { x: deg(e.x), y: deg(e.y), z: deg(e.z) }, scale: { x: r4(sc.x), y: r4(sc.y), z: r4(sc.z) } }
+  }
+  // Прикріпити до батька (або відʼєднати), НЕ зсуваючи обʼєкт у світі:
+  // поза (і кожен ключовий кадр) перераховується у координати нового батька.
+  function reparentObjs(objs, id, parentId) {
+    const obj = objs.find((o) => o.id === id)
+    if (!obj) return objs
+    const oldParentW = obj.parentId ? worldMatrix(obj.parentId, objs) : new THREE.Matrix4()
+    const newParentInv = parentId ? worldMatrix(parentId, objs).invert() : new THREE.Matrix4()
+    const convert = (pose) => ({ ...pose, ...decompose(newParentInv.clone().multiply(oldParentW.clone().multiply(localMatrix(pose)))) })
+    return objs.map((o) => (o.id !== id ? o : { ...convert(o), parentId: parentId || null, keyframes: o.keyframes.map((k) => convert(k)) }))
+  }
+  function setParent(id, parentId) {
+    if (isLocked(id)) return
+    applyObjects(reparentObjs(objectsRef.current, id, parentId))
+    toastApi.show(parentId ? '🔗 Прикріплено' : 'Відʼєднано')
+  }
   function deleteObject(id) {
-    const next = objectsRef.current.filter((o) => o.id !== id)
+    if (isLocked(id)) { toastApi.show('🔒 Обʼєкт зафіксовано — спершу розблокуй'); return }
+    // Прикріплені до нього обʼєкти лишаються на своїх місцях (відʼєднуються).
+    let objs = objectsRef.current
+    for (const ch of objs.filter((o) => o.parentId === id)) objs = reparentObjs(objs, ch.id, null)
+    const next = objs.filter((o) => o.id !== id)
     applyObjects(next)
     if (selectedIdRef.current === id) applySelected(next[0]?.id ?? null)
   }
@@ -1759,6 +1857,7 @@ function ThreeDAnimEditorInner() {
       ...obj,
       id: nextId(),
       name: obj.name ? `${obj.name} (копія)` : null,
+      locked: false,
       position: { ...obj.position, x: obj.position.x + 0.4 },
       keyframes: obj.keyframes.map((k) => ({ ...k, position: { ...k.position, x: k.position.x + 0.4 } })),
     }
@@ -1785,7 +1884,7 @@ function ThreeDAnimEditorInner() {
   // object's base (rest) transform. Position edits snap to the grid when
   // snapEnabled is on.
   function editPose(group, axis, value) {
-    if (!selectedIdRef.current) return
+    if (!selectedIdRef.current || isLocked(selectedIdRef.current)) return
     if (group === 'position' && snapEnabled) value = Math.round(value / SNAP_SIZE) * SNAP_SIZE
     const t = currentTimeRef.current
     const next = objectsRef.current.map((o) => {
@@ -1808,7 +1907,7 @@ function ThreeDAnimEditorInner() {
   // once-registered scene-mount effect always calls the current version.
   function applyRotationDelta(dx, dy, roll) {
     const id = selectedIdRef.current
-    if (!id) return
+    if (!id || isLocked(id)) return
     const t = currentTimeRef.current
     const wrap = (v) => ((v % 360) + 360) % 360
     const next = objectsRef.current.map((o) => {
@@ -1900,6 +1999,7 @@ function ThreeDAnimEditorInner() {
   function beginPaint(x, y) {
     const api = sceneApiRef.current
     const id = selectedIdRef.current
+    if (isLocked(id)) return false
     if (!api || !id || api.pickAt(x, y) !== id) return false
     ensurePaintNow(id)
     return api.paintStroke(id, x, y, paintBrushFor(id), true)
@@ -1955,6 +2055,9 @@ function ThreeDAnimEditorInner() {
             light: base.light ? { ...base.light, ...(o.light || {}) } : null,
             vertexEdits: o.vertexEdits && typeof o.vertexEdits === 'object' ? o.vertexEdits : {},
             pivot: o.pivot && typeof o.pivot === 'object' ? vec(o.pivot, { x: 0, y: 0, z: 0 }) : null,
+            locked: !!o.locked,
+            _oldId: o.id,
+            _oldParent: o.parentId || null,
             profile: type === 'custom' ? (o.profile || base.profile) : null,
             paint: typeof o.paint === 'string' && o.paint.startsWith('data:image/') ? o.paint : null,
             keyframes: Array.isArray(o.keyframes) ? o.keyframes.filter((k) => k && typeof k.time === 'number').map((k) => ({
@@ -1963,6 +2066,13 @@ function ThreeDAnimEditorInner() {
           }
         })
         if (objs.length === 0) throw new Error('empty')
+        // Прикріплення з файлу: старі id → нові.
+        const idMap = Object.fromEntries(objs.map((o) => [o._oldId, o.id]))
+        for (const o of objs) {
+          o.parentId = o._oldParent && idMap[o._oldParent] ? idMap[o._oldParent] : null
+          delete o._oldId
+          delete o._oldParent
+        }
         setPendingImport({ fileName: file.name, objects: objs, duration: Number(data.duration) || null })
       } catch {
         toastApi.show('✗ Це не схоже на 3D-файл сцени (JSON)')
@@ -2021,6 +2131,7 @@ function ThreeDAnimEditorInner() {
   function startPointDrag(key) {
     const api = sceneApiRef.current
     const id = selectedIdRef.current
+    if (isLocked(id)) return false
     const obj = objectsRef.current.find((o) => o.id === id)
     if (!api || !obj) return false
     const points = api.getPoints(id)
@@ -2301,7 +2412,7 @@ function ThreeDAnimEditorInner() {
 
       <div className="tl-editor-shell">
         <div className="tl-editor-left">
-          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onImportFile={importSceneFile} pendingImport={pendingImport} onImportApply={applyImport} onImportCancel={() => setPendingImport(null)} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} />
+          <ObjectsPanel objects={objects} selectedId={selectedId} selected={selected} onSelect={applySelected} onAdd={addObject} onDraw={() => setDrawTarget('new')} onImportFile={importSceneFile} pendingImport={pendingImport} onImportApply={applyImport} onImportCancel={() => setPendingImport(null)} onDelete={deleteObject} onDuplicate={duplicateObject} onRename={renameSelected} onToggleLock={toggleLock} />
         </div>
 
         <div className="tl-editor-center">
@@ -2386,6 +2497,9 @@ function ThreeDAnimEditorInner() {
                 onToggleSnap={() => setSnapEnabled((v) => !v)}
                 pivotState={pivotState}
                 onSetPivot={setPivot}
+                objects={objects}
+                onSetParent={setParent}
+                onToggleLock={toggleLock}
               />
             )}
             {tab === 'shape' && (

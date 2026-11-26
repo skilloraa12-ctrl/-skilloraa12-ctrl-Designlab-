@@ -692,7 +692,9 @@ export function createAnimScene(container, opts = {}) {
     const node = nodeMap.get(id)
     if (!node) return
     if (handles?.id === id) clearHandles()
-    group.remove(node)
+    // Дочірні обʼєкти (прикріплені) не видаляємо разом з батьком — повертаємо в сцену.
+    for (const ch of [...node.children]) if (ch.userData.id !== undefined) group.add(ch)
+    node.parent?.remove(node)
     if (node.target) group.remove(node.target)
     if (node.isLight) {
       const marker = node.children.find((c) => c.userData.isMarker)
@@ -784,6 +786,14 @@ export function createAnimScene(container, opts = {}) {
       node.scale.set(obj.scale.x, obj.scale.y, obj.scale.z)
       if (node.isSpotLight) applyLightAim(node, obj.position, obj.rotation)
     }
+    // Ієрархія (🔗 прикріплення): дочірній вузол живе всередині батьківського,
+    // тож його position/rotation/scale — відносно батька, і група рухається разом.
+    for (const obj of objects) {
+      const node = nodeMap.get(obj.id)
+      if (!node) continue
+      const parent = (obj.parentId && nodeMap.get(obj.parentId)) || group
+      if (node.parent !== parent) parent.add(node)
+    }
     updateSelectionOutline(selectedId)
   }
 
@@ -808,10 +818,13 @@ export function createAnimScene(container, opts = {}) {
     pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1
     raycaster.setFromCamera(pointer, camera)
     const hits = raycaster.intersectObjects(group.children, true)
-    if (hits.length === 0) return null
-    let node = hits[0].object
-    while (node && node.userData.id === undefined) node = node.parent
-    return node ? node.userData.id : null
+    // Зафіксовані (🔒) обʼєкти «прозорі» для кліку — вибирається те, що за ними.
+    for (const h of hits) {
+      let node = h.object
+      while (node && node.userData.id === undefined) node = node.parent
+      if (node && !node.userData.obj?.locked) return node.userData.id
+    }
+    return null
   }
 
   function screenshot() {

@@ -1973,3 +1973,6 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .fpc-layer-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: inherit; cursor: pointer; text-align: left; font-size: 12px; padding: 2px; }
 .fpc-layer-main img { width: 30px; height: 22px; object-fit: contain; background: #fff; border-radius: 4px; flex: none; border: 1px solid var(--line, #2c2c38); }
 .fpc-layer-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.l3d-object-row.locked .l3d-object-select { opacity: 0.75; }
+.tree-branch { color: var(--muted); margin-right: 4px; }
+.scene-build-box { border: 1px solid var(--line, #2c2c38); border-radius: 10px; padding: 10px; margin-bottom: 12px; }
