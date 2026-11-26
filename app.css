@@ -827,8 +827,8 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .tl-track-label:hover { background: var(--surface-2); }
 .tl-track-label.active { color: var(--accent-2); font-weight: 600; }
 .tl-track-lane { position: relative; flex: 1; height: 24px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--line); cursor: pointer; }
-.tl-keyframe { position: absolute; top: 50%; width: 11px; height: 11px; transform: translate(-50%, -50%) rotate(45deg); background: var(--accent-2); border: 1px solid var(--ink); cursor: pointer; padding: 0; }
-.tl-keyframe:hover { background: var(--accent); }
+.tl-keyframe { position: absolute; top: 50%; width: 13px; height: 13px; transform: translate(-50%, -50%) rotate(45deg); background: #f5a623; border: 2px solid #fff3d6; border-radius: 2px; cursor: pointer; padding: 0; box-shadow: 0 0 0 1px rgba(0,0,0,0.35); z-index: 1; }
+.tl-keyframe:hover { background: #ffd23f; transform: translate(-50%, -50%) rotate(45deg) scale(1.2); }
 .tl-playhead { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #ffd23f; pointer-events: none; }
 
 /* ---------- Pixel Art Lab ---------- */

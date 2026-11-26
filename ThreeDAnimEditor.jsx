@@ -1507,7 +1507,9 @@ function ThreeDAnimEditorInner() {
   const [moveObjMode, setMoveObjMode] = useState(false)
   const moveObjModeRef = useRef(false)
   moveObjModeRef.current = moveObjMode
-  const [autoKey, setAutoKey] = useState(false)
+  // Запис руху увімкнений одразу — як у Motion Studio: зсунула обʼєкт на
+  // якомусь часі → там зʼявляється ключовий кадр (◆).
+  const [autoKey, setAutoKey] = useState(true)
   const autoKeyRef = useRef(false)
   autoKeyRef.current = autoKey
   const rotateObjModeRef = useRef(false)
@@ -1740,6 +1742,21 @@ function ThreeDAnimEditorInner() {
   }, [currentTime, objects])
 
   useEffect(() => { sceneApiRef.current?.setLighting(lighting) }, [lighting])
+
+  // Шлях руху обраного обʼєкта (якщо в нього ≥2 ключових кадри).
+  useEffect(() => {
+    const api = sceneApiRef.current
+    if (!api) return
+    const o = objects.find((x) => x.id === selectedId)
+    if (!o || o.keyframes.length < 2 || playing) { api.clearMotionPath(); return }
+    const ks = [...o.keyframes].sort((a, b) => a.time - b.time)
+    const t0 = ks[0].time
+    const t1 = ks[ks.length - 1].time
+    const N = 80
+    const pts = []
+    for (let i = 0; i <= N; i++) pts.push(poseAt(o, t0 + ((t1 - t0) * i) / N).position)
+    api.setMotionPath(o.id, pts, ks.map((k) => k.position))
+  }, [objects, selectedId, playing])
 
   // Маркери точок обраної фігури — лише на вкладці «Форма».
   const selectedForEdit = objects.find((o) => o.id === selectedId) || null

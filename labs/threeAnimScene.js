@@ -588,6 +588,37 @@ export function createAnimScene(container, opts = {}) {
   function endPointDrag() {
     drag = null
   }
+  // ── Шлях руху обраного обʼєкта ──
+  // Пунктирна лінія траєкторії + помаранчеві точки на ключових кадрах
+  // (як у Motion Studio). Точки задаються в координатах батька обʼєкта.
+  let motionPath = null
+  function clearMotionPath() {
+    if (!motionPath) return
+    scene.remove(motionPath)
+    motionPath.traverse((o) => { o.geometry?.dispose(); o.material?.dispose() })
+    motionPath = null
+  }
+  function setMotionPath(id, pathPts, keyPts) {
+    clearMotionPath()
+    const node = nodeMap.get(id)
+    if (!node || !pathPts || pathPts.length < 2) return
+    const parent = node.parent || group
+    parent.updateMatrixWorld(true)
+    const toWorld = (p) => parent.localToWorld(new THREE.Vector3(p.x, p.y, p.z))
+    motionPath = new THREE.Group()
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pathPts.map(toWorld))
+    const line = new THREE.Line(lineGeo, new THREE.LineDashedMaterial({ color: 0xf5a623, dashSize: 0.08, gapSize: 0.05, depthTest: false, transparent: true, opacity: 0.9 }))
+    line.computeLineDistances()
+    line.renderOrder = 998
+    motionPath.add(line)
+    const kGeo = new THREE.BufferGeometry().setFromPoints(keyPts.map(toWorld))
+    const dots = new THREE.Points(kGeo, new THREE.PointsMaterial({ color: 0xf5a623, size: 11, sizeAttenuation: false, depthTest: false }))
+    dots.renderOrder = 999
+    motionPath.add(dots)
+    motionPath.traverse((o) => { o.raycast = () => {} })
+    scene.add(motionPath)
+  }
+
   // ── Перетягування обʼєкта мишкою ──
   // Звичайно — по підлозі (горизонтальна площина через обʼєкт), з Shift —
   // вгору/вниз (вертикальна площина, повернута до камери). Повертає зсув у
@@ -967,6 +998,8 @@ export function createAnimScene(container, opts = {}) {
     getPoints,
     getLocalBounds,
     beginMoveDrag,
+    setMotionPath,
+    clearMotionPath,
     dragMoveTo,
     endMoveDrag,
     paintStroke,
