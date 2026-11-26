@@ -1959,3 +1959,5 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .tl-nav-bar > .cl-mini-btn { min-width: 30px; justify-content: center; }
 .tl-nav-bar .fpc-pad { margin: 0 2px; }
 .fpc-place-panel { border: 2px solid #7c4dff; border-radius: 12px; padding: 10px; margin: 6px 0; background: rgba(124,77,255,0.08); }
+.pivot-row { align-items: center; margin-bottom: 6px; }
+.pivot-axis { width: 16px; font-size: 12px; color: var(--muted); font-weight: 600; }

@@ -120,7 +120,7 @@ function baseSignature(obj) {
   return obj.type === 'custom' ? `custom:${JSON.stringify(obj.profile || null)}` : obj.type
 }
 function geometrySignature(obj) {
-  return `${baseSignature(obj)}|${JSON.stringify(obj.vertexEdits || null)}|${obj.paint ? 'paint' : ''}`
+  return `${baseSignature(obj)}|${JSON.stringify(obj.vertexEdits || null)}|${obj.paint ? 'paint' : ''}|${JSON.stringify(obj.pivot || null)}`
 }
 
 // ── Розфарбування моделі (малювання по 3D) ───────────────────────────
@@ -315,7 +315,29 @@ export function createAnimScene(container, opts = {}) {
       geo.computeBoundingSphere()
       geo.computeBoundingBox()
     }
+    // Точка опори (pivot): геометрію зсунуто так, щоб початок координат
+    // меша був у цій точці — тоді обертання й масштаб відбуваються навколо
+    // неї (як двері на петлях), а position задає, де стоїть сама точка.
+    const pv = obj.pivot
+    if (pv && (pv.x || pv.y || pv.z)) {
+      geo.translate(-pv.x, -pv.y, -pv.z)
+      geo.computeBoundingBox()
+      geo.computeBoundingSphere()
+    }
     return obj.paint ? applyPaintAtlas(geo) : geo
+  }
+  // Межі фігури в її власних координатах БЕЗ зсуву точки опори — щоб
+  // редактор міг поставити опору «справа», «знизу» тощо.
+  function getLocalBounds(id) {
+    const node = nodeMap.get(id)
+    if (!node || node.isLight) return null
+    node.geometry.computeBoundingBox()
+    const b = node.geometry.boundingBox
+    const pv = node.userData.obj?.pivot || { x: 0, y: 0, z: 0 }
+    return {
+      min: { x: b.min.x + pv.x, y: b.min.y + pv.y, z: b.min.z + pv.z },
+      max: { x: b.max.x + pv.x, y: b.max.y + pv.y, z: b.max.z + pv.z },
+    }
   }
 
   // Полотно розфарбування живе на меші (userData.paint); obj.paint — PNG
@@ -491,6 +513,8 @@ export function createAnimScene(container, opts = {}) {
     pts.renderOrder = 999
     pts.userData.isHandles = true
     pts.raycast = () => {} // не заважає вибору обʼєктів кліком
+    const pv = node.userData.obj.pivot
+    if (pv) pts.position.set(-pv.x, -pv.y, -pv.z) // точки — у незсунутих координатах
     node.add(pts)
     handles = { id, points: pts, keys }
   }
@@ -542,6 +566,8 @@ export function createAnimScene(container, opts = {}) {
     const local = currentLocal(node, key, edits)
     if (!local) return false
     node.updateMatrixWorld()
+    const pv = node.userData.obj?.pivot
+    if (pv) local.sub(new THREE.Vector3(pv.x, pv.y, pv.z)) // у координатах меша зі зсувом опори
     const world = node.localToWorld(local.clone())
     const normal = new THREE.Vector3()
     camera.getWorldDirection(normal)
@@ -685,6 +711,7 @@ export function createAnimScene(container, opts = {}) {
   function updateSelectionOutline(selectedId) {
     if (selectionHelper) {
       selectionHelper.parent?.remove(selectionHelper)
+      selectionHelper.children.forEach((c) => { c.geometry?.dispose(); c.material?.dispose() })
       selectionHelper.geometry.dispose()
       selectionHelper.material.dispose()
       selectionHelper = null
@@ -694,6 +721,15 @@ export function createAnimScene(container, opts = {}) {
     const target = node.isLight ? node.children.find((c) => c.userData.isMarker) : node
     if (!target || !target.geometry) return
     selectionHelper = new THREE.LineSegments(new THREE.EdgesGeometry(target.geometry), new THREE.LineBasicMaterial({ color: 0xffd23f }))
+    // Маркер точки опори (початок координат меша) — червона крапка.
+    if (!node.isLight) {
+      const mg = new THREE.BufferGeometry()
+      mg.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0]), 3))
+      const marker = new THREE.Points(mg, new THREE.PointsMaterial({ color: 0xff3d3d, size: 12, sizeAttenuation: false, depthTest: false }))
+      marker.renderOrder = 1000
+      marker.raycast = () => {}
+      selectionHelper.add(marker)
+    }
     target.add(selectionHelper)
   }
 
@@ -873,6 +909,7 @@ export function createAnimScene(container, opts = {}) {
     dragPointTo,
     endPointDrag,
     getPoints,
+    getLocalBounds,
     paintStroke,
     commitPaint,
     fillPaint,

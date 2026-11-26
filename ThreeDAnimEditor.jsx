@@ -259,7 +259,13 @@ function ObjectsPanel({ objects, selectedId, onSelect, onAdd, onDraw, onImportFi
   )
 }
 
-function TransformTab({ selected, time, onEdit, onAddKeyframe, onDeleteKeyframe, onSetEasing, onCopy, onPaste, canPaste, snapEnabled, onToggleSnap }) {
+const PIVOT_AXES = [
+  { axis: 'x', options: [['min', '◀ Ліво'], ['center', 'Центр'], ['max', 'Право ▶']] },
+  { axis: 'y', options: [['min', '▼ Низ'], ['center', 'Центр'], ['max', 'Верх ▲']] },
+  { axis: 'z', options: [['min', 'Зад'], ['center', 'Центр'], ['max', 'Перед']] },
+]
+
+function TransformTab({ selected, time, onEdit, onAddKeyframe, onDeleteKeyframe, onSetEasing, onCopy, onPaste, canPaste, snapEnabled, onToggleSnap, pivotState, onSetPivot }) {
   if (!selected) return <p className="cl-tab-desc">Вибери обʼєкт зліва, щоб керувати позою й ключовими кадрами.</p>
   const existingKf = findKeyframeAt(selected, time)
   const pose = existingKf || selected
@@ -299,6 +305,21 @@ function TransformTab({ selected, time, onEdit, onAddKeyframe, onDeleteKeyframe,
               <button key={e.key} className={'cl-mini-btn' + ((existingKf.easing || 'linear') === e.key ? ' active' : '')} onClick={() => onSetEasing(e.key)}>{e.label}</button>
             ))}
           </div>
+        </>
+      )}
+
+      {pivotState && (
+        <>
+          <div className="cl-section-title">📍 Точка опори</div>
+          <p className="cl-tab-desc" style={{ margin: '0 0 6px' }}>Навколо цієї точки обʼєкт обертається й від неї збільшується — вона стоїть на місці (червона крапка у вʼюпорті). Напр. двері: опора «Право» → відчиняються на петлях.</p>
+          {PIVOT_AXES.map(({ axis, options }) => (
+            <div key={axis} className="cl-btn-row pivot-row">
+              <span className="pivot-axis">{axis.toUpperCase()}</span>
+              {options.map(([key, label]) => (
+                <button key={key} type="button" className={'cl-mini-btn' + (pivotState[axis] === key ? ' active' : '')} onClick={() => onSetPivot(axis, key)}>{label}</button>
+              ))}
+            </div>
+          ))}
         </>
       )}
 
@@ -1809,6 +1830,48 @@ function ThreeDAnimEditorInner() {
   const applyRotationDeltaRef = useRef(applyRotationDelta)
   applyRotationDeltaRef.current = applyRotationDelta
 
+  // ── Точка опори ──
+  // Яка опора зараз (min/center/max по кожній осі) — для підсвітки кнопок.
+  const pivotState = useMemo(() => {
+    if (!selected || LIGHT_TYPES.includes(selected.type)) return null
+    const b = sceneApiRef.current?.getLocalBounds(selected.id)
+    if (!b) return { x: 'center', y: 'center', z: 'center' }
+    const pv = selected.pivot || { x: 0, y: 0, z: 0 }
+    const which = (a) => {
+      const c = (b.min[a] + b.max[a]) / 2
+      const eps = Math.max(1e-3, (b.max[a] - b.min[a]) * 0.01)
+      if (Math.abs(pv[a] - b.min[a]) < eps) return 'min'
+      if (Math.abs(pv[a] - b.max[a]) < eps) return 'max'
+      return Math.abs(pv[a] - c) < eps ? 'center' : null
+    }
+    return { x: which('x'), y: which('y'), z: which('z') }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected])
+  // Переставляє опору, НЕ зсуваючи обʼєкт: position (база й кожен ключовий
+  // кадр) коригується на зсув опори з урахуванням поточних обертання й масштабу.
+  function setPivot(axis, where) {
+    const id = selectedIdRef.current
+    const obj = objectsRef.current.find((o) => o.id === id)
+    const b = sceneApiRef.current?.getLocalBounds(id)
+    if (!obj || !b) return
+    const p0 = obj.pivot || { x: 0, y: 0, z: 0 }
+    const val = where === 'min' ? b.min[axis] : where === 'max' ? b.max[axis] : (b.min[axis] + b.max[axis]) / 2
+    const p1 = { ...p0, [axis]: Math.round(val * 1e4) / 1e4 }
+    const d = new THREE.Vector3(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z)
+    const shift = (pose) => {
+      const v = d.clone().multiply(new THREE.Vector3(pose.scale.x, pose.scale.y, pose.scale.z))
+        .applyEuler(new THREE.Euler(THREE.MathUtils.degToRad(pose.rotation.x), THREE.MathUtils.degToRad(pose.rotation.y), THREE.MathUtils.degToRad(pose.rotation.z)))
+      return { x: pose.position.x + v.x, y: pose.position.y + v.y, z: pose.position.z + v.z }
+    }
+    const isZero = !p1.x && !p1.y && !p1.z
+    applyObjects(objectsRef.current.map((o) => (o.id !== id ? o : {
+      ...o,
+      pivot: isZero ? null : p1,
+      position: shift(o),
+      keyframes: o.keyframes.map((k) => ({ ...k, position: shift(k) })),
+    })))
+  }
+
   // ── Малювання на моделі ──
   function paintBrushFor(id) {
     const b = brushRef.current
@@ -1891,6 +1954,7 @@ function ThreeDAnimEditorInner() {
             material: base.material ? { ...base.material, ...(o.material || {}) } : null,
             light: base.light ? { ...base.light, ...(o.light || {}) } : null,
             vertexEdits: o.vertexEdits && typeof o.vertexEdits === 'object' ? o.vertexEdits : {},
+            pivot: o.pivot && typeof o.pivot === 'object' ? vec(o.pivot, { x: 0, y: 0, z: 0 }) : null,
             profile: type === 'custom' ? (o.profile || base.profile) : null,
             paint: typeof o.paint === 'string' && o.paint.startsWith('data:image/') ? o.paint : null,
             keyframes: Array.isArray(o.keyframes) ? o.keyframes.filter((k) => k && typeof k.time === 'number').map((k) => ({
@@ -2320,6 +2384,8 @@ function ThreeDAnimEditorInner() {
                 canPaste={hasClipboard}
                 snapEnabled={snapEnabled}
                 onToggleSnap={() => setSnapEnabled((v) => !v)}
+                pivotState={pivotState}
+                onSetPivot={setPivot}
               />
             )}
             {tab === 'shape' && (
