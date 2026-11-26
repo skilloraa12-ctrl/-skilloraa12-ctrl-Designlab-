@@ -257,8 +257,12 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     if (!el) return
     function onWheel(e) {
       e.preventDefault()
-      if (e.ctrlKey || e.metaKey || !e.shiftKey) zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY)
-      else setView((v) => ({ ...v, x: v.x - e.deltaY, y: v.y }))
+      // Коліщатко — масштаб; Shift+коліщатко — вліво/вправо;
+      // тачпад (свайп двома пальцями дає deltaX) — рух у всі боки, щипок — масштаб.
+      if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY)
+      else if (e.shiftKey) setView((v) => ({ ...v, x: v.x - e.deltaY }))
+      else if (e.deltaX !== 0) setView((v) => ({ ...v, x: v.x - e.deltaX, y: v.y - e.deltaY }))
+      else zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY)
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
@@ -274,14 +278,25 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
       setSpaceDown(true)
     }
     function up(e) { if (e.code === 'Space') setSpaceDown(false) }
+    // Стрілки на клавіатурі — рух полотна.
+    function arrows(e) {
+      const t = document.activeElement?.tagName
+      if (textActive || t === 'INPUT' || t === 'TEXTAREA') return
+      const d = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] }[e.key]
+      if (!d) return
+      e.preventDefault()
+      setView((v) => ({ ...v, x: v.x + d[0] * 80, y: v.y + d[1] * 80 }))
+    }
+    window.addEventListener('keydown', arrows)
     window.addEventListener('keydown', down)
     window.addEventListener('keyup', up)
-    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('keydown', arrows) }
   }, [textActive])
   const panning = handTool || spaceDown
   function panStart(e) {
     if (e.target.closest?.('.fpc-zoom-bar')) return // кнопки масштабу — звичайні кліки
-    if (!(panning || e.button === 1)) return
+    // Права (2) або середня (1) кнопка миші — завжди рух полотна, як у 3D.
+    if (!(panning || e.button === 1 || e.button === 2)) return
     e.preventDefault()
     e.stopPropagation()
     wrapRef.current.setPointerCapture?.(e.pointerId)
@@ -518,13 +533,21 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
         onPointerMove={panMove}
         onPointerUp={panEnd}
         onPointerCancel={panEnd}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <div className="fpc-zoom-bar">
           <button type="button" className="cl-mini-btn" onClick={() => zoomAt(1 / 1.25)} title="Віддалити (коліщатко миші вниз)">−</button>
           <button type="button" className="cl-mini-btn fpc-zoom-label" onClick={resetView} title="Показати все полотно">{Math.round(view.zoom * 100)}%</button>
           <button type="button" className="cl-mini-btn" onClick={() => zoomAt(1.25)} title="Приблизити (коліщатко миші вгору)">+</button>
-          <button type="button" className={'cl-mini-btn' + (handTool ? ' active' : '')} onClick={() => setHandTool((v) => !v)} title="Рука: тягни, щоб рухати полотно (або тримай Пробіл)">✋</button>
+          <button type="button" className={'cl-mini-btn' + (handTool ? ' active' : '')} onClick={() => setHandTool((v) => !v)} title="Рука: тягни, щоб рухати полотно (або тягни правою кнопкою миші / тримай Пробіл)">✋</button>
+          <span className="fpc-pad">
+            <button type="button" className="cl-mini-btn" style={{ gridArea: 'u' }} onClick={() => setView((v) => ({ ...v, y: v.y + 120 }))} title="Вгору (↑)">▲</button>
+            <button type="button" className="cl-mini-btn" style={{ gridArea: 'l' }} onClick={() => setView((v) => ({ ...v, x: v.x + 120 }))} title="Вліво (←)">◀</button>
+            <button type="button" className="cl-mini-btn" style={{ gridArea: 'r' }} onClick={() => setView((v) => ({ ...v, x: v.x - 120 }))} title="Вправо (→)">▶</button>
+            <button type="button" className="cl-mini-btn" style={{ gridArea: 'd' }} onClick={() => setView((v) => ({ ...v, y: v.y - 120 }))} title="Вниз (↓)">▼</button>
+          </span>
         </div>
+        <div className="fpc-nav-hint">Права кнопка миші — рухати полотно · коліщатко — масштаб · стрілки ← ↑ → ↓</div>
         <canvas
           ref={canvasRef}
           className="fpc-canvas"

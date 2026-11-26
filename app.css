@@ -1951,3 +1951,7 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .fpc-zoom-bar .cl-mini-btn { min-width: 32px; justify-content: center; }
 .fpc-zoom-label { min-width: 56px !important; }
 .tl-view-hint { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.fpc-zoom-bar { align-items: center; }
+.fpc-pad { display: grid; grid-template-areas: ". u ." "l . r" ". d ."; gap: 2px; margin-left: 6px; }
+.fpc-pad .cl-mini-btn { min-width: 26px !important; padding: 2px 4px; font-size: 10px; line-height: 1; }
+.fpc-nav-hint { position: absolute; left: 12px; bottom: 12px; z-index: 2; font-size: 11px; color: #555; background: rgba(255,255,255,0.85); padding: 4px 8px; border-radius: 8px; pointer-events: none; }
