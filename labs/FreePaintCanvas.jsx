@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   BRUSH_SIZES, BRUSH_TYPES, BRUSH_VARIANTS, SHAPE_TYPES, DEFAULT_PALETTE, setupCanvas, loadImageToCanvas,
   strokeSegment, strokeCartoonPath, dot, drawShape, drawText, canvasToDataUrl, pointFromEvent,
-  drawColorWheel, pickFromWheel, hsvToHex,
+  drawColorWheel, pickFromWheel, hsvToHex, floodFill,
 } from './freePaintEngine.js'
 import { useProgress } from '../ProgressContext.jsx'
 import { renderThreeDSnapshot, SNAPSHOT_STYLES } from './threeSnapshot.js'
@@ -148,6 +148,8 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
   const [opacity, setOpacity] = useState(1)
   const [fullscreen, setFullscreen] = useState(true)
   const [show3d, setShow3d] = useState(false)
+  const [fillTolerance, setFillTolerance] = useState(40)
+  const [fillMode, setFillMode] = useState('area')
   // Масштаб і зсув перегляду полотна (лише вигляд — сам малюнок 1100×760
   // не змінюється, тому пензлі, undo й збереження працюють як раніше).
   const [view, setView] = useState({ zoom: 1, x: 0, y: 0 })
@@ -318,6 +320,16 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
     if (!ctx) return
     const p = pointFromEvent(canvasRef.current, e, CANVAS_W, CANVAS_H)
 
+    if (tool === 'fill') {
+      const snap = captureSnapshot()
+      if (floodFill(ctx, p.x, p.y, color, { opacity, tolerance: fillTolerance, mode: fillMode })) {
+        pushUndo(snap)
+        commit()
+      } else if (fillMode === 'object') {
+        onMessage?.('Клікни по самому обʼєкту, а не по фону')
+      }
+      return
+    }
     if (tool === 'text') {
       if (textActive) return
       const snap = captureSnapshot()
@@ -426,6 +438,7 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
       <div className="cl-btn-row">
         <button type="button" className={'cl-mini-btn' + (tool === 'brush' ? ' active' : '')} onClick={() => setTool('brush')}>✏️ Пензель</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'eraser' ? ' active' : '')} onClick={() => setTool('eraser')}>🧹 Гумка</button>
+        <button type="button" className={'cl-mini-btn' + (tool === 'fill' ? ' active' : '')} onClick={() => setTool('fill')}>🪣 Заливка</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'shape' ? ' active' : '')} onClick={() => setTool('shape')}>◆ Форми</button>
         <button type="button" className={'cl-mini-btn' + (tool === 'text' ? ' active' : '')} onClick={() => setTool('text')}>Т Текст</button>
         <button type="button" className="cl-mini-btn" onClick={undo} disabled={!canUndo}>↶ Скасувати</button>
@@ -454,6 +467,35 @@ export default function FreePaintCanvas({ initialImage, onChangeImage, onMessage
         </div>
       )}
 
+      {tool === 'fill' && (
+        <div>
+          <div className="cl-btn-row" style={{ marginBottom: 8 }}>
+            <button type="button" className={'cl-mini-btn' + (fillMode === 'area' ? ' active' : '')} onClick={() => setFillMode('area')}>▢ Область</button>
+            <button type="button" className={'cl-mini-btn' + (fillMode === 'object' ? ' active' : '')} onClick={() => setFillMode('object')}>🏠 Весь обʼєкт</button>
+          </div>
+          <p className="cl-tab-desc" style={{ margin: '4px 0 8px' }}>
+            {fillMode === 'area'
+              ? 'Клікни всередині області — вона заллється обраним кольором до найближчих ліній (стіна, вікно, небо…).'
+              : 'Клікни по обʼєкту — він увесь перефарбується в обраний колір, а тіні й обʼєм збережуться (зручно для моделі з 3D).'}
+          </p>
+          <div className="fpc-slider-field">
+            Чутливість: {fillTolerance}
+            <input type="range" min={0} max={150} step={5} value={fillTolerance} onChange={(e) => setFillTolerance(parseInt(e.target.value, 10))} />
+          </div>
+          <p className="cl-tab-desc" style={{ margin: '4px 0 8px', fontSize: 11 }}>Менше — заливає лише точно такий колір; більше — захоплює й схожі відтінки (тіні, градієнт).</p>
+          <button type="button" className="cl-mini-btn" onClick={() => {
+            const ctx = ctxRef.current
+            pushUndo(captureSnapshot())
+            ctx.save()
+            ctx.globalAlpha = opacity
+            ctx.fillStyle = color
+            ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
+            ctx.restore()
+            commit()
+            onMessage?.('✓ Полотно залито (↶ — скасувати)')
+          }}>🪣 Залити все полотно цим кольором</button>
+        </div>
+      )}
       {tool === 'shape' && (
         <div className="cl-btn-row" style={{ marginTop: 6 }}>
           {SHAPE_TYPES.map((s) => (

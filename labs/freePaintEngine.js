@@ -888,3 +888,99 @@ export function pointFromEvent(canvas, e, logicalWidth, logicalHeight) {
   const scaleY = logicalHeight / rect.height
   return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY }
 }
+
+// Заливка («відро»): зафарбовує суцільну область навколо точки кліку —
+// усі сусідні пікселі, схожі за кольором на той, у який клікнули (у межах
+// `tolerance`). Працює в реальних пікселях полотна (з урахуванням
+// devicePixelRatio) і розширює залиту область на 1 px, щоб не лишалось
+// світлих «ореолів» біля згладжених країв ліній.
+// mode 'object': заливає ВЕСЬ обʼєкт під курсором — усі звʼязані пікселі,
+// що відрізняються від фону (фон = колір кута полотна), і перефарбовує їх
+// зі збереженням світлотіні (найсвітліша точка отримує саме обраний колір,
+// темніші — пропорційно темніші), тож обʼєм і контури лишаються.
+export function floodFill(ctx, x, y, color, { opacity = 1, tolerance = 40, mode = 'area' } = {}) {
+  const canvas = ctx.canvas
+  const W = canvas.width
+  const H = canvas.height
+  const t = ctx.getTransform() // масштаб devicePixelRatio із setupCanvas
+  const sx = Math.floor(x * (t.a || 1))
+  const sy = Math.floor(y * (t.d || 1))
+  if (sx < 0 || sy < 0 || sx >= W || sy >= H) return false
+  const img = ctx.getImageData(0, 0, W, H)
+  const d = img.data
+  const i0 = (sy * W + sx) * 4
+  const r0 = d[i0], g0 = d[i0 + 1], b0 = d[i0 + 2], a0 = d[i0 + 3]
+  const hex = color.replace('#', '')
+  const fr = parseInt(hex.slice(0, 2), 16)
+  const fg = parseInt(hex.slice(2, 4), 16)
+  const fb = parseInt(hex.slice(4, 6), 16)
+  const tol2 = tolerance * tolerance * 3
+  const br = d[0], bg = d[1], bb = d[2], ba = d[3]
+  const bgTol2 = Math.max(12, tolerance * 0.5) ** 2 * 3
+  const isBg = (k) => {
+    const dr = d[k] - br, dg = d[k + 1] - bg, db = d[k + 2] - bb, da = d[k + 3] - ba
+    return dr * dr + dg * dg + db * db + da * da <= bgTol2
+  }
+  if (mode === 'object' && isBg(i0)) return false // клік по фону — обʼєкта немає
+  const match = mode === 'object' ? (k) => !isBg(k) : (k) => {
+    const dr = d[k] - r0, dg = d[k + 1] - g0, db = d[k + 2] - b0, da = d[k + 3] - a0
+    return dr * dr + dg * dg + db * db + da * da <= tol2
+  }
+  const mask = new Uint8Array(W * H)
+  const stack = [sx, sy]
+  while (stack.length) {
+    const py = stack.pop()
+    let px = stack.pop()
+    let k = py * W + px
+    while (px >= 0 && !mask[k] && match(k * 4)) { px--; k-- }
+    px++; k++
+    let up = false
+    let down = false
+    while (px < W && !mask[k] && match(k * 4)) {
+      mask[k] = 1
+      if (py > 0) {
+        const u = k - W
+        if (!mask[u] && match(u * 4)) { if (!up) { stack.push(px, py - 1); up = true } } else up = false
+      }
+      if (py < H - 1) {
+        const dn = k + W
+        if (!mask[dn] && match(dn * 4)) { if (!down) { stack.push(px, py + 1); down = true } } else down = false
+      }
+      px++; k++
+    }
+  }
+  const a = Math.max(0, Math.min(1, opacity))
+  if (mode === 'object') {
+    let maxL = 1
+    for (let k = 0; k < W * H; k++) if (mask[k]) { const j = k * 4; maxL = Math.max(maxL, 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2]) }
+    for (let k = 0; k < W * H; k++) {
+      if (!mask[k]) continue
+      const j = k * 4
+      const l = (0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2]) / maxL
+      d[j] = Math.round(fr * l * a + d[j] * (1 - a))
+      d[j + 1] = Math.round(fg * l * a + d[j + 1] * (1 - a))
+      d[j + 2] = Math.round(fb * l * a + d[j + 2] * (1 - a))
+    }
+    ctx.putImageData(img, 0, 0)
+    return true
+  }
+  // +1 px навколо області (перекриває згладжені краї контуру).
+  const grown = mask.slice()
+  for (let yy = 0; yy < H; yy++) {
+    for (let xx = 0; xx < W; xx++) {
+      const k = yy * W + xx
+      if (mask[k]) continue
+      if ((xx > 0 && mask[k - 1]) || (xx < W - 1 && mask[k + 1]) || (yy > 0 && mask[k - W]) || (yy < H - 1 && mask[k + W])) grown[k] = 1
+    }
+  }
+  for (let k = 0; k < W * H; k++) {
+    if (!grown[k]) continue
+    const j = k * 4
+    d[j] = Math.round(fr * a + d[j] * (1 - a))
+    d[j + 1] = Math.round(fg * a + d[j + 1] * (1 - a))
+    d[j + 2] = Math.round(fb * a + d[j + 2] * (1 - a))
+    d[j + 3] = 255
+  }
+  ctx.putImageData(img, 0, 0)
+  return true
+}
