@@ -1924,3 +1924,5 @@ button.tool-badge--action:hover { border-color: var(--green); }
 .draw-modal-backdrop { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .draw-modal { background: var(--surface, #1c1c24); color: inherit; border: 1px solid var(--border, #2c2c38); border-radius: 14px; padding: 18px; width: min(440px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
 .draw-modal-canvas { width: 100%; aspect-ratio: 1 / 1; display: block; border-radius: 10px; border: 1px solid var(--border, #2c2c38); touch-action: none; cursor: crosshair; }
+.draw-tools { align-items: center; }
+.draw-snap { margin: 0 0 0 auto; font-size: 12.5px; }

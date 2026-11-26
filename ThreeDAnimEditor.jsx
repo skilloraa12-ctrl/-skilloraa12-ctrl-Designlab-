@@ -423,11 +423,11 @@ function simplifyPath(pts, eps) {
 // Видавлювання: замкнена форма, вписана в ~1.4 одиниці. Обертання: штрих
 // — половина силуету (ліва частина дзеркалиться), краї доводяться до осі,
 // щоб тіло вийшло суцільним.
-function strokeToProfilePoints(stroke, mode) {
-  if (stroke.length < 3) return null
-  let eps = 0.015
+function strokeToProfilePoints(stroke, mode, startEps = 0.015, maxPoints = 48) {
+  if (stroke.length < (mode === 'lathe' ? 2 : 3)) return null
+  let eps = startEps
   let pts = simplifyPath(stroke, eps)
-  while (pts.length > 48) { eps *= 1.5; pts = simplifyPath(stroke, eps) }
+  while (pts.length > maxPoints) { eps *= 1.5; pts = simplifyPath(stroke, eps) }
   const r = (v) => Math.round(v * 100) / 100
   if (mode === 'lathe') {
     let out = pts.map((p) => ({ x: r(Math.abs(p.x) * 0.9), y: r(p.y * 0.9) }))
@@ -449,60 +449,164 @@ function strokeToProfilePoints(stroke, mode) {
   return out.length >= 3 ? out : null
 }
 
-// Вікно «Намалюй форму»: малюєш мишкою/пальцем/стилусом — форма одразу
-// стає 3D-обʼєктом (видавлюванням з округленими краями або обертанням).
+// Вікно «Намалюй форму»: три інструменти — ✏️ від руки, 📏 лінійка (рівні
+// відрізки з довжиною/кутом, прив'язка до сітки, Shift — кут кратний 15°)
+// і 〰 вигин (тягни середню ручку відрізка — він вигинається кривою).
+// Шлях = вузли + для кожного відрізка необовʼязкова контрольна точка
+// квадратичної кривої Безьє (null — пряма). Будь-який інструмент редагує
+// той самий шлях, тож від руки намальоване можна потім вирівняти/вигнути.
+const DRAW_GRID = 0.125
+const HIT_R = 0.06
+
+function quadPoint(a, c, b, t) {
+  const u = 1 - t
+  return { x: u * u * a.x + 2 * u * t * c.x + t * t * b.x, y: u * u * a.y + 2 * u * t * c.y + t * t * b.y }
+}
+
 function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
   const canvasRef = useRef(null)
-  const strokeRef = useRef([])
-  const drawingRef = useRef(false)
+  const strokeRef = useRef([]) // сирий штрих під час малювання від руки
+  const dragRef = useRef(null) // { kind: 'free' | 'node' | 'ctrl', index }
+  const hoverRef = useRef(null)
   const [mode, setMode] = useState(initialMode)
-  const [hasStroke, setHasStroke] = useState(false)
+  const [tool, setTool] = useState('line')
+  const [snap, setSnap] = useState(true)
+  const [nodes, setNodes] = useState([])
+  const [ctrls, setCtrls] = useState([])
   const [depth, setDepth] = useState(0.5)
   const [bevel, setBevel] = useState(true)
+  const [, force] = useState(0)
+  const nodesRef = useRef(nodes)
+  const ctrlsRef = useRef(ctrls)
+  nodesRef.current = nodes
+  ctrlsRef.current = ctrls
+
+  const closed = mode === 'extrude'
+  const segCount = (n) => (closed ? (n >= 3 ? n : Math.max(0, n - 1)) : Math.max(0, n - 1))
+  const segEnds = (i, ns) => [ns[i], ns[(i + 1) % ns.length]]
+  function handlePos(i, ns = nodesRef.current, cs = ctrlsRef.current) {
+    const [a, b] = segEnds(i, ns)
+    const c = cs[i]
+    return c ? quadPoint(a, c, b, 0.5) : { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+  }
+  function samplePath(ns = nodes, cs = ctrls) {
+    if (ns.length === 0) return []
+    const out = [ns[0]]
+    for (let i = 0; i < segCount(ns.length); i++) {
+      const [a, b] = segEnds(i, ns)
+      const c = cs[i]
+      if (c) for (let k = 1; k <= 12; k++) out.push(quadPoint(a, c, b, k / 12))
+      else out.push(b)
+    }
+    if (closed && ns.length >= 3) out.pop() // останній збігається з першим
+    return out
+  }
 
   function redraw() {
-    const c = canvasRef.current
-    if (!c) return
-    const ctx = c.getContext('2d')
-    const W = c.width
+    const cv = canvasRef.current
+    if (!cv) return
+    const ctx = cv.getContext('2d')
+    const W = cv.width
+    const px = (p) => [((p.x + 1) / 2) * W, ((1 - p.y) / 2) * W]
+    const s = W / 400
     ctx.fillStyle = '#14141b'
     ctx.fillRect(0, 0, W, W)
-    ctx.strokeStyle = '#262632'
-    ctx.lineWidth = 1
-    for (let i = 1; i < 8; i++) {
-      ctx.beginPath(); ctx.moveTo((i * W) / 8, 0); ctx.lineTo((i * W) / 8, W); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(0, (i * W) / 8); ctx.lineTo(W, (i * W) / 8); ctx.stroke()
+    // Сітка (дрібна + основна) і лінійки по краях
+    for (let i = 1; i < 16; i++) {
+      ctx.strokeStyle = i % 2 ? '#1d1d27' : '#2a2a37'
+      ctx.lineWidth = 1
+      ctx.beginPath(); ctx.moveTo((i * W) / 16, 0); ctx.lineTo((i * W) / 16, W); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, (i * W) / 16); ctx.lineTo(W, (i * W) / 16); ctx.stroke()
+    }
+    ctx.fillStyle = '#8a8aa0'
+    ctx.font = `${10 * s}px sans-serif`
+    for (let i = 0; i <= 16; i++) {
+      const len = (i % 4 === 0 ? 10 : i % 2 === 0 ? 6 : 3) * s
+      ctx.fillRect((i * W) / 16, 0, 1, len)
+      ctx.fillRect(0, (i * W) / 16, len, 1)
+      if (i % 4 === 0 && i > 0 && i < 16) {
+        ctx.fillText(String((i / 16) * 2 - 1), (i * W) / 16 + 2 * s, 20 * s)
+        ctx.fillText(String(1 - (i / 16) * 2), 12 * s, (i * W) / 16 - 2 * s)
+      }
     }
     if (mode === 'lathe') {
       ctx.fillStyle = 'rgba(0,0,0,0.35)'
       ctx.fillRect(0, 0, W / 2, W)
       ctx.strokeStyle = '#8a86ff'
-      ctx.setLineDash([8, 6])
+      ctx.setLineDash([8 * s, 6 * s])
       ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, W); ctx.stroke()
       ctx.setLineDash([])
     }
-    const st = strokeRef.current
-    if (st.length > 1) {
-      const toPx = (p) => [((p.x + 1) / 2) * W, ((1 - p.y) / 2) * W]
-      const paint = (pts, alpha) => {
-        ctx.beginPath()
-        pts.forEach((p, i) => { const [x, y] = toPx(p); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y) })
-        if (mode === 'extrude' && !drawingRef.current) { ctx.closePath(); ctx.fillStyle = 'rgba(125,120,255,0.25)'; ctx.fill() }
-        ctx.strokeStyle = `rgba(190,187,255,${alpha})`
-        ctx.lineWidth = 4
-        ctx.lineJoin = 'round'
-        ctx.lineCap = 'round'
-        ctx.stroke()
-      }
-      paint(st, 1)
-      if (mode === 'lathe') paint(st.map((p) => ({ x: -p.x, y: p.y })), 0.35)
+    const drawLine = (pts, style, width, fill) => {
+      if (pts.length < 2) return
+      ctx.beginPath()
+      pts.forEach((p, i) => { const [x, y] = px(p); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y) })
+      if (fill) { ctx.closePath(); ctx.fillStyle = fill; ctx.fill() }
+      ctx.strokeStyle = style
+      ctx.lineWidth = width * s
+      ctx.lineJoin = 'round'
+      ctx.lineCap = 'round'
+      ctx.stroke()
     }
+    // Штрих від руки (поки малюється)
+    if (dragRef.current?.kind === 'free') {
+      drawLine(strokeRef.current, '#bebbff', 4)
+      return
+    }
+    const path = samplePath()
+    if (path.length >= 2) {
+      drawLine(path, '#bebbff', 4, closed && nodes.length >= 3 ? 'rgba(125,120,255,0.22)' : null)
+      if (mode === 'lathe') drawLine(path.map((p) => ({ x: -p.x, y: p.y })), 'rgba(190,187,255,0.3)', 3)
+    }
+    // Превʼю наступного відрізка лінійкою + довжина й кут
+    const hv = hoverRef.current
+    if (tool === 'line' && hv && nodes.length > 0 && !dragRef.current) {
+      const last = nodes[nodes.length - 1]
+      ctx.setLineDash([6 * s, 5 * s])
+      drawLine([last, hv], '#ffd23f', 2)
+      ctx.setLineDash([])
+      const len = Math.hypot(hv.x - last.x, hv.y - last.y)
+      const ang = Math.round((Math.atan2(hv.y - last.y, hv.x - last.x) * 180) / Math.PI)
+      const [hx, hy] = px(hv)
+      ctx.fillStyle = '#ffd23f'
+      ctx.font = `bold ${11 * s}px sans-serif`
+      ctx.fillText(`${len.toFixed(2)} · ${ang}°`, hx + 10 * s, hy - 10 * s)
+    }
+    // Ручки вигину (середини відрізків) — ромбики
+    if (tool !== 'free') {
+      for (let i = 0; i < segCount(nodes.length); i++) {
+        const h = handlePos(i, nodes, ctrls)
+        const [x, y] = px(h)
+        if (ctrls[i]) {
+          const [a, b] = segEnds(i, nodes)
+          ctx.strokeStyle = 'rgba(255,210,63,0.35)'
+          ctx.lineWidth = 1
+          ctx.beginPath(); ctx.moveTo(...px(a)); ctx.lineTo(...px(ctrls[i])); ctx.lineTo(...px(b)); ctx.stroke()
+        }
+        const r = 6 * s
+        ctx.fillStyle = ctrls[i] ? '#ffd23f' : '#3E37E0'
+        ctx.strokeStyle = '#ffffff'
+        ctx.lineWidth = 1.5 * s
+        ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill(); ctx.stroke()
+      }
+    }
+    // Вузли
+    nodes.forEach((n, i) => {
+      const [x, y] = px(n)
+      ctx.beginPath()
+      ctx.arc(x, y, 6.5 * s, 0, Math.PI * 2)
+      ctx.fillStyle = i === 0 ? '#ffd23f' : '#ffffff'
+      ctx.fill()
+      ctx.strokeStyle = '#3E37E0'
+      ctx.lineWidth = 2 * s
+      ctx.stroke()
+    })
   }
   useEffect(() => {
-    const c = canvasRef.current
+    const cv = canvasRef.current
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    c.width = Math.round(c.clientWidth * dpr)
-    c.height = c.width
+    cv.width = Math.round(cv.clientWidth * dpr)
+    cv.height = cv.width
     redraw()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -512,60 +616,165 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
     const rect = canvasRef.current.getBoundingClientRect()
     return { x: ((e.clientX - rect.left) / rect.width) * 2 - 1, y: 1 - ((e.clientY - rect.top) / rect.height) * 2 }
   }
+  // Лінійка: прив'язка до сітки та (Shift) кут, кратний 15° від попереднього вузла.
+  function constrain(p, e, from) {
+    let q = { ...p }
+    if (e.shiftKey && from) {
+      const len = Math.hypot(q.x - from.x, q.y - from.y)
+      const a = Math.round(Math.atan2(q.y - from.y, q.x - from.x) / (Math.PI / 12)) * (Math.PI / 12)
+      q = { x: from.x + Math.cos(a) * len, y: from.y + Math.sin(a) * len }
+    }
+    if (snap) q = { x: Math.round(q.x / DRAW_GRID) * DRAW_GRID, y: Math.round(q.y / DRAW_GRID) * DRAW_GRID }
+    const r = (v) => Math.round(Math.max(-1, Math.min(1, v)) * 1000) / 1000
+    return { x: r(q.x), y: r(q.y) }
+  }
+  function hitTest(p) {
+    const ns = nodesRef.current
+    for (let i = ns.length - 1; i >= 0; i--) if (Math.hypot(ns[i].x - p.x, ns[i].y - p.y) < HIT_R) return { kind: 'node', index: i }
+    if (tool !== 'free') {
+      for (let i = 0; i < segCount(ns.length); i++) {
+        const h = handlePos(i)
+        if (Math.hypot(h.x - p.x, h.y - p.y) < HIT_R) return { kind: 'ctrl', index: i }
+      }
+    }
+    return null
+  }
+
   function down(e) {
     e.preventDefault()
     canvasRef.current.setPointerCapture?.(e.pointerId)
-    drawingRef.current = true
-    strokeRef.current = [toLocal(e)]
-    setHasStroke(false)
-    redraw()
+    const p = toLocal(e)
+    const hit = hitTest(p)
+    if (hit) { dragRef.current = hit; return }
+    if (tool === 'free') {
+      dragRef.current = { kind: 'free' }
+      strokeRef.current = [p]
+      redraw()
+      return
+    }
+    // Лінійка/вигин: клік по порожньому — новий вузол у кінці шляху.
+    const ns = nodesRef.current
+    const q = constrain(p, e, ns[ns.length - 1])
+    setNodes([...ns, q])
+    setCtrls([...ctrlsRef.current.slice(0, Math.max(0, ns.length - 1)), null, null].slice(0, ns.length + 1))
   }
   function move(e) {
-    if (!drawingRef.current) return
     const p = toLocal(e)
-    const last = strokeRef.current[strokeRef.current.length - 1]
-    if (Math.hypot(p.x - last.x, p.y - last.y) < 0.008) return
-    strokeRef.current.push(p)
-    redraw()
+    const d = dragRef.current
+    if (!d) {
+      if (tool === 'line') {
+        const ns = nodesRef.current
+        hoverRef.current = constrain(p, e, ns[ns.length - 1])
+        redraw()
+      }
+      return
+    }
+    if (d.kind === 'free') {
+      const last = strokeRef.current[strokeRef.current.length - 1]
+      if (Math.hypot(p.x - last.x, p.y - last.y) < 0.008) return
+      strokeRef.current.push(p)
+      redraw()
+      return
+    }
+    if (d.kind === 'node') {
+      const ns = nodesRef.current
+      const prev = d.index > 0 ? ns[d.index - 1] : null
+      const q = constrain(p, e, prev)
+      setNodes(ns.map((n, i) => (i === d.index ? q : n)))
+      return
+    }
+    // Вигин: крива проходить через курсор посередині відрізка.
+    const [a, b] = segEnds(d.index, nodesRef.current)
+    const c = { x: 2 * p.x - (a.x + b.x) / 2, y: 2 * p.y - (a.y + b.y) / 2 }
+    const cs = [...ctrlsRef.current]
+    cs[d.index] = c
+    setCtrls(cs)
   }
   function up() {
-    if (!drawingRef.current) return
-    drawingRef.current = false
-    setHasStroke(strokeRef.current.length >= 3)
+    const d = dragRef.current
+    dragRef.current = null
+    if (d?.kind === 'free') {
+      const st = strokeRef.current
+      strokeRef.current = []
+      if (st.length >= 3) {
+        let eps = 0.012
+        let pts = simplifyPath(st, eps)
+        while (pts.length > 40) { eps *= 1.4; pts = simplifyPath(st, eps) }
+        if (closed && pts.length > 3 && Math.hypot(pts[0].x - pts[pts.length - 1].x, pts[0].y - pts[pts.length - 1].y) < 0.08) pts = pts.slice(0, -1)
+        setNodes(pts)
+        setCtrls(pts.map(() => null))
+      }
+    }
+    force((v) => v + 1)
+  }
+  function leave() {
+    hoverRef.current = null
     redraw()
+  }
+  function dbl(e) {
+    const hit = hitTest(toLocal(e))
+    if (!hit) return
+    if (hit.kind === 'node') {
+      setNodes(nodesRef.current.filter((_, i) => i !== hit.index))
+      setCtrls(ctrlsRef.current.filter((_, i) => i !== hit.index).map((c, i) => (i === hit.index - 1 ? null : c)))
+    } else {
+      const cs = [...ctrlsRef.current]
+      cs[hit.index] = null
+      setCtrls(cs)
+    }
+  }
+  function undoLast() {
+    setNodes(nodesRef.current.slice(0, -1))
+    setCtrls(ctrlsRef.current.slice(0, Math.max(0, nodesRef.current.length - 1)))
   }
   function clear() {
-    strokeRef.current = []
-    setHasStroke(false)
-    redraw()
+    setNodes([])
+    setCtrls([])
   }
+  const canFinish = nodes.length >= (closed ? 3 : 2)
   function finish() {
-    const pts = strokeToProfilePoints(strokeRef.current, mode)
+    // Шлях уже чистий (вузли + криві) — спрощуємо мінімально, щоб вигини
+    // лишились плавними в 3D.
+    const pts = strokeToProfilePoints(samplePath(), mode, 0.002, 90)
     if (!pts) return
     onDone({ mode, points: pts, depth, bevel })
   }
+
+  const hint = tool === 'free'
+    ? 'Малюй мишкою одним рухом — після відпускання лінія стане точками, які можна тягнути.'
+    : tool === 'line'
+      ? 'Клікай — кожен клік ставить точку, між ними рівна лінія. Показано довжину й кут. Shift — кут кратний 15°.'
+      : 'Тягни ромбик посередині відрізка — лінія вигнеться в той бік. Подвійний клік по ромбику — знову пряма.'
 
   return (
     <div className="draw-modal-backdrop" onPointerDown={(e) => { if (e.target === e.currentTarget) onCancel() }}>
       <div className="draw-modal" role="dialog" aria-label="Намалюй форму">
         <div className="cl-section-title" style={{ marginTop: 0 }}>🖌 Намалюй форму — вона стане 3D</div>
-        <div className="cl-btn-row" style={{ marginBottom: 10 }}>
+        <div className="cl-btn-row" style={{ marginBottom: 8 }}>
           <button className={'cl-mini-btn' + (mode === 'extrude' ? ' active' : '')} onClick={() => setMode('extrude')}>⭐ Обʼємна фігура</button>
           <button className={'cl-mini-btn' + (mode === 'lathe' ? ' active' : '')} onClick={() => setMode('lathe')}>🏺 Тіло обертання</button>
         </div>
+        <div className="cl-btn-row draw-tools" style={{ marginBottom: 8 }}>
+          <button className={'cl-mini-btn' + (tool === 'line' ? ' active' : '')} onClick={() => setTool('line')}>📏 Лінійка</button>
+          <button className={'cl-mini-btn' + (tool === 'bend' ? ' active' : '')} onClick={() => setTool('bend')}>〰 Вигнути</button>
+          <button className={'cl-mini-btn' + (tool === 'free' ? ' active' : '')} onClick={() => setTool('free')}>✏️ Від руки</button>
+          <label className="cl-editrow draw-snap"><input type="checkbox" checked={snap} onChange={(e) => setSnap(e.target.checked)} /> 🧲 Сітка</label>
+        </div>
         <p className="cl-tab-desc" style={{ marginBottom: 8 }}>
-          {mode === 'extrude'
-            ? 'Обведи контур одним рухом (серце, зірку, листок, букву…) — він замкнеться сам і отримає товщину.'
-            : 'Намалюй половину силуету праворуч від пунктирної осі (як контур вази чи келиха) — він обернеться по колу.'}
+          {hint} {mode === 'lathe' ? 'Малюй праворуч від пунктирної осі — половина силуету обернеться по колу.' : 'Контур замкнеться сам.'}
         </p>
         <canvas
           ref={canvasRef}
           className="draw-modal-canvas"
+          style={{ cursor: tool === 'bend' ? 'grab' : 'crosshair' }}
           onPointerDown={down}
           onPointerMove={move}
           onPointerUp={up}
           onPointerCancel={up}
+          onPointerLeave={leave}
+          onDoubleClick={dbl}
         />
+        <p className="cl-tab-desc" style={{ margin: '6px 0' }}>Точки можна тягнути будь-яким інструментом · подвійний клік по точці — видалити.</p>
         {mode === 'extrude' && (
           <>
             <div className="cl-editrow"><label>Товщина
@@ -575,15 +784,17 @@ function DrawShapeModal({ initialMode = 'extrude', onCancel, onDone }) {
             <label className="cl-editrow"><input type="checkbox" checked={bevel} onChange={(e) => setBevel(e.target.checked)} /> Округлені краї</label>
           </>
         )}
-        <div className="cl-picker-top" style={{ marginTop: 12, justifyContent: 'flex-end' }}>
-          <button className="cl-mini-btn" onClick={clear} disabled={!hasStroke}>🧽 Стерти</button>
+        <div className="cl-picker-top" style={{ marginTop: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <button className="cl-mini-btn" onClick={undoLast} disabled={nodes.length === 0}>↶ Остання точка</button>
+          <button className="cl-mini-btn" onClick={clear} disabled={nodes.length === 0}>🧽 Стерти</button>
           <button className="cl-mini-btn" onClick={onCancel}>Скасувати</button>
-          <button className="harmony-btn" onClick={finish} disabled={!hasStroke}>✨ Перетворити на 3D</button>
+          <button className="harmony-btn" onClick={finish} disabled={!canFinish}>✨ Перетворити на 3D</button>
         </div>
       </div>
     </div>
   )
 }
+
 
 function ShapeTab({
   selected, pointsVisible, onTogglePoints, selectedPointKey, pointBase, softRadius, onSoftRadius,
